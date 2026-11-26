@@ -1,0 +1,278 @@
+// ============================================================================
+// HEROQUEST: CRÓNICAS DEL ABISMO (Sistema HQ-D20 v2)
+// COMPENDIO DE CARTAS OFICIALES (Juego Base 2021 + La Luna del Terror)
+// Extraído de los 5 PDFs oficiales y adaptado limpiamente al sistema HQ-D20 v2
+// ============================================================================
+
+// ==================== 1. ARTEFACTOS OFICIALES (21 Cartas: 14 Base + 7 Luna del Terror) ====================
+export const OFFICIAL_ARTIFACTS = [
+  // Juego Base (14)
+  {
+    id: 'art_armadura_borin',
+    name: 'Armadura de Borin',
+    expansion: 'Juego Base',
+    type: 'Armadura',
+    dice: '+2 Def (Sin penalización)',
+    restriction: 'No Mago',
+    text: 'Esta mágica vestimenta acorazada otorga +2 Dados de Defensa adicionales. A diferencia de la Coraza normal, es ultraligera y no ralentiza tu movimiento. Combinable con Yelmo y/o Escudo.',
+  },
+  {
+    id: 'art_vara_telekinesis',
+    name: 'Vara de Telekinesis',
+    expansion: 'Juego Base',
+    type: 'Artefacto',
+    dice: '1 uso/misión',
+    restriction: 'Todas las clases',
+    text: 'Una vez por Misión atrapa a un Monstruo en un campo de fuerza mágica (pierde su siguiente turno). El Monstruo resiste si saca un 6 tirando 1 Dado Rojo por cada PM (o SAB CD 13).',
+  },
+  {
+    id: 'art_elixir_vida',
+    name: 'Elixir de Vida',
+    expansion: 'Juego Base',
+    type: 'Poción Legendaria',
+    dice: 'Revive 100%',
+    restriction: 'Todas las clases',
+    text: 'Pequeña botella de líquido perlado que devuelve la vida a un Héroe Muerto, restaurando todos sus Puntos Corporales y Mentales. Un solo uso.',
+  },
+  {
+    id: 'art_espada_fortuna',
+    name: 'Espada Larga de la Fortuna',
+    expansion: 'Juego Base',
+    type: 'Arma',
+    dice: '3 DC (Diagonal)',
+    restriction: 'No Mago',
+    text: 'Permite atacar en diagonal con 3 Dados de Ataque. Una vez por Misión puedes volver a lanzar 1 Dado de Ataque.',
+  },
+  {
+    id: 'art_azote_orcos',
+    name: 'Azote de Orcos',
+    expansion: 'Juego Base',
+    type: 'Arma',
+    dice: '2 DC (×2 vs Orco)',
+    restriction: 'No Mago',
+    text: 'Espada corta mágica de 2 Dados de Ataque. Puedes atacar DOS veces en el mismo turno si te enfrentas a un Orco.',
+  },
+  {
+    id: 'art_filo_fantasma',
+    name: 'Filo del Fantasma',
+    expansion: 'Juego Base',
+    type: 'Arma',
+    dice: '1 DC (Indefendible ×1)',
+    restriction: 'Todas las clases',
+    text: 'Daga ornamentada de 1 Dado de Ataque. Una vez por Misión atraviesa la armadura y el objetivo no puede defenderse (daña Etéreos).',
+  },
+  {
+    id: 'art_anillo_retorno',
+    name: 'Anillo de Retorno',
+    expansion: 'Juego Base',
+    type: 'Anillo',
+    dice: 'Teletransporte Grupal',
+    restriction: 'Todas las clases',
+    text: 'Al invocarlo, devuelve a todos los Héroes que el portador pueda ver al punto de partida de la Misión. Un solo uso.',
+  },
+  {
+    id: 'art_anillo_fortaleza',
+    name: 'Anillo de Fortaleza',
+    expansion: 'Juego Base',
+    type: 'Anillo',
+    dice: '+1 PC Máximo',
+    restriction: 'Todas las clases',
+    text: 'Este anillo mágico otorga +1 Punto Corporal máximo adicional mientras lo lleves equipado.',
+  },
+  {
+    id: 'art_anillo_hechizos',
+    name: 'Anillo de Hechizos',
+    expansion: 'Juego Base',
+    type: 'Anillo',
+    dice: 'Duplica 1 Hechizo',
+    restriction: 'Lanzadores',
+    text: 'Permite lanzar un Hechizo dos veces (no simultáneamente). Al inicio de cada Misión declara qué Hechizo está alojado en el Anillo.',
+  },
+  {
+    id: 'art_filo_espiritu',
+    name: 'Filo del Espíritu',
+    expansion: 'Juego Base',
+    type: 'Arma Legendaria',
+    dice: '3 DC / 4 DC vs No Muertos',
+    restriction: 'No Mago',
+    text: 'Espada mágica de mango de hueso tallado: 3 DC (4 DC contra Esqueletos, Zombis, Momias y Espectros). Es la única arma capaz de dañar al Señor de los Brujos.',
+  },
+  {
+    id: 'art_talisman_sabiduria',
+    name: 'Talismán de la Sabiduría',
+    expansion: 'Juego Base',
+    type: 'Amuleto',
+    dice: '+1 PM Máximo',
+    restriction: 'Todas las clases',
+    text: 'Medallón mágico que otorga +1 Punto Mental adicional mientras lo lleves puesto.',
+  },
+  {
+    id: 'art_varita_magica',
+    name: 'Varita Mágica',
+    expansion: 'Juego Base',
+    type: 'Artefacto',
+    dice: '2 Hechizos/turno',
+    restriction: 'Lanzadores',
+    text: 'Permite lanzar DOS Hechizos distintos en un mismo turno en lugar de uno solo.',
+  },
+  {
+    id: 'art_capa_mago',
+    name: 'Capa de Mago',
+    expansion: 'Juego Base',
+    type: 'Armadura',
+    dice: '+1 Def',
+    restriction: 'Solo Mago / Lanzador',
+    text: 'Capa mágica de tela brillante con runas místicas. Otorga +1 Dado de Defensa adicional.',
+  },
+  {
+    id: 'art_baston_mago',
+    name: 'Bastón del Mago',
+    expansion: 'Juego Base',
+    type: 'Arma',
+    dice: '2 DC (Diagonal)',
+    restriction: 'Solo Mago / Lanzador',
+    text: 'Bastón antiguo que brilla con luz azul. Otorga 2 Dados de Ataque y permite atacar en diagonal.',
+  },
+
+  // La Luna del Terror (7)
+  {
+    id: 'art_manto_sombras',
+    name: 'Manto de las Sombras',
+    expansion: 'La Luna del Terror',
+    type: 'Capa',
+    dice: 'Incorpóreo ×1/misión',
+    restriction: 'Todas las clases',
+    text: 'Como acción (1 vez por Misión) te haces incorpóreo: en tu próximo movimiento actúas bajo los efectos combinados de A Través de la Roca y Niebla.',
+  },
+  {
+    id: 'art_escudo_alba',
+    name: 'Escudo del Alba',
+    expansion: 'La Luna del Terror',
+    type: 'Armadura',
+    dice: '+1 Def · Repite Atq enemigo',
+    restriction: 'No Mago / No 2 Manos',
+    text: 'Otorga +1 Dado de Defensa. Una vez por Misión, antes de que cualquier Héroe tire defensa, obliga al Monstruo atacante a repetir su tirada de ataque.',
+  },
+  {
+    id: 'art_cenizas_fenix',
+    name: 'Cenizas de Fénix',
+    expansion: 'La Luna del Terror',
+    type: 'Reliquia',
+    dice: 'Salva de 0 PC → 1 PC',
+    restriction: 'Todas las clases',
+    text: '1 vez por Misión, cuando los PC de cualquier Héroe caigan a 0 quedan en 1. Luego tira 1 Dado Rojo: con 5 o 6 se consume; con 1–4 se conserva.',
+  },
+  {
+    id: 'art_garra_cuervo',
+    name: 'Garra de Cuervo',
+    expansion: 'La Luna del Terror',
+    type: 'Arma',
+    dice: '2 DC (Repite Esc. Negro)',
+    restriction: 'Todas las clases',
+    text: 'Daga sombría de 2 Dados de Ataque. Durante tu turno puedes repetir 1 Dado de Ataque en el que haya salido un Escudo Negro.',
+  },
+  {
+    id: 'art_escamas_elethorn',
+    name: 'Escamas de Elethorn',
+    expansion: 'La Luna del Terror',
+    type: 'Armadura',
+    dice: '+1 Def · +1 Resist. Terror',
+    restriction: 'Todas las clases',
+    text: 'Armadura élfica encantada: +1 Dado de Defensa y +1 dado adicional al resistir Hechizos del Terror. Combinable con Yelmo, Escudo o Capa de Mago.',
+  },
+  {
+    id: 'art_perg_roca',
+    name: 'Pergamino: A Través de la Roca',
+    expansion: 'La Luna del Terror',
+    type: 'Pergamino',
+    dice: '1 uso',
+    restriction: 'Todas las clases',
+    text: 'Permite a cualquier Héroe atravesar paredes en su próximo movimiento (sin terminar en Roca Sólida sombreada).',
+  },
+  {
+    id: 'art_perg_rafaga',
+    name: 'Pergamino: Ráfaga',
+    expansion: 'La Luna del Terror',
+    type: 'Pergamino',
+    dice: '1 uso',
+    restriction: 'Todas las clases',
+    text: 'Permite a cualquier Héroe tirar el doble de Dados Rojos en su próximo movimiento.',
+  },
+];
+
+// ==================== 2. MAZO OFICIAL DE ALQUIMIA (20 Pociones · La Luna del Terror) ====================
+export const OFFICIAL_ALCHEMY_DECK = [
+  { id: 'alc_combate', name: 'Poción de Combate', price: 200, dice: 'Repite Ataque', text: 'Amarga pero efectiva. Bébela para repetir tu tirada completa de Dados de Ataque.' },
+  { id: 'alc_furia', name: 'Poción de Furia de Combate', price: 400, dice: '2 Ataques/turno', text: 'Haz 2 ataques con arma por turno hasta que dejen de haber Monstruos en tu Línea de Visión.' },
+  { id: 'alc_celeridad', name: 'Celeridad', price: 450, dice: 'Mov 12 + 2 Ataques', text: 'Muévete hasta 12 casillas sin tirar dados y haz 2 ataques por turno hasta sufrir cualquier daño.' },
+  { id: 'alc_defensa', name: 'Poción de Defensa', price: 200, dice: '+2 DC Defensa', text: 'Tira +2 Dados de Combate adicionales la próxima vez que te defiendas.' },
+  { id: 'alc_destreza', name: 'Poción de Destreza', price: 100, dice: '+5 Mov / Salta Foso', text: 'Añade +5 casillas a tu próximo movimiento O supera automáticamente un salto de Foso (máx. 1 por turno).' },
+  { id: 'alc_destino', name: 'Poción de Destino Imprevisible', price: 250, dice: '¡Efecto Aleatorio!', isWildcard: true, text: 'Su color cambia sin cesar. Al beberla, roba otra Carta al azar del Mazo de Alquimia y aplica su efecto al instante.' },
+  { id: 'alc_piel_congelada', name: 'Poción de Piel Congelada', price: 300, dice: '+2 Def (Combate)', text: 'Tira +2 Dados adicionales al defender hasta que no queden Monstruos en tu Línea de Visión.' },
+  { id: 'alc_grog_ogro', name: 'Grog Ogro', price: 20, dice: 'Bebida Riesgosa', text: 'Deliciosa e infrecuente. Tira 1 DC: si sacas Calavera pierdes 1 PM; con cualquier otro resultado no sufres daño (y ganas +1 a tu próxima tirada de Intimidación).' },
+  { id: 'alc_heroica', name: 'Poción Heroica', price: 250, dice: '2 Ataques (1 turno)', text: 'Bébela antes de atacar para realizar DOS ataques con arma en lugar de uno este turno.' },
+  { id: 'alc_curacion', name: 'Poción de Curación', price: 500, dice: '+1d6 PC', text: 'Tira 1 Dado Rojo y recupera ese número de Puntos Corporales (sin superar tu máximo).' },
+  { id: 'alc_fuerza_gelida', name: 'Poción de Fuerza Gélida', price: 200, dice: '×2 Daño Corporal', text: 'Tu próximo ataque con arma causa el DOBLE de daño de Puntos Corporales de lo que indiquen tus dados.' },
+  { id: 'alc_curacion_menor', name: 'Poción de Curación Menor', price: 200, dice: '+2 PC', text: 'Restaura hasta 2 Puntos Corporales de inmediato (evita morir al caer a 0 PC).' },
+  { id: 'alc_magia', name: 'Poción de Magia', price: 450, dice: 'Recupera 3 Hechizos', text: 'Recupera hasta 3 Hechizos que ya hayas lanzado durante esta Misión.' },
+  { id: 'alc_resist_magica', name: 'Poción de Resistencia Mágica', price: 300, dice: 'Cancela Hechizo', text: 'Crea una barrera etérea que cancela por completo un Hechizo enemigo que te cause daño.' },
+  { id: 'alc_recuerdo', name: 'Poción del Recuerdo', price: 400, dice: 'Recupera 1 Hechizo', text: 'Disolución morada vibrante: recupera 1 Hechizo que ya hayas lanzado durante esta Misión.' },
+  { id: 'alc_restablecimiento', name: 'Poción de Restablecimiento', price: 300, dice: '+1 PC y +1 PM', text: 'Aroma intenso a lavanda: recupera 1 Punto Corporal y 1 Punto Mental al instante.' },
+  { id: 'alc_velocidad', name: 'Poción de Velocidad', price: 200, dice: '×2 Dados Mov', text: 'Tira el doble de Dados de Movimiento en tu próximo turno (máx. 1 por turno).' },
+  { id: 'alc_fuerza', name: 'Poción de Fuerza', price: 200, dice: '+2 DC Ataque', text: 'Tira +2 Dados de Combate adicionales en tu próximo ataque.' },
+  { id: 'alc_restauracion_sup', name: 'Poción de Restauración Superior', price: 800, dice: 'Full PC y PM', text: 'Recupera TODOS tus Puntos Corporales y Mentales (y cura estados graves como licantropía o maldiciones).' },
+  { id: 'alc_vision', name: 'Poción de la Visión', price: 500, dice: 'Ve Trampas/Secretos', text: 'Revela todas las puertas secretas y trampas en tu Línea de Visión hasta que sufras cualquier daño.' },
+];
+
+// ==================== 3. HECHIZOS DE TERROR DE ZARGON (15 Oficiales: 12 Base + 3 Luna) ====================
+export const OFFICIAL_DREAD_SPELLS = [
+  // Base (12)
+  { id: 'ds_bola_llamas', name: 'Bola en Llamas', expansion: 'Juego Base', text: 'Causa 2 PC a un Héroe. El Héroe tira 2 Dados Rojos: por cada 5 o 6 reduce el daño en 1.' },
+  { id: 'ds_nube_terror', name: 'Nube de Terror', expansion: 'Juego Base', text: 'Paraliza a TODOS los Héroes en la misma sala o pasillo (no mueven, atacan ni defienden). Cada víctima se libera sacando un 6 tirando 1 Dado Rojo por cada PM.' },
+  { id: 'ds_dominacion', name: 'Dominación', expansion: 'Juego Base', text: 'Pone a un Héroe bajo control de Zargon (mueve y ataca aliados). Se rompe sacando un 6 tirando 1 Dado Rojo por cada PM.' },
+  { id: 'ds_huida_fugaz', name: 'Huída Fugaz', expansion: 'Juego Base', text: 'El lanzador desaparece y se teletransporta al punto seguro marcado en el Mapa de la Misión (ej. XX).' },
+  { id: 'ds_miedo', name: 'Miedo', expansion: 'Juego Base', text: 'Un Héroe entra en pánico y solo puede atacar con 1 Dado de Combate. Se rompe sacando un 6 con 1 Dado Rojo por PM.' },
+  { id: 'ds_tormenta_fuego', name: 'Tormenta de Fuego', expansion: 'Juego Base', text: 'Causa 3 PC a TODOS los Héroes y Monstruos en la sala (no al lanzador; no usable en pasillos). Cada víctima tira 2 Dados Rojos: cada 5 o 6 reduce 1 daño.' },
+  { id: 'ds_tempestad', name: 'Tempestad', expansion: 'Juego Base', text: 'Rodea a un Héroe de tu elección en un torbellino: ese Héroe pierde su siguiente turno.' },
+  { id: 'ds_invocar_nomuertos', name: 'Invocar Muertos Vivientes', expansion: 'Juego Base', text: 'Tira 1 Dado Rojo: 1–2 = 4 Esqueletos; 3–4 = 3 Esqueletos y 2 Zombis; 5–6 = 2 Zombis y 2 Momias.' },
+  { id: 'ds_invocar_orcos', name: 'Invocar Orcos', expansion: 'Juego Base', text: 'Tira 1 Dado Rojo: 1–3 = 4 Orcos; 4–5 = 5 Orcos; 6 = 6 Orcos.' },
+  { id: 'ds_dormir', name: 'Dormir', expansion: 'Juego Base', text: 'Duerme a un Héroe (no mueve, ataca ni defiende). Se rompe sacando un 6 con 1 Dado Rojo por cada PM.' },
+  { id: 'ds_oxidacion', name: 'Oxidación', expansion: 'Juego Base', text: 'Vuelve inservible cualquier Espada o Yelmo metálico no-artefacto (en HQ-D20 v2: -1 DC hasta repararlo en Herrería con 1 Acero).' },
+  { id: 'ds_rayo_mortifero', name: 'Rayo Mortífero', expansion: 'Juego Base', text: 'Línea recta horizontal, vertical o diagonal hasta chocar con pared/puerta cerrada: causa 2 PC a todos en el camino.' },
+
+  // La Luna del Terror (3)
+  { id: 'ds_canalizar_terror', name: 'Canalizar el Terror', expansion: 'La Luna del Terror', text: 'Tira 1 Dado Rojo (+1 por cada otro lanzador adyacente): 1–3 resistido; 4–5 = 1 PC; 6+ = 2 PC.' },
+  { id: 'ds_luces_terror', name: 'Luces del Terror', expansion: 'La Luna del Terror', text: 'Todos los Monstruos tiran +1 DC Ataque contra el Héroe afectado hasta que saque 5 o 6 en 1 Dado Rojo al iniciar su turno.' },
+  { id: 'ds_invocar_espectros', name: 'Invocar Espectros', expansion: 'La Luna del Terror', text: 'Tira 1 Dado Rojo: 1–2 = 1 Espectro; 3–5 = 2 Espectros; 6 = 3 Espectros (Etéreos).' },
+];
+
+// ==================== 4. HECHIZOS ELEMENTALES OFICIALES (12 Base) ====================
+export const OFFICIAL_ELEMENTAL_SPELLS = [
+  { id: 'el_tempestad', school: 'Aire', name: 'Tempestad', text: 'Rodea a un Monstruo en una tempestad: ese Monstruo pierde su siguiente turno.' },
+  { id: 'el_rafaga', school: 'Aire', name: 'Ráfaga', text: 'Un Héroe tira el doble de Dados Rojos la próxima vez que se mueva.' },
+  { id: 'el_genio', school: 'Aire', name: 'Genio', text: 'Abre cualquier Puerta del tablero O ataca a cualquier Monstruo en Línea de Visión con 5 Dados de Combate.' },
+  { id: 'el_fuego_ira', school: 'Fuego', name: 'Fuego de la Ira', text: 'Causa 1 PC a cualquier Monstruo (lo evita si saca 5 o 6 en 1 Dado Rojo).' },
+  { id: 'el_valentia', school: 'Fuego', name: 'Valentía', text: 'Un Héroe tira +2 Dados de Combate extra al atacar hasta que no haya Monstruos en su Línea de Visión.' },
+  { id: 'el_bola_fuego', school: 'Fuego', name: 'Bola de Fuego', text: 'Causa 2 PC a un Monstruo (tira 2 Dados Rojos: por cada 5 o 6 reduce 1 daño).' },
+  { id: 'el_agua_milagrosa', school: 'Agua', name: 'Agua Milagrosa', text: 'Cura hasta 4 Puntos Corporales a cualquier Héroe sin superar su máximo.' },
+  { id: 'el_niebla', school: 'Agua', name: 'Niebla', text: 'En su próximo movimiento, el Héroe puede atravesar casillas ocupadas por Monstruos sin ser visto.' },
+  { id: 'el_dormir', school: 'Agua', name: 'Dormir', text: 'Duerme a un Monstruo (no Momias, Zombis ni Esqueletos). Se despierta sacando un 6 tirando 1 Dado Rojo por PM.' },
+  { id: 'el_piel_roca', school: 'Tierra', name: 'Piel de Roca', text: 'Un Héroe tira +1 Dado de Combate adicional al defender hasta que sufra 1 PC.' },
+  { id: 'el_cura_corporal', school: 'Tierra', name: 'Cura Corporal', text: 'Restaura inmediatamente hasta 4 Puntos Corporales a cualquier Héroe.' },
+  { id: 'el_traves_roca', school: 'Tierra', name: 'A Través de la Roca', text: 'Un Héroe puede atravesar paredes en su siguiente movimiento (¡sin terminar en Roca Sólida sombreada!).' },
+];
+
+// ==================== 5. HABILIDADES OFICIALES DEL CABALLERO GUARDIÁN (3) ====================
+export const OFFICIAL_KNIGHT_SKILLS = [
+  { id: 'kn_reto', name: 'Reto del Caballero', text: '1 vez/Misión: cuando aparezca un Monstruo Errante en tu sala, tomas el lugar del buscador y el Monstruo te ataca a ti en su lugar.' },
+  { id: 'kn_parada', name: 'Parada con Escudo', text: '1 vez/Misión (requiere Escudo): en el turno enemigo, cuando un Héroe adyacente sufra daño, cancela ese daño por completo.' },
+  { id: 'kn_tenacidad', name: 'Tenacidad', text: '1 vez/Misión (requiere Escudo): cuando tus PC queden reducidos a 0, en lugar de caer quedan en 1 PC.' },
+];
+
+// ==================== 6. MERCENARIOS ÉLFICOS OFICIALES (4 · La Luna del Terror) ====================
+export const OFFICIAL_ELVEN_MERCENARIES = [
+  { id: 'elf_exploradora', name: 'Exploradora Élfica', mov: 9, at: 2, def: 3, pc: 2, pm: 2, cost: 50, gear: 'Tiene la habilidad del Enano para detectar y desactivar trampas.' },
+  { id: 'elf_ballestera', name: 'Ballestera Élfica', mov: 6, at: 3, def: 3, pc: 2, pm: 2, cost: 75, gear: 'Usa Ballesta (3 DC rango); al atacar adyacente usa Espada Ancha.' },
+  { id: 'elf_guja', name: 'Guja Élfica', mov: 6, at: 3, def: 3, pc: 2, pm: 2, cost: 75, gear: 'Arma de asta: puede atacar en diagonal.' },
+  { id: 'elf_taladora', name: 'Taladora Élfica', mov: 5, at: 4, def: 5, pc: 2, pm: 2, cost: 100, gear: 'Guerrera pesada de primera línea (4 DC Atq, 5 DC Def).' },
+];

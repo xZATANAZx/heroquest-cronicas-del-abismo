@@ -99,20 +99,32 @@ export const FURNITURE_DECK = [
 ];
 
 export const TREASURE_TRAP_DECK = [
-  { id: 't1', title: 'Bolsa de Oro Imperial', kind: 'Tesoro', text: 'Encuentras 25 monedas de oro (o 50 MO si el grupo es Nivel 4+).' },
-  { id: 't2', title: 'Joyas Antiguas', kind: 'Tesoro', text: 'Un broche de rubí valorado en 40 MO. Si eres Mercader Negociante o Bardo, puedes venderlo en ciudad por 55 MO.' },
-  { id: 't3', title: 'Poción de Curación', kind: 'Tesoro', text: 'Encuentras una Poción de Curación Menor (+2 PC, acción gratuita).' },
-  { id: 't4', title: 'Poción de Fuerza', kind: 'Tesoro', text: 'Te otorga +2 Dados de Combate en tu próximo ataque cuerpo a cuerpo.' },
-  { id: 't5', title: 'Ingredientes de Luna del Terror', kind: 'Alquimia', text: 'Obtienes +1 Hierba Lunar y +1 Polvo Rúnico: úsalos en tu celular (pestaña Crafteo) o en la Ciudad para crear pociones y runas.' },
-  { id: 't6', title: 'Agua Bendita', kind: 'Tesoro', text: 'Frasco arrojadizo (hasta 4 casillas): inflige 3 DC indefendibles a un No Muerto o Espectro.' },
-  { id: 't7', title: 'Pergamino de Coraje', kind: 'Tesoro', text: 'Cualquier héroe puede leerlo como acción para lanzar el hechizo Coraje (+2 DC ataque).' },
-  { id: 't8', title: 'Monstruo Errante', kind: 'Peligro', text: '¡Emboscada! El DM coloca el Monstruo Errante de la misión actual adyacente al buscador y ataca inmediatamente.' },
-  { id: 't9', title: 'Trampa de Foso Oculto', kind: 'Trampa', text: 'El suelo cede bajo tus pies. Salvación DES CD 13: si fallas caes, sufres 1d6/2 (redondeado arriba) PC y termina tu turno.' },
-  { id: 't10', title: 'Trampa de Flecha Mecánica', kind: 'Trampa', text: 'Un mecanismo en la pared dispara una flecha. Salvación DES CD 13 o sufres 2 DC de daño (escalado a 3 DC en Nivel 5+).' },
-  { id: 't11', title: 'Cofre con Gas Somnífero', kind: 'Trampa', text: 'Gas púrpura escapa al abrir un recoveco. Salvación CON CD 13 o pierdes tu próximo turno y 1 PM.' },
-  { id: 't12', title: 'Nada de Valor', kind: 'Vacío', text: 'Solo polvo, telarañas y huesos roídos.' },
-  { id: 't13', title: 'Reliquia Menor (+1)', kind: 'Tesoro', text: 'Un talismán tallado: una vez por misión te permite repetir una tirada de defensa completa.' },
-  { id: 't14', title: 'Alijo de Flechas y Pólvora', kind: 'Tesoro', text: 'Recargas toda tu munición y obtienes 1 Bomba de Humo gratis.' },
+  // Mazo Oficial HeroQuest 2021 + Alquimia de La Luna del Terror adaptado a HQ-D20 v2
+  { id: 't_gema_1', title: '¡Gema! (35 MO)', kind: 'Tesoro', returnToDeck: false, rewardGold: 35, text: 'Escondida en la puntera de una vieja bota encuentras una pequeña Gema que vale 35 Monedas de Oro. (No vuelve al mazo).' },
+  { id: 't_gema_2', title: '¡Gema! (35 MO)', kind: 'Tesoro', returnToDeck: false, rewardGold: 35, text: 'Entre escombros brilla una Gema tallada valorada en 35 Monedas de Oro. (No vuelve al mazo).' },
+  { id: 't_oro_15_1', title: '¡Oro! (15 MO)', kind: 'Tesoro', returnToDeck: false, rewardGold: 15, text: 'Entre viejos trapos y mantas sucias encuentras 15 Monedas de Oro. (No vuelve al mazo).' },
+  { id: 't_oro_15_2', title: '¡Oro! (15 MO)', kind: 'Tesoro', returnToDeck: false, rewardGold: 15, text: 'Junto a una antorcha caída hallas una bolsita con 15 Monedas de Oro. (No vuelve al mazo).' },
+  { id: 't_oro_25_1', title: '¡Oro! (25 MO)', kind: 'Tesoro', returnToDeck: false, rewardGold: 25, text: 'Arrancas una piedra suelta de la pared y descubres 25 Monedas de Oro envueltas en cuero. (No vuelve al mazo).' },
+  { id: 't_oro_25_2', title: '¡Oro! (25 MO)', kind: 'Tesoro', returnToDeck: false, rewardGold: 25, text: 'Bajo una tabla floja encuentras una bolsa con 25 Monedas de Oro. (No vuelve al mazo).' },
+  { id: 't_joyas_1', title: '¡Joyas! (50 MO)', kind: 'Tesoro', returnToDeck: false, rewardGold: 50, text: 'Un pequeño cofre forrado de terciopelo guarda joyas antiguas por valor de 50 Monedas de Oro. (No vuelve al mazo).' },
+  { id: 't_joyas_2', title: '¡Joyas! (50 MO)', kind: 'Tesoro', returnToDeck: false, rewardGold: 50, text: 'Encuentras un broche imperial incrustado con gemas valorado en 50 Monedas de Oro. (No vuelve al mazo).' },
+  { id: 't_poc_heroica', title: 'Poción Heroica', kind: 'Tesoro', returnToDeck: false, text: 'Bolsa de cuero en la pared: bébela antes de atacar para hacer DOS ataques en lugar de uno (1 uso).', rewardLoot: { name: 'Poción Heroica', type: 'Poción', rarity: 'poco_comun', dice: '2 Ataques', upgrade: 'Haz 2 ataques con arma en este turno.', special: '1 uso.' } },
+  { id: 't_poc_defensa', title: 'Poción de Defensa', kind: 'Tesoro', returnToDeck: false, text: 'Frasco transparente: bébelo en cualquier momento para tirar +2 Dados de Combate adicionales en tu próxima defensa (1 uso).', rewardLoot: { name: 'Poción de Defensa', type: 'Poción', rarity: 'poco_comun', dice: '+2 DC Def', upgrade: '+2 DC en tu próxima defensa.', special: '1 uso.' } },
+  { id: 't_poc_fuerza', title: 'Poción de Fuerza', kind: 'Tesoro', returnToDeck: false, text: 'Frasco púrpura: bébelo en cualquier momento para tirar +2 Dados de Combate adicionales en tu próximo ataque (1 uso).', rewardLoot: { name: 'Poción de Fuerza', type: 'Poción', rarity: 'poco_comun', dice: '+2 DC Atq', upgrade: '+2 DC en tu próximo ataque.', special: '1 uso.' } },
+  { id: 't_poc_cur_1', title: 'Poción Curativa (+1d6 PC)', kind: 'Tesoro', returnToDeck: false, text: 'Botella de líquido azulado: bébela en cualquier momento para restaurar 1 Dado Rojo de Puntos Corporales (1 uso).', rewardLoot: { name: 'Poción Curativa', type: 'Poción', rarity: 'comun', dice: '+1d6 PC', upgrade: 'Restaura 1d6 PC (evita morir a 0 PC).', special: '1 uso.' } },
+  { id: 't_poc_cur_2', title: 'Poción Curativa (+1d6 PC)', kind: 'Tesoro', returnToDeck: false, text: 'En un fardo de harapos encuentras una Poción Curativa (+1 Dado Rojo de PC).', rewardLoot: { name: 'Poción Curativa', type: 'Poción', rarity: 'comun', dice: '+1d6 PC', upgrade: 'Restaura 1d6 PC (evita morir a 0 PC).', special: '1 uso.' } },
+  { id: 't_flor_misteriosa', title: 'Flor Misteriosa (Alquimia)', kind: 'Alquimia', returnToDeck: false, text: 'Planta élfica comestible: consúmela para recuperar +1 PC al instante O guárdala como +1 Hierba Lunar para Crafteo.' },
+  { id: 't_planta_sagrada', title: 'Planta Sagrada (Alquimia)', kind: 'Alquimia', returnToDeck: false, text: 'Hierba medicinal élfica: consúmela para recuperar +1 PM al instante O guárdala como +1 Polvo Rúnico para Crafteo.' },
+  { id: 't_ingrediente_desc', title: 'Ingrediente Desconocido', kind: 'Alquimia', returnToDeck: false, text: 'Esencia molida en polvo fino: guárdala como +1 Esencia Espectral para Crafteo o destila 1 Poción aleatoria del Mazo de Alquimia.' },
+  { id: 't_agua_bendita', title: 'Agua Bendita', kind: 'Tesoro', returnToDeck: false, text: 'Frasco sagrado: mata al instante a un Esqueleto, Zombi o Momia (o causa 3 DC mágicos a Jefes No Muertos).', rewardLoot: { name: 'Agua Bendita', type: 'Poción', rarity: 'raro', dice: 'Mata No Muerto', upgrade: 'Destruye No Muerto común o 3 DC mágicos a Jefes.', special: '1 uso.' } },
+  // Peligros y Trampas oficiales (vuelven al fondo del mazo)
+  { id: 't_pel_foso_1', title: '¡Peligro! Foso Oculto', kind: 'Trampa', returnToDeck: true, text: 'El suelo cede bajo tus pies: pierdes 1 PC y termina tu turno (DES CD 13 evita el daño). Vuelve al fondo del mazo.' },
+  { id: 't_pel_flecha_1', title: '¡Peligro! Flecha Oculta', kind: 'Trampa', returnToDeck: true, text: 'Una flecha oculta sale disparada de la pared: pierdes 1 PC y termina tu turno (DES CD 13 evita). Vuelve al fondo del mazo.' },
+  { id: 't_veneno', title: '¡Veneno!', kind: 'Trampa', returnToDeck: true, text: 'Probar el frasco te retuerce la garganta: tira 1 DC (si sacas Calavera pierdes 1 PM). Vuelve al fondo del mazo.' },
+  { id: 't_errante_1', title: 'Monstruo Errante', kind: 'Peligro', returnToDeck: true, text: '¡Emboscada! Zargon coloca el Monstruo Errante de esta Misión en una casilla adyacente y ataca inmediatamente. Vuelve al fondo del mazo.' },
+  { id: 't_errante_2', title: 'Monstruo Errante', kind: 'Peligro', returnToDeck: true, text: '¡Un enemigo te acecha desde las sombras! El Monstruo Errante de la Misión ataca al instante. Vuelve al fondo del mazo.' },
+  { id: 't_errante_3', title: 'Monstruo Errante', kind: 'Peligro', returnToDeck: true, text: '¡Ruido tras la esquina! Aparece el Monstruo Errante de esta Misión junto a ti y ataca inmediatamente. Vuelve al fondo del mazo.' },
+  { id: 't_nada', title: '¡Nada!', kind: 'Vacío', returnToDeck: true, text: 'A pesar de tu búsqueda minuciosa, solo encuentras polvo y telarañas.' },
 ];
 
 export const TRAVEL_DECK = [
@@ -137,9 +149,12 @@ export const CITY_EVENTS = [
 ];
 
 export const MERCENARIES = [
-  { id: 'explorador_m', name: 'Explorador Mercenario', mov: 9, at: 2, def: 3, pc: 2, pm: 2, cost: 100, gear: 'Espada corta, escudo, herramientas (busca/desarma trampas).' },
-  { id: 'ballestero_m', name: 'Ballestero Imperial', mov: 6, at: 3, def: 3, pc: 2, pm: 2, cost: 150, gear: 'Ballesta (3 DC a distancia) + espada corta.' },
-  { id: 'alabardero_m', name: 'Alabardero Veterano', mov: 6, at: 3, def: 3, pc: 2, pm: 2, cost: 170, gear: 'Alabarda (ataque diagonal y alcance).' },
-  { id: 'espadachin_m', name: 'Espadachín de Élite', mov: 5, at: 4, def: 5, pc: 2, pm: 2, cost: 200, gear: 'Espada ancha y armadura pesada.' },
-  { id: 'lobo_comp', name: 'Lobo de Combate (Domador)', mov: 10, at: 2, def: 1, pc: 3, pm: 1, cost: 350, gear: 'Compañero permanente: ataque diagonal y salta fosos.' },
+  // Mercenarios Élficos Oficiales (La Luna del Terror)
+  { id: 'elf_exploradora', name: 'Exploradora Élfica (Oficial)', mov: 9, at: 2, def: 3, pc: 2, pm: 2, cost: 50, gear: 'Habilidad del Enano para detectar y desactivar trampas.' },
+  { id: 'elf_ballestera', name: 'Ballestera Élfica (Oficial)', mov: 6, at: 3, def: 3, pc: 2, pm: 2, cost: 75, gear: 'Ballesta (3 DC a distancia) + Espada Ancha en combate adyacente.' },
+  { id: 'elf_guja', name: 'Guja Élfica (Oficial)', mov: 6, at: 3, def: 3, pc: 2, pm: 2, cost: 75, gear: 'Arma de asta: puede atacar en diagonal.' },
+  { id: 'elf_taladora', name: 'Taladora Élfica (Oficial)', mov: 5, at: 4, def: 5, pc: 2, pm: 2, cost: 100, gear: 'Guerrera pesada de primera línea (4 DC Atq, 5 DC Def).' },
+  // Mercenarios Imperiales (HQ-D20)
+  { id: 'espadachin_m', name: 'Espadachín Imperial de Élite', mov: 5, at: 4, def: 5, pc: 3, pm: 2, cost: 160, gear: 'Espada ancha y armadura pesada.' },
+  { id: 'lobo_comp', name: 'Lobo de Combate (Domador)', mov: 10, at: 2, def: 1, pc: 3, pm: 1, cost: 250, gear: 'Compañero permanente: ataque diagonal y salta fosos.' },
 ];

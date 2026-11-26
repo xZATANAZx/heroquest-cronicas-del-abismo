@@ -11,6 +11,9 @@ import {
   Users,
   Infinity as InfinityIcon,
   Tv,
+  FlaskConical,
+  Crown,
+  Zap,
 } from 'lucide-react';
 import {
   EVIL_WIZARD_DECK,
@@ -20,6 +23,13 @@ import {
   TREASURE_TRAP_DECK,
   TRAVEL_DECK,
 } from '../data/decks';
+import {
+  OFFICIAL_ARTIFACTS,
+  OFFICIAL_ALCHEMY_DECK,
+  OFFICIAL_DREAD_SPELLS,
+  OFFICIAL_ELEMENTAL_SPELLS,
+  OFFICIAL_KNIGHT_SKILLS,
+} from '../data/officialCards';
 import {
   generateProceduralEvilWizard,
   generateProceduralEvent,
@@ -48,7 +58,7 @@ export default function DecksPanel({
   setZargonCounters,
   activeMissionContext = null,
 }) {
-  const [activeTab, setActiveTab] = useState('zargon');
+  const [activeTab, setActiveTab] = useState('treasure');
 
   // Mazo del Malvado Brujo (mano máx 3)
   const [ewDeck, setEwDeck] = useState(() => shuffleArray(EVIL_WIZARD_DECK));
@@ -62,8 +72,30 @@ export default function DecksPanel({
   const [furnitureFilter, setFurnitureFilter] = useState('Todos');
   const [furnitureCard, setFurnitureCard] = useState(null);
 
-  // Mazo de Tesoros y Trampas
+  // Mazo Oficial de Tesoros y Trampas (descarta tesoros, devuelve trampas/errantes al fondo)
+  const [treasureDeck, setTreasureDeck] = useState(() => shuffleArray(TREASURE_TRAP_DECK));
   const [treasureCard, setTreasureCard] = useState(null);
+
+  // Nuevos Mazos Oficiales: Alquimia (20), Artefactos (21), Hechizos (27) + Caballero (3)
+  const [alchemyCard, setAlchemyCard] = useState(null);
+  const [artifactFilter, setArtifactFilter] = useState('Todos');
+  const [spellSubTab, setSpellSubTab] = useState('terror'); // 'terror' | 'elemental' | 'caballero'
+
+  const drawOfficialTreasure = () => {
+    let pool = treasureDeck;
+    if (pool.length === 0) {
+      pool = shuffleArray(TREASURE_TRAP_DECK);
+    }
+    const [drawn, ...rest] = pool;
+    const nextDeck = drawn.returnToDeck ? [...rest, drawn] : rest;
+    setTreasureDeck(nextDeck);
+    setTreasureCard({ ...drawn, _drawnAt: Date.now() });
+  };
+
+  const resetOfficialTreasure = () => {
+    setTreasureDeck(shuffleArray(TREASURE_TRAP_DECK));
+    setTreasureCard(null);
+  };
 
   // Viajes y Pistas
   const [travelCard, setTravelCard] = useState(null);
@@ -117,10 +149,13 @@ export default function DecksPanel({
   };
 
   const tabs = [
+    { id: 'treasure', label: `Tesoros Oficiales (${treasureDeck.length})`, icon: Gem, color: 'text-emerald-400' },
+    { id: 'alquimia', label: 'Alquimia (20)', icon: FlaskConical, color: 'text-teal-400' },
+    { id: 'artefactos', label: 'Artefactos (21)', icon: Crown, color: 'text-amber-300' },
+    { id: 'hechizos', label: 'Hechizos Oficiales', icon: Zap, color: 'text-cyan-400' },
     { id: 'zargon', label: 'Malvado Brujo', icon: Flame, color: 'text-red-400' },
-    { id: 'events', label: 'Eventos / Caos', icon: Sparkles, color: 'text-purple-400' },
     { id: 'furniture', label: 'Mobiliario', icon: Armchair, color: 'text-amber-400' },
-    { id: 'treasure', label: 'Tesoros y Trampas', icon: Gem, color: 'text-emerald-400' },
+    { id: 'events', label: 'Eventos / Caos', icon: Sparkles, color: 'text-purple-400' },
     { id: 'travel', label: 'Pistas y Viajes', icon: Compass, color: 'text-sky-400' },
   ];
 
@@ -404,35 +439,41 @@ export default function DecksPanel({
         </div>
       )}
 
-      {/* 4. MAZO DE TESOROS Y TRAMPAS */}
+      {/* 4. MAZO OFICIAL DE TESOROS, ALQUIMIA Y TRAMPAS */}
       {activeTab === 'treasure' && (
         <div className="grimoire-panel rounded-2xl p-6 space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h3 className="text-2xl font-bold text-emerald-300">Mazo de Tesoros, Alquimia y Trampas D&D</h3>
+              <h3 className="text-2xl font-bold text-emerald-300">Mazo Oficial de Tesoros (Base + Luna del Terror)</h3>
               <p className="text-sm text-stone-400">
-                1 búsqueda de tesoro por habitación por héroe (sin monstruos visibles). Las trampas permiten Tirada de Salvación d20.
+                Regla oficial: los Tesoros salen del mazo al robarse; las Trampas y Monstruos Errantes vuelven al fondo. Cartas restantes: <strong className="text-amber-300">{treasureDeck.length}/{TREASURE_TRAP_DECK.length}</strong>.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => drawRandom(TREASURE_TRAP_DECK, setTreasureCard)}
+                onClick={drawOfficialTreasure}
                 className="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-sm cursor-pointer transition"
               >
-                💎 Buscar Tesoro
+                💎 Robar Carta Oficial ({treasureDeck.length})
+              </button>
+              <button
+                onClick={resetOfficialTreasure}
+                className="px-3.5 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 border border-stone-600 text-stone-200 font-bold text-xs flex items-center gap-1 cursor-pointer"
+              >
+                <Shuffle className="w-3.5 h-3.5" /> Barajar Mazo
               </button>
               <button
                 onClick={() => setTreasureCard(generateProceduralTreasure(partyLevel))}
                 className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-black font-bold text-sm flex items-center gap-1.5 cursor-pointer transition"
               >
-                <InfinityIcon className="w-4 h-4" /> Tesoro / Reliquia Procedural
+                <InfinityIcon className="w-4 h-4" /> Reliquia Procedural
               </button>
               {treasureCard && onProjectToTV && (
                 <button
                   onClick={() =>
                     onProjectToTV({
                       kind: 'card',
-                      subtitle: `Tesoro / Trampa · ${treasureCard.kind}`,
+                      subtitle: `Tesoro Oficial · ${treasureCard.kind}`,
                       title: treasureCard.title,
                       text: treasureCard.text,
                     })
@@ -453,14 +494,237 @@ export default function DecksPanel({
                   : 'bg-emerald-950/30 border-emerald-500/60'
               }`}
             >
-              <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-black/40 text-amber-300">
-                {treasureCard.kind}
-              </span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-black/40 text-amber-300">
+                  {treasureCard.kind}
+                </span>
+                <span className="text-[11px] font-bold text-stone-300">
+                  {treasureCard.returnToDeck ? '↩️ Vuelve al fondo del mazo' : '✓ Se retira del mazo'}
+                </span>
+              </div>
               <h4 className="font-display text-2xl font-bold text-white mt-3 mb-2">{treasureCard.title}</h4>
               <p className="text-stone-200 leading-relaxed">{treasureCard.text}</p>
             </div>
           ) : (
-            <p className="text-center py-10 text-stone-500">Pulsa <strong>Buscar Tesoro</strong> para robar una carta del mazo.</p>
+            <p className="text-center py-10 text-stone-500">Pulsa <strong>Robar Carta Oficial</strong> para sacar una carta del Mazo de Tesoros.</p>
+          )}
+        </div>
+      )}
+
+      {/* 4B. MAZO OFICIAL DE ALQUIMIA (20 POCIONES · LA LUNA DEL TERROR) */}
+      {activeTab === 'alquimia' && (
+        <div className="grimoire-panel rounded-2xl p-6 space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-2xl font-bold text-teal-300">🧪 Mazo Oficial de Alquimia (20 Pociones)</h3>
+              <p className="text-sm text-stone-400">
+                Todas las pociones oficiales de La Luna del Terror, incluyendo <strong>Poción de Destino Imprevisible</strong> y <strong>Grog Ogro</strong>.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => drawRandom(OFFICIAL_ALCHEMY_DECK, setAlchemyCard)}
+                className="px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-slate-950 font-black text-sm cursor-pointer shadow"
+              >
+                🧪 Robar Poción Aleatoria
+              </button>
+              {alchemyCard && onProjectToTV && (
+                <button
+                  onClick={() =>
+                    onProjectToTV({
+                      kind: 'card',
+                      subtitle: `Alquimia Oficial · ${alchemyCard.dice}`,
+                      title: alchemyCard.name,
+                      text: `${alchemyCard.text} (Valor: ${alchemyCard.price} MO)`,
+                    })
+                  }
+                  className="px-3.5 py-2.5 rounded-xl bg-sky-700 hover:bg-sky-600 text-white font-bold text-xs flex items-center gap-1 cursor-pointer"
+                >
+                  <Tv className="w-4 h-4" /> TV
+                </button>
+              )}
+            </div>
+          </div>
+
+          {alchemyCard && (
+            <div className="p-5 rounded-2xl bg-teal-950/40 border-2 border-teal-400/70 max-w-2xl mx-auto space-y-2 shadow-xl">
+              <div className="flex items-center justify-between">
+                <span className="px-2.5 py-0.5 rounded bg-teal-500 text-slate-950 text-xs font-black">
+                  {alchemyCard.dice}
+                </span>
+                <span className="text-xs font-bold text-amber-300">💰 {alchemyCard.price} MO</span>
+              </div>
+              <h4 className="font-display text-2xl font-bold text-white">{alchemyCard.name}</h4>
+              <p className="text-sm text-teal-100 leading-relaxed">{alchemyCard.text}</p>
+              {alchemyCard.isWildcard && (
+                <button
+                  onClick={() => drawRandom(OFFICIAL_ALCHEMY_DECK.filter((p) => !p.isWildcard), setAlchemyCard)}
+                  className="mt-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer"
+                >
+                  🎲 ¡Robar Efecto Aleatorio de Destino Imprevisible!
+                </button>
+              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {OFFICIAL_ALCHEMY_DECK.map((p) => (
+              <div
+                key={p.id}
+                onClick={() => setAlchemyCard(p)}
+                className="p-3.5 rounded-xl bg-stone-950/80 border border-stone-800 hover:border-teal-500/70 cursor-pointer space-y-1 text-xs transition"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <strong className="text-teal-200 text-sm">{p.name}</strong>
+                  <span className="text-amber-300 font-bold shrink-0">{p.price} MO</span>
+                </div>
+                <div className="text-[11px] font-bold text-emerald-300">{p.dice}</div>
+                <p className="text-stone-300 leading-snug">{p.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 4C. GALERÍA DE ARTEFACTOS OFICIALES (21 CARTAS: 14 BASE + 7 LUNA DEL TERROR) */}
+      {activeTab === 'artefactos' && (
+        <div className="grimoire-panel rounded-2xl p-6 space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-2xl font-bold text-amber-300">👑 Artefactos Oficiales (21 Reliquias)</h3>
+              <p className="text-sm text-stone-400">
+                Catálogo oficial completo del Juego Base (14) y La Luna del Terror (7). Haz clic en TV para mostrar la carta a la mesa.
+              </p>
+            </div>
+            <div className="flex gap-1.5">
+              {['Todos', 'Juego Base', 'La Luna del Terror'].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setArtifactFilter(f)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border cursor-pointer ${
+                    artifactFilter === f
+                      ? 'bg-amber-500 text-slate-950 border-amber-300'
+                      : 'bg-stone-900 border-stone-700 text-stone-300'
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {OFFICIAL_ARTIFACTS.filter((a) => artifactFilter === 'Todos' || a.expansion === artifactFilter).map((a) => (
+              <div
+                key={a.id}
+                className="p-4 rounded-2xl bg-gradient-to-b from-amber-950/30 to-stone-950 border border-amber-700/45 flex flex-col justify-between gap-2 text-xs"
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-black">
+                      {a.expansion}
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-300">{a.dice}</span>
+                  </div>
+                  <h4 className="font-display text-base font-bold text-amber-100">{a.name}</h4>
+                  <p className="text-stone-300 leading-relaxed">{a.text}</p>
+                </div>
+                <div className="pt-2 border-t border-stone-800 flex items-center justify-between">
+                  <span className="text-[10px] text-stone-400">{a.type} · {a.restriction}</span>
+                  {onProjectToTV && (
+                    <button
+                      onClick={() =>
+                        onProjectToTV({
+                          kind: 'card',
+                          subtitle: `Artefacto Oficial · ${a.expansion}`,
+                          title: `${a.name} (${a.dice})`,
+                          text: a.text,
+                        })
+                      }
+                      className="px-2.5 py-1 rounded-lg bg-sky-700 hover:bg-sky-600 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer"
+                    >
+                      <Tv className="w-3 h-3" /> TV
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 4D. HECHIZOS OFICIALES (15 TERROR DE ZARGON + 12 ELEMENTALES + 3 CABALLERO) */}
+      {activeTab === 'hechizos' && (
+        <div className="grimoire-panel rounded-2xl p-6 space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-2xl font-bold text-cyan-300">⚡ Hechizos Oficiales y Caballero Guardián</h3>
+              <p className="text-sm text-stone-400">
+                Referencia rápida oficial para el DM (Hechizos del Terror de Zargon) y los jugadores (Elementales y Caballero).
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                ['terror', '💀 Hechizos del Terror (15)'],
+                ['elemental', '✨ Elementales (12)'],
+                ['caballero', '🛡️ Caballero Guardián (3)'],
+              ].map(([id, lbl]) => (
+                <button
+                  key={id}
+                  onClick={() => setSpellSubTab(id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border cursor-pointer ${
+                    spellSubTab === id
+                      ? 'bg-cyan-500 text-slate-950 border-cyan-300'
+                      : 'bg-stone-900 border-stone-700 text-stone-300'
+                  }`}
+                >
+                  {lbl}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {spellSubTab === 'terror' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {OFFICIAL_DREAD_SPELLS.map((s) => (
+                <div key={s.id} className="p-4 rounded-2xl bg-rose-950/25 border border-rose-700/45 space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <strong className="font-display text-sm text-rose-200">{s.name}</strong>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-black/50 text-amber-300 font-bold">
+                      {s.expansion}
+                    </span>
+                  </div>
+                  <p className="text-stone-200 leading-relaxed">{s.text}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {spellSubTab === 'elemental' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {OFFICIAL_ELEMENTAL_SPELLS.map((s) => (
+                <div key={s.id} className="p-4 rounded-2xl bg-sky-950/25 border border-sky-700/45 space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <strong className="font-display text-sm text-sky-200">{s.name}</strong>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-black/50 text-cyan-300 font-bold">
+                      {s.school}
+                    </span>
+                  </div>
+                  <p className="text-stone-200 leading-relaxed">{s.text}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {spellSubTab === 'caballero' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {OFFICIAL_KNIGHT_SKILLS.map((k) => (
+                <div key={k.id} className="p-4 rounded-2xl bg-amber-950/30 border border-amber-500/50 space-y-1.5 text-xs">
+                  <strong className="font-display text-base text-amber-200">🛡️ {k.name}</strong>
+                  <p className="text-stone-200 leading-relaxed">{k.text}</p>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       )}
