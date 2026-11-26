@@ -9,6 +9,11 @@ releases/
 .hq_version
 campaign_heroes.json
 
+# Scripts exclusivos del creador (no se suben a GitHub)
+SUBIR_ACTUALIZACION.bat
+EMPAQUETAR_PARA_COMPARTIR.bat
+ACTUALIZAR_HEROQUEST.bat
+
 # Archivos del sistema / editor
 .DS_Store
 Thumbs.db
