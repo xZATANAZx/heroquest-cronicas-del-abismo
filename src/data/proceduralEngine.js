@@ -789,197 +789,229 @@ function buildProceduralBoardMap({
   };
 
   // ============================================================================
-  // 1. 5 ARQUETIPOS ARQUITECTÓNICOS COHERENTES (Distintas salas de inicio y muros reales)
-  // Regla estricta:
-  //  - blocked_double (2×1) SOLO en el corredor vertical central de 2 casillas (x=12..13, y=1..5 o y=13..17)
-  //  - blocked (1×1) SOLO en pasillos de 1 casilla, canalizando rutas reales verificadas por BFS
+  // 1. 5 ARQUETIPOS BASADOS EN PASILLOS (ESTILO LIBRO OFICIAL DE HEROQUEST)
+  // Principios reales de diseño:
+  //  - La mayoría de las puertas (~70%) abren DESDE LOS PASILLOS hacia las salas
+  //    (los héroes exploran corredores, buscan trampas/puertas secretas y eligen qué puerta abrir).
+  //  - Solo 2-3 puertas conectan sala↔sala (cámaras interiores / antesalas).
+  //  - CADA muro bloqueado (blocked 1×1 / blocked_double 2×1) cierra un corte exacto
+  //    de un pasillo activo para dar dirección real al recorrido (0 muros al azar).
   // ============================================================================
   const ARCHETYPES = [
     {
-      name: 'La Espiral del Bastión',
+      name: 'Corredor Oeste y Anillo Central',
       startRoom: 'R14',
       stairsPos: { x: 2, y: 15 },
       doors: [
-        { room: 'R14', x: 2, y: 14, edge: 'N' },
-        { room: 'R14', x: 4, y: 16, edge: 'E' },
-        { room: 'R12', x: 2, y: 10, edge: 'N' },
-        { room: 'R15', x: 6, y: 13, edge: 'N' },
-        { room: 'R13', x: 6, y: 10, edge: 'N' },
-        { room: 'R4', x: 2, y: 8, edge: 'S' },
-        { room: 'R4', x: 4, y: 6, edge: 'E' },
-        { room: 'R4', x: 2, y: 4, edge: 'N' },
-        { room: 'R1', x: 4, y: 2, edge: 'E' },
-        { room: 'R2', x: 8, y: 2, edge: 'E' },
-        { room: 'R3', x: 10, y: 5, edge: 'S' },
-        { room: 'R5', x: 8, y: 6, edge: 'E' },
-        { room: 'R11', x: 12, y: 11, edge: 'S' },
-        { room: 'R11', x: 15, y: 9, edge: 'E' },
-        { room: 'R7', x: 18, y: 4, edge: 'S' },
-        { room: 'R9', x: 17, y: 7, edge: 'W' },
-        { room: 'R10', x: 22, y: 8, edge: 'S' },
-        { room: 'R18', x: 22, y: 10, edge: 'N' },
+        // Salida directa al Pasillo Exterior Oeste (x=0) y al Pasillo Sur (y=18)
+        { room: 'R14', x: 1, y: 15, edge: 'W' },  // R14 -> Pasillo Oeste (x=0)
+        // Puertas desde el Pasillo Oeste (x=0) y Pasillo Medio Oeste (y=9) hacia las salas
+        { room: 'R12', x: 1, y: 11, edge: 'W' },  // Pasillo Oeste -> R12
+        { room: 'R12', x: 3, y: 10, edge: 'N' },  // R12 -> Pasillo Medio Oeste (y=9)
+        { room: 'R13', x: 5, y: 10, edge: 'N' },  // Pasillo Medio -> R13 (2×3)
+        { room: 'R15', x: 6, y: 17, edge: 'S' },  // Pasillo Sur (y=18) -> R15
+        { room: 'R4', x: 1, y: 6, edge: 'W' },    // Pasillo Oeste -> R4
+        { room: 'R4', x: 3, y: 8, edge: 'S' },    // Pasillo Medio (y=9) -> R4
+        { room: 'R5', x: 6, y: 8, edge: 'S' },    // Pasillo Medio (y=9) -> R5
+        { room: 'R5', x: 8, y: 6, edge: 'E' },    // R5 -> Anillo Central Oeste (x=9)
+        { room: 'R1', x: 2, y: 1, edge: 'N' },    // Pasillo Norte (y=0) -> R1
+        { room: 'R2', x: 6, y: 1, edge: 'N' },    // Pasillo Norte (y=0) -> R2
+        { room: 'R3', x: 10, y: 5, edge: 'S' },   // Anillo Norte (y=6) -> R3
+        // Gran Sala Central (R11) accesible desde el Anillo Central
+        { room: 'R11', x: 10, y: 9, edge: 'W' },  // Anillo Oeste (x=9) -> R11
+        { room: 'R11', x: 12, y: 11, edge: 'S' }, // Anillo Sur (y=12) -> R11
+        // Ala Este accesible desde el Anillo Este (x=16) y Pasillo Medio Este (y=9)
+        { room: 'R9', x: 17, y: 7, edge: 'W' },   // Anillo Este -> R9
+        { room: 'R9', x: 18, y: 5, edge: 'N' },   // Conexión interna R9 -> R7 (Cámara Interior)
+        { room: 'R10', x: 22, y: 8, edge: 'S' },  // Pasillo Medio Este (y=9) -> R10
+        { room: 'R18', x: 22, y: 10, edge: 'N' }, // Pasillo Medio Este (y=9) -> R18
       ],
-      secretDoor: { x: 22, y: 13, edge: 'S', room: 'R21' },
+      secretDoor: { x: 22, y: 13, edge: 'S', room: 'R21' }, // Puerta secreta R18 -> R21
       blockedWalls: [
-        { x: 0, y: 9, type: 'blocked', note: 'Derrumbe sella pasillo exterior oeste' },
-        { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Muro derrumbado en corredor central norte (2×1)' },
-        { x: 12, y: 17, type: 'blocked_double', w: 2, h: 1, note: 'Escombros cierran corredor central sur (2×1)' },
-        { x: 25, y: 9, type: 'blocked', note: 'Derrumbe en pasillo exterior este' },
+        // Cierra el pasillo sur justo debajo de R14: obliga a subir por el Pasillo Oeste (x=0)
+        { x: 0, y: 17, type: 'blocked', note: 'Derrumbe al sur de R14: canaliza el avance hacia el Norte por el Pasillo Oeste' },
+        // Cierra el corredor central norte (2×1) para que el anillo norte sea un punto estratégico
+        { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Derrumbe en el Corredor Central Norte (2×1)' },
+        // Cierra el pasillo exterior este para que el ala este se explore desde el pasillo medio (y=9)
+        { x: 25, y: 8, type: 'blocked', note: 'Escombros cierran el pasillo exterior este' },
       ],
-      furnRooms: ['R15', 'R12', 'R5', 'R1', 'R2', 'R7', 'R10', 'R18', 'R21'],
-      combatRooms: ['R15', 'R12', 'R4', 'R5', 'R1', 'R2', 'R9', 'R10', 'R18'],
+      furnRooms: ['R12', 'R15', 'R4', 'R5', 'R1', 'R2', 'R7', 'R10', 'R18', 'R21'],
+      combatRooms: ['R12', 'R4', 'R5', 'R1', 'R2', 'R3', 'R9', 'R10', 'R18'],
       alchemyCandidates: ['R5', 'R7', 'R18', 'R21'],
       traps: [
-        { type: 'trap_spear', x: 12, y: 12, label: 'Trampa de Lanza ante el Salón del Jefe (DES CD 13)' },
-        { type: 'trap_pit', x: 9, y: 6, label: 'Foso Oculto en el Anillo Central (DES CD 13)' },
-        { type: 'trap_falling_rock', x: 16, y: 9, label: 'Bloque Cayendo en Corredor Este (DES CD 14)' },
+        { type: 'trap_pit', x: 0, y: 9, label: 'Foso en el Cruce del Pasillo Oeste (DES CD 13)' },
+        { type: 'trap_spear', x: 9, y: 9, label: 'Trampa de Lanza frente a la Puerta Oeste del Jefe (DES CD 13)' },
+        { type: 'trap_falling_rock', x: 18, y: 9, label: 'Bloque Cayendo en el Pasillo Medio Este (DES CD 14)' },
       ],
     },
     {
-      name: 'Las Catacumbas del Sur',
+      name: 'La Ruta del Corredor Sur y Este',
       startRoom: 'R14',
       stairsPos: { x: 2, y: 15 },
       doors: [
-        { room: 'R14', x: 4, y: 16, edge: 'E' },
-        { room: 'R15', x: 8, y: 15, edge: 'E' },
-        { room: 'R16', x: 11, y: 15, edge: 'E' },
-        { room: 'R19', x: 14, y: 15, edge: 'W' },
-        { room: 'R19', x: 17, y: 15, edge: 'E' },
-        { room: 'R20', x: 20, y: 15, edge: 'E' },
-        { room: 'R21', x: 22, y: 14, edge: 'N' },
-        { room: 'R18', x: 22, y: 10, edge: 'N' },
-        { room: 'R10', x: 22, y: 8, edge: 'S' },
-        { room: 'R10', x: 22, y: 5, edge: 'N' },
-        { room: 'R8', x: 21, y: 2, edge: 'W' },
-        { room: 'R7', x: 17, y: 3, edge: 'W' },
-        { room: 'R6', x: 14, y: 3, edge: 'W' },
-        { room: 'R11', x: 12, y: 7, edge: 'N' },
-        { room: 'R11', x: 12, y: 11, edge: 'S' },
+        // Salida directa al Pasillo Exterior Sur (y=18)
+        { room: 'R14', x: 2, y: 17, edge: 'S' },  // R14 -> Pasillo Sur (y=18)
+        // Puertas desde el Pasillo Sur (y=18) y Corredor Central Sur (x=12..13)
+        { room: 'R15', x: 6, y: 17, edge: 'S' },  // Pasillo Sur -> R15
+        { room: 'R16', x: 10, y: 17, edge: 'S' }, // Pasillo Sur -> R16
+        { room: 'R16', x: 11, y: 15, edge: 'E' }, // R16 -> Corredor Central Sur (x=12..13)
+        { room: 'R19', x: 14, y: 15, edge: 'W' }, // Corredor Central Sur -> R19
+        { room: 'R20', x: 19, y: 17, edge: 'S' }, // Pasillo Sur -> R20
+        { room: 'R21', x: 22, y: 17, edge: 'S' }, // Pasillo Sur -> R21
+        // Subida por el Pasillo Exterior Este (x=25) hacia el Norte
+        { room: 'R18', x: 24, y: 11, edge: 'E' }, // Pasillo Este (x=25) -> R18
+        { room: 'R17', x: 19, y: 10, edge: 'N' }, // Pasillo Medio Este (y=9) -> Sala en "L" R17
+        { room: 'R10', x: 24, y: 6, edge: 'E' },  // Pasillo Este (x=25) -> R10
+        { room: 'R10', x: 22, y: 8, edge: 'S' },  // Pasillo Medio Este (y=9) -> R10
+        { room: 'R8', x: 24, y: 2, edge: 'E' },   // Pasillo Este -> R8
+        { room: 'R7', x: 18, y: 1, edge: 'N' },   // Pasillo Norte (y=0) -> R7
+        { room: 'R6', x: 14, y: 3, edge: 'W' },   // Corredor Central Norte (x=12..13) -> R6
+        // Gran Sala Central (R11) desde el Anillo Norte y Anillo Este
+        { room: 'R11', x: 12, y: 7, edge: 'N' },  // Anillo Norte (y=6) -> R11
+        { room: 'R11', x: 15, y: 9, edge: 'E' },  // Anillo Este (x=16) -> R11
       ],
-      secretDoor: { x: 2, y: 14, edge: 'N', room: 'R12' },
+      secretDoor: { x: 2, y: 14, edge: 'N', room: 'R12' }, // Puerta secreta R14 -> R12
       blockedWalls: [
-        { x: 0, y: 9, type: 'blocked', note: 'Derrumbe sella el ala oeste' },
-        { x: 12, y: 13, type: 'blocked_double', w: 2, h: 1, note: 'Muro derrumbado bloquea el atajo directo sur al Jefe (2×1)' },
-        { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Corredor norte sellado (2×1)' },
-        { x: 25, y: 14, type: 'blocked', note: 'Pasillo exterior sureste cerrado' },
+        // Cierra el pasillo oeste arriba de R14: obliga a avanzar por el Pasillo Sur (y=18)
+        { x: 0, y: 14, type: 'blocked', note: 'Derrumbe cierra el Pasillo Oeste: obliga a tomar el Corredor Sur' },
+        // Cierra el acceso directo al norte por el corredor central sur (obliga a rodear por el Este)
+        { x: 12, y: 13, type: 'blocked_double', w: 2, h: 1, note: 'Muro derrumbado bloquea el atajo directo al Jefe (2×1)' },
+        // Cierra el pasillo norte hacia el oeste para centrar la batalla en el ala este y central
+        { x: 11, y: 0, type: 'blocked', note: 'Escombros cierran el Pasillo Norte hacia el Oeste' },
       ],
-      furnRooms: ['R15', 'R16', 'R19', 'R21', 'R18', 'R10', 'R8', 'R7'],
-      combatRooms: ['R15', 'R16', 'R19', 'R21', 'R18', 'R10', 'R8', 'R7', 'R6'],
+      furnRooms: ['R15', 'R16', 'R19', 'R21', 'R18', 'R17', 'R10', 'R8', 'R7'],
+      combatRooms: ['R15', 'R16', 'R19', 'R21', 'R18', 'R17', 'R10', 'R8', 'R7'],
       alchemyCandidates: ['R19', 'R10', 'R7', 'R18'],
       traps: [
-        { type: 'trap_pit', x: 12, y: 15, label: 'Foso en el Corredor Central Sur (DES CD 13)' },
+        { type: 'trap_pit', x: 12, y: 18, label: 'Foso en el Pasillo Exterior Sur (DES CD 13)' },
+        { type: 'trap_falling_rock', x: 25, y: 9, label: 'Bloque Cayendo en el Cruce del Pasillo Este (DES CD 14)' },
         { type: 'trap_spear', x: 12, y: 6, label: 'Trampa de Lanza ante la Puerta Norte del Jefe (DES CD 13)' },
-        { type: 'trap_falling_rock', x: 20, y: 9, label: 'Techo Inestable en Pasillo Este (DES CD 14)' },
       ],
     },
     {
-      name: 'Incursión desde el Noreste',
+      name: 'Incursión por el Pasillo Norte (Inicio Noreste)',
       startRoom: 'R8',
       stairsPos: { x: 22, y: 2 },
       doors: [
-        { room: 'R8', x: 21, y: 2, edge: 'W' },
-        { room: 'R8', x: 22, y: 4, edge: 'S' },
-        { room: 'R7', x: 17, y: 3, edge: 'W' },
-        { room: 'R6', x: 14, y: 3, edge: 'W' },
-        { room: 'R3', x: 11, y: 3, edge: 'E' },
-        { room: 'R3', x: 10, y: 5, edge: 'S' },
-        { room: 'R2', x: 8, y: 2, edge: 'E' },
-        { room: 'R10', x: 22, y: 8, edge: 'S' },
-        { room: 'R18', x: 22, y: 10, edge: 'N' },
-        { room: 'R18', x: 21, y: 11, edge: 'W' },
-        { room: 'R17', x: 17, y: 11, edge: 'W' },
-        { room: 'R11', x: 15, y: 9, edge: 'E' },
-        { room: 'R11', x: 12, y: 7, edge: 'N' },
-        { room: 'R5', x: 8, y: 6, edge: 'E' },
-        { room: 'R4', x: 4, y: 6, edge: 'E' },
+        // Salida directa al Pasillo Exterior Norte (y=0) y al Pasillo Este (x=25)
+        { room: 'R8', x: 22, y: 1, edge: 'N' },   // R8 -> Pasillo Norte (y=0)
+        { room: 'R8', x: 24, y: 3, edge: 'E' },   // R8 -> Pasillo Este (x=25)
+        // Puertas desde el Pasillo Norte (y=0) y Corredor Central Norte (x=12..13)
+        { room: 'R7', x: 18, y: 1, edge: 'N' },   // Pasillo Norte -> R7
+        { room: 'R6', x: 14, y: 3, edge: 'W' },   // Corredor Central Norte -> R6
+        { room: 'R3', x: 11, y: 3, edge: 'E' },   // Corredor Central Norte -> R3
+        { room: 'R2', x: 6, y: 1, edge: 'N' },    // Pasillo Norte -> R2
+        { room: 'R5', x: 8, y: 6, edge: 'E' },    // Anillo Oeste (x=9) -> R5
+        { room: 'R4', x: 3, y: 8, edge: 'S' },    // Pasillo Medio Oeste (y=9) -> R4
+        // Puertas desde el Pasillo Este (x=25) y Pasillo Medio Este (y=9)
+        { room: 'R10', x: 24, y: 6, edge: 'E' },  // Pasillo Este -> R10
+        { room: 'R10', x: 22, y: 8, edge: 'S' },  // Pasillo Medio Este -> R10
+        { room: 'R18', x: 22, y: 10, edge: 'N' }, // Pasillo Medio Este -> R18
+        { room: 'R17', x: 17, y: 11, edge: 'W' }, // Anillo Este (x=16) -> Sala en "L" R17
+        // Gran Sala Central (R11) desde el Anillo Norte y Anillo Este
+        { room: 'R11', x: 12, y: 7, edge: 'N' },  // Anillo Norte (y=6) -> R11
+        { room: 'R11', x: 15, y: 9, edge: 'E' },  // Anillo Este (x=16) -> R11
       ],
-      secretDoor: { x: 4, y: 2, edge: 'E', room: 'R1' },
+      secretDoor: { x: 4, y: 2, edge: 'E', room: 'R1' }, // Puerta secreta R2 -> R1 (Cripta Oculta)
       blockedWalls: [
-        { x: 12, y: 17, type: 'blocked_double', w: 2, h: 1, note: 'Ala sur derrumbada (2×1)' },
-        { x: 25, y: 14, type: 'blocked', note: 'Pasillo sureste sellado' },
-        { x: 0, y: 14, type: 'blocked', note: 'Pasillo suroeste sellado' },
-        { x: 9, y: 12, type: 'blocked', note: 'Anillo sur-oeste derrumbado' },
+        // Cierra el pasillo este hacia el sur: canaliza hacia el Pasillo Medio Este (y=9)
+        { x: 25, y: 10, type: 'blocked', note: 'Derrumbe sella el Pasillo Exterior Sureste' },
+        // Cierra el corredor central sur (2×1) para mantener la acción en las alas Norte y Central
+        { x: 12, y: 13, type: 'blocked_double', w: 2, h: 1, note: 'Corredor Central Sur derrumbado (2×1)' },
+        // Cierra el pasillo exterior oeste debajo del pasillo medio
+        { x: 0, y: 10, type: 'blocked', note: 'Escombros cierran el ala Suroeste' },
       ],
       furnRooms: ['R7', 'R10', 'R18', 'R17', 'R2', 'R5', 'R4', 'R1'],
       combatRooms: ['R7', 'R6', 'R10', 'R18', 'R17', 'R3', 'R2', 'R5', 'R4'],
       alchemyCandidates: ['R7', 'R18', 'R5', 'R1'],
       traps: [
+        { type: 'trap_pit', x: 13, y: 0, label: 'Foso en el Pasillo Exterior Norte (DES CD 13)' },
         { type: 'trap_spear', x: 16, y: 9, label: 'Trampa de Lanza ante la Puerta Este del Jefe (DES CD 13)' },
-        { type: 'trap_pit', x: 12, y: 6, label: 'Foso en el Anillo Norte Central (DES CD 13)' },
-        { type: 'trap_falling_rock', x: 20, y: 9, label: 'Bloque Cayendo en Pasillo Medio Este (DES CD 14)' },
+        { type: 'trap_falling_rock', x: 21, y: 9, label: 'Bloque Cayendo en el Pasillo Medio Este (DES CD 14)' },
       ],
     },
     {
-      name: 'Descenso desde el Sureste',
+      name: 'Descenso por el Corredor Sureste (Inicio R21)',
       startRoom: 'R21',
       stairsPos: { x: 22, y: 15 },
       doors: [
-        { room: 'R21', x: 21, y: 15, edge: 'W' },
-        { room: 'R21', x: 22, y: 14, edge: 'N' },
-        { room: 'R20', x: 18, y: 15, edge: 'W' },
-        { room: 'R19', x: 14, y: 15, edge: 'W' },
-        { room: 'R16', x: 11, y: 15, edge: 'E' },
-        { room: 'R15', x: 8, y: 15, edge: 'E' },
-        { room: 'R15', x: 6, y: 13, edge: 'N' },
-        { room: 'R13', x: 6, y: 10, edge: 'N' },
-        { room: 'R18', x: 22, y: 10, edge: 'N' },
-        { room: 'R18', x: 21, y: 11, edge: 'W' },
-        { room: 'R17', x: 17, y: 11, edge: 'W' },
-        { room: 'R11', x: 12, y: 11, edge: 'S' },
-        { room: 'R11', x: 10, y: 9, edge: 'W' },
-        { room: 'R9', x: 17, y: 7, edge: 'W' },
-        { room: 'R10', x: 22, y: 8, edge: 'S' },
+        // Salida directa al Pasillo Exterior Sur (y=18) y al Pasillo Este (x=25)
+        { room: 'R21', x: 22, y: 17, edge: 'S' }, // R21 -> Pasillo Sur (y=18)
+        { room: 'R21', x: 24, y: 15, edge: 'E' }, // R21 -> Pasillo Este (x=25)
+        // Puertas desde el Pasillo Sur (y=18) y Corredor Central Sur (x=12..13)
+        { room: 'R20', x: 19, y: 17, edge: 'S' }, // Pasillo Sur -> R20
+        { room: 'R19', x: 14, y: 15, edge: 'W' }, // Corredor Central Sur -> R19
+        { room: 'R16', x: 11, y: 15, edge: 'E' }, // Corredor Central Sur -> R16
+        { room: 'R15', x: 6, y: 17, edge: 'S' },  // Pasillo Sur -> R15
+        { room: 'R13', x: 5, y: 10, edge: 'N' },  // Pasillo Medio Oeste (y=9) -> R13
+        // Puertas desde el Pasillo Este (x=25) y Pasillo Medio Este (y=9)
+        { room: 'R18', x: 24, y: 11, edge: 'E' }, // Pasillo Este -> R18
+        { room: 'R17', x: 19, y: 10, edge: 'N' }, // Pasillo Medio Este -> Sala en "L" R17
+        { room: 'R9', x: 17, y: 7, edge: 'W' },   // Anillo Este -> R9
+        { room: 'R10', x: 22, y: 8, edge: 'S' },  // Pasillo Medio Este -> R10
+        // Gran Sala Central (R11) desde el Anillo Sur y Anillo Oeste
+        { room: 'R11', x: 12, y: 11, edge: 'S' }, // Anillo Sur (y=12) -> R11
+        { room: 'R11', x: 10, y: 9, edge: 'W' },  // Anillo Oeste (x=9) -> R11
       ],
-      secretDoor: { x: 22, y: 5, edge: 'N', room: 'R8' },
+      secretDoor: { x: 22, y: 5, edge: 'N', room: 'R8' }, // Puerta secreta R10 -> R8
       blockedWalls: [
-        { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Corredor central norte sellado (2×1)' },
-        { x: 0, y: 4, type: 'blocked', note: 'Ala noroeste derrumbada' },
-        { x: 25, y: 4, type: 'blocked', note: 'Pasillo noreste cerrado' },
-        { x: 16, y: 6, type: 'blocked', note: 'Escombros en esquina noreste del anillo' },
+        // Cierra el corredor central norte (2×1) para centrar el asalto desde el Sur/Este
+        { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Corredor Central Norte sellado (2×1)' },
+        // Cierra el pasillo este hacia el norte de R10
+        { x: 25, y: 5, type: 'blocked', note: 'Escombros cierran el extremo Noreste del pasillo' },
+        // Cierra el pasillo sur-oeste pasando R15
+        { x: 4, y: 18, type: 'blocked', note: 'Derrumbe cierra la esquina Suroeste' },
       ],
       furnRooms: ['R20', 'R19', 'R18', 'R17', 'R16', 'R15', 'R10', 'R8'],
       combatRooms: ['R20', 'R19', 'R18', 'R17', 'R16', 'R15', 'R9', 'R10'],
       alchemyCandidates: ['R19', 'R18', 'R15', 'R8'],
       traps: [
         { type: 'trap_pit', x: 12, y: 12, label: 'Foso frente a la Gran Puerta Sur (DES CD 13)' },
-        { type: 'trap_spear', x: 16, y: 11, label: 'Trampa de Lanza saliendo de la Sala en L (DES CD 13)' },
-        { type: 'trap_falling_rock', x: 9, y: 9, label: 'Bloque Cayendo en el Pasillo Oeste (DES CD 14)' },
+        { type: 'trap_spear', x: 25, y: 13, label: 'Trampa de Lanza en el Pasillo Exterior Este (DES CD 13)' },
+        { type: 'trap_falling_rock', x: 16, y: 9, label: 'Bloque Cayendo en el Cruce Este del Anillo (DES CD 14)' },
       ],
     },
     {
-      name: 'Asedio de Doble Flanco',
+      name: 'Asedio al Anillo Central (Doble Corredor)',
       startRoom: 'R14',
       stairsPos: { x: 2, y: 15 },
       doors: [
-        { room: 'R14', x: 2, y: 14, edge: 'N' },
-        { room: 'R12', x: 2, y: 10, edge: 'N' },
-        { room: 'R4', x: 2, y: 8, edge: 'S' },
-        { room: 'R4', x: 4, y: 6, edge: 'E' },
-        { room: 'R5', x: 8, y: 6, edge: 'E' },
-        { room: 'R14', x: 4, y: 16, edge: 'E' },
-        { room: 'R15', x: 8, y: 15, edge: 'E' },
-        { room: 'R16', x: 11, y: 15, edge: 'E' },
-        { room: 'R11', x: 10, y: 9, edge: 'W' },
-        { room: 'R11', x: 12, y: 11, edge: 'S' },
-        { room: 'R11', x: 15, y: 9, edge: 'E' },
-        { room: 'R17', x: 17, y: 11, edge: 'W' },
-        { room: 'R17', x: 20, y: 11, edge: 'E' },
-        { room: 'R9', x: 17, y: 7, edge: 'W' },
-        { room: 'R9', x: 18, y: 5, edge: 'N' },
+        // Doble salida a pasillos: Oeste (x=0) y Sur (y=18)
+        { room: 'R14', x: 1, y: 15, edge: 'W' },  // R14 -> Pasillo Oeste (x=0)
+        { room: 'R14', x: 2, y: 17, edge: 'S' },  // R14 -> Pasillo Sur (y=18)
+        // Flanco Norte por Pasillo Oeste (x=0) y Pasillo Medio Oeste (y=9)
+        { room: 'R12', x: 1, y: 11, edge: 'W' },  // Pasillo Oeste -> R12
+        { room: 'R4', x: 2, y: 8, edge: 'S' },    // Pasillo Medio (y=9) -> R4
+        { room: 'R5', x: 6, y: 8, edge: 'S' },    // Pasillo Medio (y=9) -> R5
+        // Flanco Sur por Pasillo Sur (y=18) y Corredor Central Sur (x=12..13)
+        { room: 'R15', x: 6, y: 17, edge: 'S' },  // Pasillo Sur -> R15
+        { room: 'R16', x: 11, y: 15, edge: 'E' }, // Corredor Central Sur -> R16
+        // Gran Sala Central (R11) con 3 accesos al Anillo Central
+        { room: 'R11', x: 10, y: 9, edge: 'W' },  // Anillo Oeste -> R11
+        { room: 'R11', x: 12, y: 11, edge: 'S' }, // Anillo Sur -> R11
+        { room: 'R11', x: 15, y: 9, edge: 'E' },  // Anillo Este -> R11
+        // Ala Este desde Anillo Este (x=16) y Pasillo Medio Este (y=9)
+        { room: 'R17', x: 17, y: 11, edge: 'W' }, // Anillo Este -> Sala en "L" R17
+        { room: 'R18', x: 22, y: 10, edge: 'N' }, // Pasillo Medio Este -> R18
+        { room: 'R9', x: 17, y: 7, edge: 'W' },   // Anillo Este -> R9
+        { room: 'R7', x: 18, y: 4, edge: 'S' },   // Conexión interna R9 -> R7
       ],
-      secretDoor: { x: 22, y: 13, edge: 'S', room: 'R21' },
+      secretDoor: { x: 22, y: 13, edge: 'S', room: 'R21' }, // Puerta secreta R18 -> R21
       blockedWalls: [
-        { x: 0, y: 4, type: 'blocked', note: 'Derrumbe en ala noroeste' },
-        { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Corredor central norte sellado (2×1)' },
-        { x: 25, y: 9, type: 'blocked', note: 'Derrumbe en pasillo exterior este' },
+        // Cierra el pasillo oeste arriba de R4: canaliza el flanco norte por el Pasillo Medio (y=9)
+        { x: 0, y: 8, type: 'blocked', note: 'Derrumbe en el Pasillo Oeste: dirige el flanco norte hacia el centro' },
+        // Cierra el corredor central norte (2×1)
+        { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Corredor Central Norte derrumbado (2×1)' },
+        // Cierra el pasillo sur pasando el corredor central: canaliza el flanco sur hacia el Jefe
+        { x: 14, y: 18, type: 'blocked', note: 'Escombros cierran el Pasillo Sur hacia el Este' },
       ],
       furnRooms: ['R12', 'R4', 'R5', 'R15', 'R16', 'R7', 'R17', 'R18', 'R21'],
       combatRooms: ['R12', 'R4', 'R5', 'R15', 'R16', 'R9', 'R7', 'R17', 'R18'],
       alchemyCandidates: ['R5', 'R7', 'R18', 'R21'],
       traps: [
-        { type: 'trap_pit', x: 9, y: 9, label: 'Foso frente a la Puerta Oeste del Jefe (DES CD 13)' },
-        { type: 'trap_spear', x: 12, y: 12, label: 'Trampa de Lanza en el Acceso Sur (DES CD 13)' },
-        { type: 'trap_falling_rock', x: 16, y: 11, label: 'Bloque Cayendo hacia la Sala en L (DES CD 14)' },
+        { type: 'trap_pit', x: 5, y: 9, label: 'Foso en el Pasillo Medio Oeste (DES CD 13)' },
+        { type: 'trap_spear', x: 12, y: 12, label: 'Trampa de Lanza en el Acceso Sur al Jefe (DES CD 13)' },
+        { type: 'trap_falling_rock', x: 16, y: 9, label: 'Bloque Cayendo en el Anillo Este (DES CD 14)' },
       ],
     },
   ];
