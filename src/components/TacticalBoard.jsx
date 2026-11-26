@@ -1071,6 +1071,7 @@ export default function TacticalBoard({
   const [triggeredQuirks, setTriggeredQuirks] = useState({});
   const [monsterDreadSpells, setMonsterDreadSpells] = useState({});
   const [lootedBodies, setLootedBodies] = useState(() => new Set());
+  const [bodyLootResults, setBodyLootResults] = useState({});
   const roomQuirkAlerts = useMemo(
     () => evaluateRoomQuirks(heroes, roomItems, roomMonstersScaled, selectedRoomId === 'CORRIDOR'),
     [heroes, roomItems, roomMonstersScaled, selectedRoomId]
@@ -1872,6 +1873,9 @@ export default function TacticalBoard({
                   {selectedMonsterObj.scaled.activeAbilities.map((ab, abIdx) => (
                     <div key={abIdx} className="leading-snug">• {ab}</div>
                   ))}
+                  <div className="mt-1.5 pt-1.5 border-t border-amber-900/40 text-[10px] text-purple-200 leading-snug">
+                    <strong className="text-purple-300">🎲 Salvación (CD {selectedMonsterObj.scaled.saveDC}):</strong> Si una habilidad de este monstruo pide salvación, el héroe tira <strong>1d20 + Mod</strong> vs <strong>CD {selectedMonsterObj.scaled.saveDC}</strong>. Si un héroe lanza un hechizo/control contra este monstruo, el monstruo intenta resistir tirando <strong>1d20 + {Math.max(0, Math.floor((selectedMonsterObj.scaled.pm || 1) / 2))}</strong> (o sacando 6 con {Math.max(1, selectedMonsterObj.scaled.pm || 1)} dado{selectedMonsterObj.scaled.pm > 1 ? 's' : ''} rojo{selectedMonsterObj.scaled.pm > 1 ? 's' : ''}).
+                  </div>
                 </div>
               )}
 
@@ -2033,17 +2037,23 @@ export default function TacticalBoard({
                 )}
               </div>
 
-              {/* Revisar Cuerpo del Monstruo Abatido (Probabilidad por Rareza + Bonos del Héroe que Revisa) */}
+              {/* Revisar Cuerpo del Monstruo Abatido (Resultado inline aquí mismo + Entrega Automática al Héroe) */}
               {selectedMonsterObj.currentPC <= 0 && (() => {
                 const alreadyLooted = lootedBodies.has(selectedMonsterObj.key);
+                const lootRes = bodyLootResults[selectedMonsterObj.key] || null;
                 return (
                   <div className="p-2.5 rounded-xl bg-emerald-950/35 border border-emerald-600/60 space-y-2 text-xs">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-bold text-emerald-300">
                         🔍 Revisar Cuerpo {alreadyLooted ? '(Ya revisado ✓)' : ''}
                       </span>
+                      {lootRes?.badge && (
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-900/80 text-emerald-200">
+                          {lootRes.badge}
+                        </span>
+                      )}
                     </div>
-                    {!alreadyLooted && (
+                    {!alreadyLooted ? (
                       <div className="flex flex-wrap items-center gap-1.5">
                         {heroes.length > 0 && (
                           <select
@@ -2074,7 +2084,6 @@ export default function TacticalBoard({
                               next.add(selectedMonsterObj.key);
                               return next;
                             });
-                            // Entregar automáticamente al héroe seleccionado que revisó el cuerpo
                             let deliveredTo = '';
                             if (searcher && !res.isEmpty) {
                               if ((res.rewardLoot || res.rewardGold > 0) && onSendLootToHero) {
@@ -2085,20 +2094,22 @@ export default function TacticalBoard({
                               }
                               deliveredTo = searcher.name;
                             }
-                            setRoomDiscovery({
-                              isBodyLoot: true,
-                              alreadyDeliveredTo: deliveredTo,
-                              source: searcher ? `Cuerpo (${searcher.name})` : 'Revisión de Cuerpo',
-                              title: res.title,
-                              badge: res.rarityLabel,
-                              text: res.text,
-                              rewardLoot: deliveredTo ? null : res.rewardLoot,
-                              rewardGold: deliveredTo ? 0 : res.rewardGold,
-                              materialId: res.materialId,
-                              materialQty: res.materialQty,
-                              heroBonusNotes: res.heroBonusNotes,
-                            });
-                            setRightPanelTab('tools');
+                            const matSummary =
+                              res.materialId && res.materialQty > 0
+                                ? `${res.materialQty}× ${getMaterialById(res.materialId).icon} ${getMaterialById(res.materialId).name}`
+                                : '';
+                            setBodyLootResults((prev) => ({
+                              ...prev,
+                              [selectedMonsterObj.key]: {
+                                title: res.title,
+                                text: res.text,
+                                badge: res.rarityLabel,
+                                deliveredTo,
+                                heroBonusNotes: res.heroBonusNotes || [],
+                                matSummary,
+                                isEmpty: res.isEmpty,
+                              },
+                            }));
                             showToast?.(
                               res.isEmpty
                                 ? `🔍 ${selectedMonsterObj.scaled.name}: no llevaba nada útil.`
@@ -2112,7 +2123,27 @@ export default function TacticalBoard({
                           🔍 Revisar y Entregar
                         </button>
                       </div>
-                    )}
+                    ) : lootRes ? (
+                      <div className="p-2 rounded-lg bg-black/40 border border-emerald-800/60 space-y-1 text-[11px]">
+                        <div className="font-bold text-amber-200">{lootRes.title}</div>
+                        <p className="text-stone-200 leading-snug">{lootRes.text}</p>
+                        {lootRes.matSummary && (
+                          <div className="text-emerald-300 font-bold">🎒 Material: {lootRes.matSummary}</div>
+                        )}
+                        {lootRes.heroBonusNotes?.length > 0 && (
+                          <div className="text-purple-200">
+                            {lootRes.heroBonusNotes.map((bn, i) => (
+                              <div key={i}>✨ {bn}</div>
+                            ))}
+                          </div>
+                        )}
+                        {lootRes.deliveredTo && (
+                          <div className="text-emerald-300 font-bold">
+                            ✅ Enviado automáticamente a {lootRes.deliveredTo}.
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
                   </div>
                 );
               })()}
@@ -2248,7 +2279,7 @@ export default function TacticalBoard({
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                🧰 Herramientas
+                🎲 Eventos
               </button>
               <button
                 onClick={() => setRightTab('notes')}
@@ -2830,64 +2861,80 @@ export default function TacticalBoard({
               );
             })()}
 
-            {/* ==================== SUB-TAB 2: HERRAMIENTAS LIBRES DEL DM ==================== */}
+            {/* ==================== SUB-TAB 2: EVENTOS Y ACCIONES DEL DM ==================== */}
             {rightTab === 'actions' && (
               <div className="space-y-3">
                 <p className="text-[11px] text-slate-400">
-                  Herramientas libres para improvisar en cualquier momento (los triggers específicos de cada sala ya están integrados en <strong>📍 Sala</strong>).
+                  Dispara eventos, tesoros, giros o puzzles en el momento adecuado de la partida:
                 </p>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={searchRoomTreasure}
-                    className="py-2.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow"
-                  >
-                    <Gem className="w-4 h-4" /> Buscar Tesoro
-                  </button>
-                  <button
-                    onClick={() => triggerContextualRoomEvent('room')}
-                    className="py-2.5 px-3 rounded-xl bg-purple-700 hover:bg-purple-600 text-white text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow"
-                  >
-                    <Sparkles className="w-4 h-4" /> Evento Sala
-                  </button>
-                  <button
-                    onClick={() => triggerContextualRoomEvent('corridor')}
-                    className="py-2.5 px-3 rounded-xl bg-stone-800 hover:bg-stone-700 border border-stone-600 text-amber-200 text-xs font-black cursor-pointer"
-                  >
-                    🕯️ Evento Pasillo
-                  </button>
-                  <button
-                    onClick={triggerEpicSceneTwist}
-                    className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 text-white text-xs font-black cursor-pointer shadow"
-                  >
-                    🔥 Giro Épico
-                  </button>
-                  <button
-                    onClick={() => setQuickSendOpen((v) => !v)}
-                    className={`py-2.5 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer border ${
-                      quickSendOpen
+                <div className="space-y-2">
+                  {[
+                    {
+                      label: '💎 Buscar Tesoro',
+                      when: 'Cuándo: un héroe gasta su acción en Buscar Tesoro (sin enemigos visibles).',
+                      does: 'Tira probabilidad de oro, material, equipo o trampa (aplica bonos del héroe).',
+                      cls: 'bg-emerald-950/60 hover:bg-emerald-900/70 border-emerald-600/60 text-emerald-200',
+                      onClick: searchRoomTreasure,
+                    },
+                    {
+                      label: '✨ Evento de Sala',
+                      when: 'Cuándo: al entrar a una sala clave o cuando el Reloj del Caos llega a 10.',
+                      does: 'Saca un suceso contextual coherente con la misión oficial o bioma actual.',
+                      cls: 'bg-purple-950/60 hover:bg-purple-900/70 border-purple-600/60 text-purple-200',
+                      onClick: () => triggerContextualRoomEvent('room'),
+                    },
+                    {
+                      label: '🕯️ Evento de Pasillo',
+                      when: 'Cuándo: al cruzar un pasillo largo o tras 2 turnos tranquilos sin combate.',
+                      does: 'Genera patrullas, rastros, trampas ligeras o tensión ambiental de corredor.',
+                      cls: 'bg-stone-900/90 hover:bg-stone-800 border-stone-600 text-amber-200',
+                      onClick: () => triggerContextualRoomEvent('corridor'),
+                    },
+                    {
+                      label: '🔥 Giro Épico',
+                      when: 'Cuándo: 1–2 veces por misión en salas importantes o contra el Jefe.',
+                      does: 'Añade puertas con puzzle, cofres mímicos, NPCs o terreno interactivo sin alterar el mapa oficial.',
+                      cls: 'bg-gradient-to-r from-amber-950/80 to-rose-950/80 hover:from-amber-900 hover:to-rose-900 border-amber-500/70 text-amber-100',
+                      onClick: triggerEpicSceneTwist,
+                    },
+                    {
+                      label: '🎁 Dar Botín Manual',
+                      when: 'Cuándo: recompensa especial del libro de misiones o hallazgo narrativo.',
+                      does: 'Abre el selector para enviar oro o equipo directo al celular de un héroe.',
+                      cls: quickSendOpen
                         ? 'bg-amber-500 text-black border-amber-300'
-                        : 'bg-amber-950/60 hover:bg-amber-900/70 text-amber-200 border-amber-700/70'
-                    }`}
-                  >
-                    <Gift className="w-4 h-4" /> Dar Botín
-                  </button>
-                  <button
-                    onClick={spawnNpcQuestInRoom}
-                    className="py-2.5 px-3 rounded-xl bg-sky-800 hover:bg-sky-700 text-white text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow"
-                  >
-                    🧙 Invocar NPC
-                  </button>
-                  <button
-                    onClick={() => setPuzzleOpen((v) => !v)}
-                    className={`py-2.5 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer border ${
-                      puzzleOpen
+                        : 'bg-amber-950/50 hover:bg-amber-900/60 border-amber-700/70 text-amber-200',
+                      onClick: () => setQuickSendOpen((v) => !v),
+                    },
+                    {
+                      label: '🧙 Invocar NPC en Sala',
+                      when: 'Cuándo: quieres añadir un encuentro narrativo o rescate improvisado.',
+                      does: 'Coloca un NPC en la sala actual con mini-misión (+1 Ficha de Reputación).',
+                      cls: 'bg-sky-950/60 hover:bg-sky-900/70 border-sky-600/60 text-sky-200',
+                      onClick: spawnNpcQuestInRoom,
+                    },
+                    {
+                      label: '🧩 Puzzle al Celular',
+                      when: 'Cuándo: puerta sellada por runas, cofre con candado o mecanismo antiguo.',
+                      does: 'Envía un minijuego interactivo en vivo al celular del héroe elegido.',
+                      cls: puzzleOpen
                         ? 'bg-fuchsia-500 text-black border-fuchsia-300'
-                        : 'bg-fuchsia-950/60 hover:bg-fuchsia-900/70 text-fuchsia-200 border-fuchsia-700/70'
-                    }`}
-                  >
-                    🧩 Puzzle Celular
-                  </button>
+                        : 'bg-fuchsia-950/50 hover:bg-fuchsia-900/60 border-fuchsia-600/60 text-fuchsia-200',
+                      onClick: () => setPuzzleOpen((v) => !v),
+                    },
+                  ].map((btn) => (
+                    <button
+                      key={btn.label}
+                      type="button"
+                      onClick={btn.onClick}
+                      className={`w-full p-2.5 rounded-xl border text-left transition cursor-pointer space-y-0.5 ${btn.cls}`}
+                    >
+                      <div className="font-black text-xs">{btn.label}</div>
+                      <div className="text-[10px] opacity-90 leading-snug">{btn.when}</div>
+                      <div className="text-[10px] opacity-75 leading-snug">{btn.does}</div>
+                    </button>
+                  ))}
                 </div>
 
                 {puzzleSentToast && (
