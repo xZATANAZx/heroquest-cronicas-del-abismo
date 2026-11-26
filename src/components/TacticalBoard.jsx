@@ -1443,6 +1443,23 @@ export default function TacticalBoard({
               );
             })}
 
+            {/* Celdas Oscurecidas Oficiales (<dark> del Libro de Misiones — cubre salas y pasillos cerrados) */}
+            {(currentMap.darkCells || []).map((cellKey) => {
+              const [dx, dy] = cellKey.split(',').map(Number);
+              if (Number.isNaN(dx) || Number.isNaN(dy)) return null;
+              return (
+                <rect
+                  key={`dk-${cellKey}`}
+                  x={MARGIN_LEFT + dx * CELL}
+                  y={MARGIN_TOP + dy * CELL}
+                  width={CELL}
+                  height={CELL}
+                  fill="rgba(42, 34, 28, 0.52)"
+                  pointerEvents="none"
+                />
+              );
+            })}
+
             {/* Cuadrícula fina estilo Libro de Misiones Moderno 2021 (26×19) */}
             {Array.from({ length: BOARD_COLS + 1 }, (_, x) => (
               <line

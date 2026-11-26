@@ -768,6 +768,7 @@ function buildProceduralBoardMap({
     campaign: `Procedural · ${biome.name}`,
     recLevel: partyLevel,
     startRoom,
+    darkCells: bp.darkCells || [],
     isProcedural: true,
     biomeId: biome.id,
     biomeRule: biome.globalRule,
