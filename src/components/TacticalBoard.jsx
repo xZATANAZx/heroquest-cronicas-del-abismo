@@ -75,6 +75,12 @@ const TRAP_RULES = {
     disarm: 'Desarmar Trampas CD 13 (Enano/Pícaro tienen Ventaja).',
     effect: 'Si se activa, dispara una lanza o aguja: Salvación DES CD 13 o recibe 1 PC (si es aguja envenenada, queda Envenenado -1 DC Ataque).',
   },
+  trap_falling_rock: {
+    name: 'Trampa de Bloque Cayendo',
+    detect: 'Percepción CD 13 (grietas en el techo al buscar trampas).',
+    disarm: 'Desarmar Trampas CD 13 (Enano/Ingeniero tienen Ventaja).',
+    effect: 'Cae un bloque de piedra: Salvación DES CD 13 o sufre 2 PC (1 PC si supera) y la casilla queda bloqueada como Muro.',
+  },
 };
 
 // Detecta si un evento/tesoro/mueble menciona un monstruo o trampa para poder invocarlo en el tablero con 1 clic
@@ -717,32 +723,95 @@ export default function TacticalBoard({
     });
   };
 
-  // Encuentra una casilla libre dentro de la sala actual (o pasillo) para invocar un monstruo o trampa
-  const findFreeCellInRoom = (roomId) => {
+  // Encuentra una casilla inteligente dentro de la sala actual (o pasillo) según el tipo de pieza
+  // - monster (Errante): junto a una puerta o acceso libre, separado de otros enemigos
+  // - trap: en casilla estratégica frente a puerta, cofre o centro de paso
+  // - npc: en casilla libre apartada de enemigos y puertas
+  const findFreeCellInRoom = (roomId, kind = 'monster') => {
     const occupied = new Set();
+    const roomDoors = [];
+    const roomChests = [];
+    const roomAllies = [];
+
     allMapItems.forEach((it) => {
-      if (it.type === 'door' || it.type === 'secret_door') return;
-      const w = it.w || 1;
-      const h = it.h || 1;
+      if (it.type === 'door' || it.type === 'secret_door') {
+        const ox = it.edge === 'W' ? it.x - 1 : it.edge === 'E' ? it.x + 1 : it.x;
+        const oy = it.edge === 'N' ? it.y - 1 : it.edge === 'S' ? it.y + 1 : it.y;
+        if (getRoomAt(it.x, it.y) === roomId) roomDoors.push({ x: it.x, y: it.y });
+        if (getRoomAt(ox, oy) === roomId) roomDoors.push({ x: ox, y: oy });
+        return;
+      }
+      const info = PIECE_TYPES[it.type];
+      const w = it.w || info?.defaultW || 1;
+      const h = it.h || info?.defaultH || 1;
       for (let yy = it.y; yy < it.y + h; yy++) {
         for (let xx = it.x; xx < it.x + w; xx++) {
           occupied.add(`${xx},${yy}`);
         }
       }
+      if (getRoomAt(it.x, it.y) === roomId) {
+        if (it.type === 'chest') roomChests.push({ x: it.x, y: it.y });
+        if (info?.monsterId) roomAllies.push({ x: it.x, y: it.y });
+      }
     });
 
     const rObj = getRoomObj(roomId);
     if (rObj) {
-      for (let y = rObj.y1; y <= rObj.y2; y++) {
-        for (let x = rObj.x1; x <= rObj.x2; x++) {
-          if (!occupied.has(`${x},${y}`)) return { x, y };
+      const cells = getRoomCells(rObj).filter((c) => !occupied.has(`${c.x},${c.y}`));
+      if (cells.length === 0) return { x: rObj.x1, y: rObj.y1 };
+
+      const cx = (rObj.x1 + rObj.x2) / 2;
+      const cy = (rObj.y1 + rObj.y2) / 2;
+
+      let best = cells[0];
+      let bestScore = -999;
+      for (const c of cells) {
+        const doorDist =
+          roomDoors.length > 0
+            ? Math.min(...roomDoors.map((d) => Math.hypot(c.x - d.x, c.y - d.y)))
+            : 2;
+        const allyDist =
+          roomAllies.length > 0
+            ? Math.min(...roomAllies.map((a) => Math.hypot(c.x - a.x, c.y - a.y)))
+            : 2.5;
+        const chestDist =
+          roomChests.length > 0
+            ? Math.min(...roomChests.map((ch) => Math.hypot(c.x - ch.x, c.y - ch.y)))
+            : 4;
+        const centerDist = Math.hypot(c.x - cx, c.y - cy);
+
+        let score = 0;
+        if (kind === 'monster') {
+          // Monstruo Errante: entra cerca de una puerta (distancia 1-2) y separado de aliados
+          score = (3 - Math.abs(doorDist - 1.2)) * 2.2 + Math.min(allyDist, 3) * 1.6 - centerDist * 0.2;
+        } else if (kind === 'trap') {
+          // Trampa: protege un cofre (distancia 1), una puerta (distancia 1) o el centro de paso
+          const nearChest = chestDist <= 1.5 ? 4 : 0;
+          const nearDoor = doorDist <= 1.5 ? 3 : 0;
+          score = nearChest + nearDoor - centerDist * 0.5;
+        } else {
+          // NPC: protegido lejos de puertas y monstruos
+          score = doorDist * 1.3 + Math.min(allyDist, 3) * 1.2;
+        }
+        if (score > bestScore) {
+          bestScore = score;
+          best = c;
         }
       }
-      return { x: rObj.x1, y: rObj.y1 };
+      return best;
     }
-    // Pasillo: buscar una casilla libre de pasillo cerca del centro
-    for (let y = 9; y <= 18; y++) {
-      for (let x = 1; x <= 24; x++) {
+
+    // Pasillo: buscar una casilla libre adyacente a una puerta activa del corredor
+    const corridorDoors = allMapItems.filter((it) => it.type === 'door' || it.type === 'secret_door');
+    for (const d of corridorDoors) {
+      const ox = d.edge === 'W' ? d.x - 1 : d.edge === 'E' ? d.x + 1 : d.x;
+      const oy = d.edge === 'N' ? d.y - 1 : d.edge === 'S' ? d.y + 1 : d.y;
+      if (getRoomAt(ox, oy) === 'CORRIDOR' && !occupied.has(`${ox},${oy}`)) {
+        return { x: ox, y: oy };
+      }
+    }
+    for (let y = 6; y <= 14; y++) {
+      for (let x = 8; x <= 18; x++) {
         if (getRoomAt(x, y) === 'CORRIDOR' && !occupied.has(`${x},${y}`)) {
           return { x, y };
         }
@@ -752,7 +821,13 @@ export default function TacticalBoard({
   };
 
   const spawnDynamicPiece = (pieceType, customNote, customTrapDesc = '') => {
-    const pos = findFreeCellInRoom(selectedRoomId);
+    const kind =
+      PIECE_TYPES[pieceType]?.monsterId
+        ? 'monster'
+        : pieceType === 'npc'
+        ? 'npc'
+        : 'trap';
+    const pos = findFreeCellInRoom(selectedRoomId, kind);
     const dynId = Date.now().toString(36);
     const newItem = {
       x: pos.x,
@@ -766,7 +841,7 @@ export default function TacticalBoard({
     if (PIECE_TYPES[pieceType]?.monsterId) {
       setSelectedTrapKey(null);
       setSelectedMonsterKey(getMonsterKey(newItem));
-    } else if (pieceType === 'trap_pit' || pieceType === 'trap_spear') {
+    } else if (pieceType === 'trap_pit' || pieceType === 'trap_spear' || pieceType === 'trap_falling_rock') {
       setSelectedMonsterKey(null);
       setSelectedTrapKey(getTrapKey(newItem));
     }
@@ -900,7 +975,9 @@ export default function TacticalBoard({
   const selectedTrapObj = useMemo(() => {
     if (!selectedTrapKey) return null;
     const foundItem = allMapItems.find(
-      (it) => (it.type === 'trap_pit' || it.type === 'trap_spear') && getTrapKey(it) === selectedTrapKey
+      (it) =>
+        (it.type === 'trap_pit' || it.type === 'trap_spear' || it.type === 'trap_falling_rock') &&
+        getTrapKey(it) === selectedTrapKey
     );
     if (!foundItem) return null;
     const rules = TRAP_RULES[foundItem.type] || TRAP_RULES.trap_spear;
@@ -1212,9 +1289,9 @@ export default function TacticalBoard({
         </div>
       </div>
 
-      {/* Cuerpo Principal: Plano Pergamino SVG + Guía de Montaje por Sala */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
-        {/* PLANO PERGAMINO ESTILO LIBRO DE MISIONES OFICIAL */}
+      {/* Cuerpo Principal: Plano Pergamino SVG + Guía de Montaje por Sala (items-start evita espacio vacío debajo del tablero) */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+        {/* PLANO PERGAMINO ESTILO LIBRO DE MISIONES MODERNO 2021 */}
         <div className="xl:col-span-8 parchment-sheet rounded-2xl p-3 sm:p-4 overflow-x-auto shadow-2xl">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-2 px-1">
             <div className="flex items-center gap-2">

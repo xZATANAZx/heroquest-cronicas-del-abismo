@@ -2,10 +2,15 @@ import React from 'react';
 
 // ============================================================================
 // ICONOS OFICIALES DE TABLERO HEROQUEST (Paquete Open-Source HeroScribe GPL-2.0)
-// Dimensiones exactas 2021: 3×2, 3×1, 2×2, 2×1, 1×1 con auto-rotación 90°
+// Orientaciones reales verificadas en píxeles:
+//   - tomb.png (56×91) y torture_rack.png (64×94) son NATIVAMENTE VERTICALES (2×3)
+//   - El resto de muebles 3×2 y 3×1 son NATIVAMENTE HORIZONTALES
+//   - door.png (41×18) y secret_door.png (27×19) son HORIZONTALES sobre el muro
 // ============================================================================
 
 const INK = '#3b1616';
+
+const NATIVE_VERTICAL = new Set(['tomb', 'torture_rack']);
 
 const FURNITURE_ICONS = {
   table: '/hq-icons/table.png',
@@ -50,57 +55,63 @@ export function getPieceIconSrc(type) {
   return FURNITURE_ICONS[type] || MONSTER_ICONS[type] || STRUCTURE_AND_TRAP_ICONS[type] || null;
 }
 
-// Si un mueble está rotado verticalmente (h > w), rota el icono 90° alrededor de su centro
-function RotatedGroup({ px, py, w, h, children }) {
-  const isVertical = h > w;
-  if (!isVertical) {
-    return <g transform={`translate(${px}, ${py})`}>{children(w, h)}</g>;
+// Rota 90° SOLO cuando la orientación del PNG nativo no coincide con la orientación (w vs h) en el tablero
+function SmartOrientedImage({ type, src, px, py, w, h, pad = 1 }) {
+  const isNativeVert = NATIVE_VERTICAL.has(type);
+  const isTargetVert = h > w;
+  const isSquare = Math.abs(w - h) < 2;
+  const needsRotate = !isSquare && isNativeVert !== isTargetVert;
+
+  if (!needsRotate) {
+    return (
+      <image
+        href={src}
+        x={px + pad}
+        y={py + pad}
+        width={w - pad * 2}
+        height={h - pad * 2}
+        preserveAspectRatio="xMidYMid meet"
+      />
+    );
   }
+
   const cx = px + w / 2;
   const cy = py + h / 2;
   return (
-    <g transform={`translate(${cx}, ${cy}) rotate(90) translate(${-h / 2}, ${-w / 2})`}>
-      {children(h, w)}
+    <g transform={`translate(${cx}, ${cy}) rotate(90)`}>
+      <image
+        href={src}
+        x={-(h / 2) + pad}
+        y={-(w / 2) + pad}
+        width={h - pad * 2}
+        height={w - pad * 2}
+        preserveAspectRatio="xMidYMid meet"
+      />
     </g>
   );
 }
 
 // ============================================================================
-// 1. MUEBLES OFICIALES (11 piezas HeroScribe exactas)
+// 1. MUEBLES OFICIALES (11 piezas HeroScribe con orientación y escala exactas)
 // ============================================================================
 export function FurnitureSVG({ type, px, py, w, h }) {
   const src = FURNITURE_ICONS[type] || FURNITURE_ICONS.table;
-  return (
-    <RotatedGroup px={px} py={py} w={w} h={h}>
-      {(rw, rh) => (
-        <g>
-          <image
-            href={src}
-            x={1}
-            y={1}
-            width={rw - 2}
-            height={rh - 2}
-            preserveAspectRatio="xMidYMid meet"
-          />
-        </g>
-      )}
-    </RotatedGroup>
-  );
+  return <SmartOrientedImage type={type} src={src} px={px} py={py} w={w} h={h} pad={1.5} />;
 }
 
 // ============================================================================
-// 2. ESTRUCTURAS OFICIALES (Escaleras, Puertas, Muros Bloqueados)
+// 2. ESTRUCTURAS OFICIALES (Escaleras, Puertas, Puertas Secretas, Muros Bloqueados)
 // ============================================================================
 export function StairsSVG({ px, py, w, h }) {
   return (
     <g>
       <image
         href="/hq-icons/stairs.png"
-        x={px + 1}
-        y={py + 1}
-        width={w - 2}
-        height={h - 2}
-        preserveAspectRatio="xMidYMid meet"
+        x={px + 0.5}
+        y={py + 0.5}
+        width={w - 1}
+        height={h - 1}
+        preserveAspectRatio="xMidYMid slice"
       />
     </g>
   );
@@ -110,34 +121,32 @@ export function DoorSVG({ type, px, py, cell, edge = 'N' }) {
   const isSecret = type === 'secret_door';
   const src = isSecret ? '/hq-icons/secret_door.png' : '/hq-icons/door.png';
   const isHorizontal = edge === 'N' || edge === 'S';
-  const dw = isHorizontal ? cell : cell * 0.42;
-  const dh = isHorizontal ? cell * 0.42 : cell;
   const cx = edge === 'W' ? px : edge === 'E' ? px + cell : px + cell / 2;
   const cy = edge === 'N' ? py : edge === 'S' ? py + cell : py + cell / 2;
-
-  if (isSecret) {
-    return (
-      <g>
-        <image
-          href={src}
-          x={px + 2}
-          y={py + 2}
-          width={cell - 4}
-          height={cell - 4}
-          preserveAspectRatio="xMidYMid meet"
-        />
-      </g>
-    );
-  }
+  const imgW = isSecret ? cell * 0.9 : cell * 1.05;
+  const imgH = isSecret ? cell * 0.62 : cell * 0.48;
 
   return (
     <g transform={`translate(${cx}, ${cy}) ${isHorizontal ? '' : 'rotate(90)'}`}>
+      {isSecret && (
+        <rect
+          x={-imgW / 2 - 1}
+          y={-imgH / 2 - 1}
+          width={imgW + 2}
+          height={imgH + 2}
+          rx="2.5"
+          fill="rgba(126, 34, 206, 0.22)"
+          stroke="#7e22ce"
+          strokeWidth="1.2"
+          strokeDasharray="2,1.5"
+        />
+      )}
       <image
         href={src}
-        x={-cell / 2}
-        y={-(cell * 0.24)}
-        width={cell}
-        height={cell * 0.48}
+        x={-imgW / 2}
+        y={-imgH / 2}
+        width={imgW}
+        height={imgH}
         preserveAspectRatio="xMidYMid meet"
       />
     </g>
@@ -147,18 +156,15 @@ export function DoorSVG({ type, px, py, cell, edge = 'N' }) {
 export function BlockedWallSVG({ type, px, py, w, h }) {
   const src = type === 'blocked_double' ? '/hq-icons/blocked_double.png' : '/hq-icons/blocked.png';
   return (
-    <RotatedGroup px={px} py={py} w={w} h={h}>
-      {(rw, rh) => (
-        <image
-          href={src}
-          x={0.5}
-          y={0.5}
-          width={rw - 1}
-          height={rh - 1}
-          preserveAspectRatio="xMidYMid meet"
-        />
-      )}
-    </RotatedGroup>
+    <SmartOrientedImage
+      type={type}
+      src={src}
+      px={px}
+      py={py}
+      w={w}
+      h={h}
+      pad={0}
+    />
   );
 }
 
@@ -176,7 +182,7 @@ export function TrapSVG({ type, px, py, cell, isDisarmed, isSelected }) {
   return (
     <g opacity={isDisarmed ? 0.35 : 1}>
       {isSelected && (
-        <rect x={px + 1} y={py + 1} width={cell - 2} height={cell - 2} rx="3" fill="none" stroke="#fde047" strokeWidth="2.8" />
+        <rect x={px + 1} y={py + 1} width={cell - 2} height={cell - 2} rx="3" fill="rgba(253,224,71,0.22)" stroke="#fde047" strokeWidth="2.6" />
       )}
       <image
         href={src}
@@ -188,7 +194,7 @@ export function TrapSVG({ type, px, py, cell, isDisarmed, isSelected }) {
       />
       {isDisarmed && (
         <g>
-          <circle cx={px + cell / 2} cy={py + cell / 2} r="9" fill="rgba(21, 128, 61, 0.9)" />
+          <circle cx={px + cell / 2} cy={py + cell / 2} r="9" fill="rgba(21, 128, 61, 0.92)" />
           <text x={px + cell / 2} y={py + cell / 2 + 4} textAnchor="middle" fontSize="11" fontWeight="900" fill="#ffffff">
             ✓
           </text>
@@ -209,7 +215,7 @@ export function MonsterIconSVG({ type, px, py, cell, info, isSelected, isDead })
   return (
     <g opacity={isDead ? 0.32 : 1}>
       {isSelected && (
-        <rect x={px + 1} y={py + 1} width={cell - 2} height={cell - 2} rx="4" fill="rgba(253, 224, 71, 0.25)" stroke="#fde047" strokeWidth="2.8" />
+        <rect x={px + 1} y={py + 1} width={cell - 2} height={cell - 2} rx="4" fill="rgba(253, 224, 71, 0.28)" stroke="#fde047" strokeWidth="2.8" />
       )}
       {src ? (
         <image
@@ -221,7 +227,6 @@ export function MonsterIconSVG({ type, px, py, cell, info, isSelected, isDead })
           preserveAspectRatio="xMidYMid meet"
         />
       ) : (
-        /* Monstruos exclusivos de expansiones modernas (Espectro, Asesino, Mímico) */
         <g>
           <circle cx={cx} cy={cy} r="12" fill={info?.fill || '#3b1616'} stroke={INK} strokeWidth="1.8" />
           {type === 'specter' ? (
