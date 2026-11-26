@@ -91,54 +91,54 @@ export function rollBodyLoot({ monsterName = 'Monstruo', isBoss = false, isElite
   if (highTier) {
     // JEFE / ÉLITE: 0% Vacío | 30% Oro + Mat Poco Común | 40% Mat Raro | 22% Objeto Raro | 8% Objeto Épico
     if (rollPct <= 30) {
-      rarityLabel = 'Poco Común (30%)';
+      rarityLabel = 'Poco Común';
       rewardGold = Math.round((25 + partyLevel * 8) * heroBonuses.goldMultiplier);
       materialId = pick(UNCOMMON_MATS);
       materialQty = 1;
       const mat = getMaterialById(materialId);
       title = `Bolsa de Guerra de ${monsterName}`;
-      text = `Tirada ${rollPct}% — Entre su armadura encuentran ${rewardGold} MO y 1× ${mat.icon} ${mat.name}.`;
+      text = `Entre su armadura encuentran ${rewardGold} MO y 1× ${mat.icon} ${mat.name}.`;
     } else if (rollPct <= 70) {
-      rarityLabel = 'Raro (40%)';
+      rarityLabel = 'Raro';
       materialId = pick(RARE_MATS);
       materialQty = 1;
       rewardGold = Math.round((15 + partyLevel * 5) * heroBonuses.goldMultiplier);
       const mat = getMaterialById(materialId);
       title = `Esencia Valiosa de ${monsterName}`;
-      text = `Tirada ${rollPct}% — Extraen un componente raro: 1× ${mat.icon} ${mat.name} y ${rewardGold} MO.`;
+      text = `Extraen un componente raro: 1× ${mat.icon} ${mat.name} y ${rewardGold} MO.`;
     } else if (rollPct <= 92) {
-      rarityLabel = 'Objeto Raro (22%)';
+      rarityLabel = 'Objeto Raro';
       const rarePool = DIGITAL_LOOT_CATALOG.filter((it) => it.rarity === 'raro');
       rewardLoot = Math.random() < 0.5 && rarePool.length ? pick(rarePool) : generateProceduralLoot('raro', partyLevel);
       title = `¡Trofeo Raro: ${rewardLoot.name}!`;
-      text = `Tirada ${rollPct}% — ${monsterName} portaba ${rewardLoot.name} (${rewardLoot.dice}). ${rewardLoot.upgrade || rewardLoot.special || ''}`;
+      text = `${monsterName} portaba ${rewardLoot.name} (${rewardLoot.dice}). ${rewardLoot.upgrade || rewardLoot.special || ''}`;
     } else {
-      rarityLabel = 'Objeto Épico (8%)';
+      rarityLabel = 'Objeto Épico';
       const epicPool = DIGITAL_LOOT_CATALOG.filter((it) => it.rarity === 'epico');
       rewardLoot = Math.random() < 0.5 && epicPool.length ? pick(epicPool) : generateProceduralLoot('epico', partyLevel);
       title = `✨ ¡Botín Épico: ${rewardLoot.name}!`;
-      text = `Tirada ${rollPct}% — ¡Hallazgo excepcional! ${rewardLoot.name} (${rewardLoot.dice}). ${rewardLoot.upgrade || rewardLoot.special || ''}`;
+      text = `¡Hallazgo excepcional! ${rewardLoot.name} (${rewardLoot.dice}). ${rewardLoot.upgrade || rewardLoot.special || ''}`;
     }
   } else {
     // MONSTRUO NORMAL: 35% Vacío | 33% Oro pequeño | 22% Material Común/Poco Común | 8% Consumible | 2% Objeto Poco Común
     if (rollPct <= 35) {
-      rarityLabel = 'Vacío (35%)';
+      rarityLabel = 'Vacío';
       title = `Cuerpo Vacío (${monsterName})`;
-      text = `Tirada ${rollPct}% — Revisan el cuerpo de ${monsterName}, pero solo lleva harapos rotos y armas inservibles. No encuentran nada.`;
+      text = `Revisan el cuerpo, pero solo lleva harapos rotos y armas inservibles. No encuentran nada.`;
     } else if (rollPct <= 68) {
-      rarityLabel = 'Común · Oro (33%)';
+      rarityLabel = 'Común · Oro';
       rewardGold = Math.round((6 + Math.floor(Math.random() * 10) + partyLevel * 2) * heroBonuses.goldMultiplier);
       title = `Monedas de ${monsterName}`;
-      text = `Tirada ${rollPct}% — En su cinturón rescatan ${rewardGold} Monedas de Oro.`;
+      text = `En su cinturón rescatan ${rewardGold} Monedas de Oro.`;
     } else if (rollPct <= 90) {
-      rarityLabel = 'Material (22%)';
+      rarityLabel = 'Material';
       materialId = rollPct > 83 ? pick(UNCOMMON_MATS) : pick(COMMON_MATS);
       materialQty = 1;
       const mat = getMaterialById(materialId);
       title = `Material Rescatado de ${monsterName}`;
-      text = `Tirada ${rollPct}% — Aprovechan 1× ${mat.icon} ${mat.name} en buen estado.`;
+      text = `Aprovechan 1× ${mat.icon} ${mat.name} en buen estado.`;
     } else if (rollPct <= 98) {
-      rarityLabel = 'Consumible (8%)';
+      rarityLabel = 'Consumible';
       rewardLoot = {
         name: 'Poción de Curación Menor',
         type: 'Poción',
@@ -148,13 +148,13 @@ export function rollBodyLoot({ monsterName = 'Monstruo', isBoss = false, isElite
         upgrade: 'Acción gratuita: restaura 2 PC.',
       };
       title = `¡Frasco Intacto en ${monsterName}!`;
-      text = `Tirada ${rollPct}% — Entre sus ropas llevaba una Poción de Curación Menor (+2 PC) intacta.`;
+      text = `Entre sus ropas llevaba una Poción de Curación Menor (+2 PC) intacta.`;
     } else {
-      rarityLabel = 'Poco Común (2%)';
+      rarityLabel = 'Poco Común';
       const uncPool = DIGITAL_LOOT_CATALOG.filter((it) => it.rarity === 'poco_comun');
       rewardLoot = uncPool.length ? pick(uncPool) : generateProceduralLoot('poco_comun', partyLevel);
       title = `¡Hallazgo Inusual: ${rewardLoot.name}!`;
-      text = `Tirada ${rollPct}% — ¡Suerte rara! ${monsterName} escondía ${rewardLoot.name} (${rewardLoot.dice}).`;
+      text = `¡Suerte rara! Escondía ${rewardLoot.name} (${rewardLoot.dice}).`;
     }
   }
 
@@ -200,47 +200,47 @@ export function rollTreasureProbability({ partyLevel = 1, hero = null }) {
   let text = '';
 
   if (rollPct <= 18) {
-    badge = `Vacío (${rollPct}%)`;
+    badge = 'Vacío';
     title = 'Cofre / Rincón Vacío';
-    text = `Tirada ${rollPct}% (18% prob.) — Solo polvo, telas podridas y monedas falsas. No hay nada de valor aquí.`;
+    text = 'Solo polvo, telas podridas y monedas falsas. No hay nada de valor aquí.';
   } else if (rollPct <= 30) {
     isTrap = true;
-    badge = `¡Trampa! (${rollPct}%)`;
+    badge = '¡Trampa!';
     title = '¡Trampa de Aguja en el Escondite!';
-    text = `Tirada ${rollPct}% (12% prob.) — ¡Clic! Una aguja salta al buscar. Salvación DES CD 12 o pierde 1 PC (y el Reloj del Caos sube +1).`;
+    text = '¡Clic! Una aguja salta al buscar. Salvación DES CD 12 o pierde 1 PC (y el Reloj del Caos sube +1).';
   } else if (rollPct <= 64) {
-    badge = `Común · Oro (${rollPct}%)`;
+    badge = 'Común · Oro';
     rewardGold = Math.round((15 + partyLevel * 6 + Math.floor(Math.random() * 15)) * heroBonuses.goldMultiplier);
     title = `Alijo de ${rewardGold} Monedas de Oro`;
-    text = `Tirada ${rollPct}% (34% prob.) — Encuentran una bolsa escondida con ${rewardGold} MO.`;
+    text = `Encuentran una bolsa escondida con ${rewardGold} MO.`;
   } else if (rollPct <= 84) {
-    badge = `Materiales (${rollPct}%)`;
+    badge = 'Materiales';
     materialId = rollPct > 76 ? pick(UNCOMMON_MATS) : pick(COMMON_MATS);
     materialQty = 1;
     const mat = getMaterialById(materialId);
     title = `Suministros de Crafteo: ${mat.name}`;
-    text = `Tirada ${rollPct}% (20% prob.) — Recuperan 1× ${mat.icon} ${mat.name} listo para la Forja o el Alquimista.`;
+    text = `Recuperan 1× ${mat.icon} ${mat.name} listo para la Forja o el Alquimista.`;
   } else if (rollPct <= 94) {
-    badge = `Poco Común (${rollPct}%)`;
+    badge = 'Poco Común';
     const pool = DIGITAL_LOOT_CATALOG.filter((it) => it.rarity === 'poco_comun');
     rewardLoot = pool.length ? pick(pool) : generateProceduralLoot('poco_comun', partyLevel);
     const rMeta = getRarityMeta(rewardLoot.rarity);
     title = `¡${rewardLoot.name} (${rMeta.name})!`;
-    text = `Tirada ${rollPct}% (10% prob.) — ${rewardLoot.special || rewardLoot.upgrade || ''}`;
+    text = `${rewardLoot.special || rewardLoot.upgrade || ''}`;
   } else if (rollPct <= 98) {
-    badge = `Raro (${rollPct}%)`;
+    badge = 'Raro';
     const pool = DIGITAL_LOOT_CATALOG.filter((it) => it.rarity === 'raro');
     rewardLoot = pool.length && Math.random() < 0.5 ? pick(pool) : generateProceduralLoot('raro', partyLevel);
     const rMeta = getRarityMeta(rewardLoot.rarity);
     title = `✨ ¡Tesoro Raro: ${rewardLoot.name} (${rMeta.name})!`;
-    text = `Tirada ${rollPct}% (4% prob.) — ${rewardLoot.upgrade || rewardLoot.special || ''}`;
+    text = `${rewardLoot.upgrade || rewardLoot.special || ''}`;
   } else {
-    badge = `Épico (${rollPct}%)`;
+    badge = 'Épico';
     const pool = DIGITAL_LOOT_CATALOG.filter((it) => it.rarity === 'epico');
     rewardLoot = pool.length && Math.random() < 0.5 ? pick(pool) : generateProceduralLoot('epico', partyLevel);
     const rMeta = getRarityMeta(rewardLoot.rarity);
     title = `🌟 ¡Tesoro Épico: ${rewardLoot.name} (${rMeta.name})!`;
-    text = `Tirada ${rollPct}% (2% prob.) — ¡Hallazgo extraordinario! ${rewardLoot.upgrade || rewardLoot.special || ''}`;
+    text = `¡Hallazgo extraordinario! ${rewardLoot.upgrade || rewardLoot.special || ''}`;
   }
 
   if (heroBonuses.doubleMaterials && materialId && materialQty > 0) {

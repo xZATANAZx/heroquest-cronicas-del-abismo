@@ -2040,7 +2040,7 @@ export default function TacticalBoard({
                   <div className="p-2.5 rounded-xl bg-emerald-950/35 border border-emerald-600/60 space-y-2 text-xs">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-bold text-emerald-300">
-                        🔍 Revisar Cuerpo {alreadyLooted ? '(Ya revisado ✓)' : '(Probabilidad por Rareza)'}
+                        🔍 Revisar Cuerpo {alreadyLooted ? '(Ya revisado ✓)' : ''}
                       </span>
                     </div>
                     {!alreadyLooted && (
@@ -2074,13 +2074,26 @@ export default function TacticalBoard({
                               next.add(selectedMonsterObj.key);
                               return next;
                             });
+                            // Entregar automáticamente al héroe seleccionado que revisó el cuerpo
+                            let deliveredTo = '';
+                            if (searcher && !res.isEmpty) {
+                              if ((res.rewardLoot || res.rewardGold > 0) && onSendLootToHero) {
+                                onSendLootToHero(searcher.id, res.rewardLoot, res.rewardGold);
+                              }
+                              if (res.materialId && res.materialQty > 0 && onSendMaterialToHero) {
+                                onSendMaterialToHero(searcher.id, res.materialId, res.materialQty);
+                              }
+                              deliveredTo = searcher.name;
+                            }
                             setRoomDiscovery({
+                              isBodyLoot: true,
+                              alreadyDeliveredTo: deliveredTo,
                               source: searcher ? `Cuerpo (${searcher.name})` : 'Revisión de Cuerpo',
                               title: res.title,
                               badge: res.rarityLabel,
                               text: res.text,
-                              rewardLoot: res.rewardLoot,
-                              rewardGold: res.rewardGold,
+                              rewardLoot: deliveredTo ? null : res.rewardLoot,
+                              rewardGold: deliveredTo ? 0 : res.rewardGold,
                               materialId: res.materialId,
                               materialQty: res.materialQty,
                               heroBonusNotes: res.heroBonusNotes,
@@ -2088,13 +2101,15 @@ export default function TacticalBoard({
                             setRightPanelTab('tools');
                             showToast?.(
                               res.isEmpty
-                                ? `🔍 ${selectedMonsterObj.scaled.name}: cuerpo vacío (${res.rollPct}%).`
-                                : `🔍 ¡Hallazgo en ${selectedMonsterObj.scaled.name}: ${res.title}!`
+                                ? `🔍 ${selectedMonsterObj.scaled.name}: no llevaba nada útil.`
+                                : deliveredTo
+                                ? `✅ Entregado a ${deliveredTo}: ${res.title}`
+                                : `🔍 Hallazgo en ${selectedMonsterObj.scaled.name}: ${res.title}`
                             );
                           }}
                           className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] cursor-pointer shrink-0"
                         >
-                          🔍 Revisar Cuerpo
+                          🔍 Revisar y Entregar
                         </button>
                       </div>
                     )}
@@ -2933,7 +2948,9 @@ export default function TacticalBoard({
                 {/* Resultado Activo (con botón 1 clic para Mandar Botín, Invocar Monstruo o Colocar Trampa en el Tablero) */}
                 {roomDiscovery ? (
                   (() => {
-                    const spawn = detectSpawnable(roomDiscovery, currentMap);
+                    const spawn = roomDiscovery.isBodyLoot
+                      ? { monsterType: null, trapType: null }
+                      : detectSpawnable(roomDiscovery, currentMap);
                     return (
                       <div className="p-3.5 rounded-xl bg-emerald-950/35 border-2 border-emerald-500/70 space-y-2.5 text-xs">
                         <div className="flex items-center justify-between gap-2">
@@ -2998,8 +3015,14 @@ export default function TacticalBoard({
                           </div>
                         )}
 
+                        {roomDiscovery.alreadyDeliveredTo && (
+                          <div className="p-2 rounded-lg bg-emerald-900/50 border border-emerald-500/70 text-[11px] font-bold text-emerald-200">
+                            ✅ Enviado automáticamente a la mochila de {roomDiscovery.alreadyDeliveredTo}.
+                          </div>
+                        )}
+
                         {/* Enviar Botín / Oro / Material al Celular del Héroe */}
-                        {(roomDiscovery.rewardLoot || roomDiscovery.rewardGold > 0 || (roomDiscovery.materialId && roomDiscovery.materialQty > 0)) && onSendLootToHero && (
+                        {!roomDiscovery.alreadyDeliveredTo && (roomDiscovery.rewardLoot || roomDiscovery.rewardGold > 0 || (roomDiscovery.materialId && roomDiscovery.materialQty > 0)) && onSendLootToHero && (
                           <div className="pt-2 border-t border-emerald-800/60 flex flex-wrap items-center gap-2">
                             {heroes.length === 0 ? (
                               <span className="text-[11px] text-amber-300">
