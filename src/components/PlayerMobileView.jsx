@@ -16,6 +16,7 @@ import {
   UserPlus,
   RefreshCw,
   Building2,
+  Compass,
 } from 'lucide-react';
 import {
   ATTRIBUTES,
@@ -35,6 +36,7 @@ import {
 } from '../data/characterSystem';
 import CharacterForge from './CharacterForge';
 import PuzzleModal from './PuzzleModal';
+import MobileOutworldTab from './MobileOutworldTab';
 import { getRarityMeta } from '../data/lootCatalog';
 import { MATERIALS_CATALOG, CRAFTING_RECIPES, getMaterialById } from '../data/craftingSystem';
 import { PROFESSIONS, TAVERN_FEASTS, FAMILIARS, getHeroFameTier } from '../data/citySystem';
@@ -2848,19 +2850,25 @@ export default function PlayerMobileView({ initialPlayerParam }) {
             </div>
           );
         })()}
+
+        {/* PESTAÑA OUTWORLD EN VIVO (Viaje, Eventos DM, Random Events, Casa de Apuestas, Mercado Negro) */}
+        {tab === 'outworld' && (
+          <MobileOutworldTab hero={hero} pushHeroUpdate={pushHeroUpdate} showToast={showToast} />
+        )}
       </main>
 
-      {/* Navegación Inferior Anclada (4 pestañas en mazmorra; 5 cuando el DM abre la Ciudad) */}
+      {/* Navegación Inferior Anclada (5 pestañas; 6 cuando el DM abre la Ciudad) */}
       <nav
         className={`shrink-0 bg-[#111827]/95 backdrop-blur-xl border-t border-slate-700/80 grid ${
-          cityOpen ? 'grid-cols-5' : 'grid-cols-4'
-        } gap-1 px-2 pt-2 z-30 shadow-[0_-8px_24px_rgba(2,6,23,0.7)]`}
+          cityOpen ? 'grid-cols-6' : 'grid-cols-5'
+        } gap-1 px-1.5 pt-2 z-30 shadow-[0_-8px_24px_rgba(2,6,23,0.7)]`}
         style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
       >
         {[
           { id: 'hero', label: 'Héroe', icon: Shield },
           { id: 'gear', label: 'Equipo', icon: Backpack },
           { id: 'skills', label: 'Poderes', icon: Sparkles },
+          { id: 'outworld', label: 'Outworld', icon: Compass },
           ...(cityOpen ? [{ id: 'city', label: 'Ciudad', icon: Building2 }] : []),
           { id: 'guide', label: 'Reglas', icon: BookOpen },
         ].map((item) => {

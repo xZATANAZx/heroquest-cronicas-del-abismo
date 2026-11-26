@@ -10,6 +10,7 @@ import { bin as cloudflaredBin, install as installCloudflared } from 'cloudflare
 const DATA_DIR = path.resolve(process.cwd(), '.hq_data');
 const DATA_FILE = path.resolve(DATA_DIR, 'campaign_heroes.json');
 const CREATOR_NOTES_FILE = path.resolve(DATA_DIR, 'creator_notes.json');
+const OUTWORLD_FILE = path.resolve(DATA_DIR, 'outworld_state.json');
 const LEGACY_DATA_FILE = path.resolve(process.cwd(), 'campaign_heroes.json');
 const isCreatorMachine = () =>
   fs.existsSync(path.resolve(process.cwd(), '.hq_creator')) ||
@@ -18,6 +19,44 @@ const ACTIONS_STORE = [];
 const ACTIVE_PUZZLES = {}; // { [heroId]: { id, puzzle, sentAt } }
 let CITY_MODE_OPEN = false;
 let CONTRACTS_BOARD = { contracts: [], votes: {} };
+
+const DEFAULT_OUTWORLD_STATE = {
+  phase: 'camp', // 'camp' | 'travel' | 'settlement'
+  settlementType: 'capital', // 'village' | 'town' | 'capital'
+  travelDay: 0,
+  travelTotal: 0,
+  settlementDay: 1,
+  strictMode: false, // false = Campaña Heroica, true = Estricto Outworld
+  useStockRolls: false,
+  havenUnlocked: false,
+  havenVaultGold: 0,
+  havenVaultGems: 0,
+  havenVaultItems: [],
+  activeEvent: null, // Último evento de Outworld (Viaje / Asentamiento / Taberna / Mercado Negro / Haven / Catástrofe)
+  randomDungeonEvent: null, // Último Random Event de Mazmorra (pág. 45 / 102–105)
+  arenaRound: 0,
+  updatedAt: 0,
+};
+
+function readOutworldState() {
+  try {
+    if (fs.existsSync(OUTWORLD_FILE)) {
+      const parsed = JSON.parse(fs.readFileSync(OUTWORLD_FILE, 'utf8'));
+      return { ...DEFAULT_OUTWORLD_STATE, ...parsed };
+    }
+  } catch {
+    // ignore
+  }
+  return { ...DEFAULT_OUTWORLD_STATE };
+}
+
+function writeOutworldState(next) {
+  try {
+    fs.writeFileSync(OUTWORLD_FILE, JSON.stringify(next, null, 2), 'utf8');
+  } catch {
+    // ignore
+  }
+}
 
 // Migrar archivo antiguo si existe para no perder héroes ya creados
 if (!fs.existsSync(DATA_DIR)) {
@@ -229,6 +268,20 @@ function localSyncAndTunnelPlugin() {
           }
         }
         res.end(JSON.stringify(CONTRACTS_BOARD));
+      });
+
+      server.middlewares.use('/api/outworld', async (req, res) => {
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'no-store');
+        const current = readOutworldState();
+        if (req.method === 'POST') {
+          const payload = await parseBody(req);
+          const merged = { ...current, ...payload, updatedAt: Date.now() };
+          writeOutworldState(merged);
+          res.end(JSON.stringify({ ok: true, state: merged }));
+          return;
+        }
+        res.end(JSON.stringify({ ok: true, state: current }));
       });
 
       server.middlewares.use('/api/network-info', (req, res) => {
