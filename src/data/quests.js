@@ -164,6 +164,7 @@ export const QUESTS = [
   },
   {
     id: 'q5',
+    officialMapId: 'm5_laberinto_melar',
     number: 5,
     campaignId: 'base',
     biomeId: 'catacumbas',
@@ -194,6 +195,7 @@ export const QUESTS = [
   },
   {
     id: 'q6',
+    officialMapId: 'm6_legado_orco',
     number: 6,
     campaignId: 'base',
     biomeId: 'fortaleza_orca',
@@ -224,6 +226,7 @@ export const QUESTS = [
   },
   {
     id: 'q7',
+    officialMapId: 'm7_mago_perdido',
     number: 7,
     campaignId: 'base',
     biomeId: 'laboratorio_alquimico',
@@ -254,6 +257,7 @@ export const QUESTS = [
   },
   {
     id: 'q8',
+    officialMapId: 'm8_mago_fuego',
     number: 8,
     campaignId: 'base',
     biomeId: 'abismo_caos',
@@ -284,6 +288,7 @@ export const QUESTS = [
   },
   {
     id: 'q9',
+    officialMapId: 'm9_carrera_tiempo',
     number: 9,
     campaignId: 'base',
     biomeId: 'cavernas_hielo',
@@ -314,6 +319,7 @@ export const QUESTS = [
   },
   {
     id: 'q10',
+    officialMapId: 'm10_castillo_misterio',
     number: 10,
     campaignId: 'base',
     biomeId: 'cripta_espectral',
@@ -344,6 +350,7 @@ export const QUESTS = [
   },
   {
     id: 'q11',
+    officialMapId: 'm11_bastion_caos',
     number: 11,
     campaignId: 'base',
     biomeId: 'abismo_caos',
@@ -374,6 +381,7 @@ export const QUESTS = [
   },
   {
     id: 'q12',
+    officialMapId: 'm12_barak_tor_tumulo',
     number: 12,
     campaignId: 'base',
     biomeId: 'catacumbas',
@@ -404,6 +412,7 @@ export const QUESTS = [
   },
   {
     id: 'q13',
+    officialMapId: 'm13_hoja_espiritual',
     number: 13,
     campaignId: 'base',
     biomeId: 'abismo_caos',
