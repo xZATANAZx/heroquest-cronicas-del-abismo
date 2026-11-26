@@ -255,11 +255,11 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 8, y: 6, type: 'door', edge: 'E', note: 'Sale al anillo central (col J)' },
 
       // R1 (x:1..4, y:1..3) y R2 (x:5..8, y:1..3) — Tumbas de Fellmarg (Notas C y D)
-      { x: 2, y: 1, type: 'tomb', w: 3, h: 2, note: 'Tumba de Fellmarg (3×2)' },
-      { x: 1, y: 1, type: 'chest', note: 'Nota D: 84 MO + Diario (+75 XP)' },
+      { x: 1, y: 1, type: 'tomb', w: 3, h: 2, note: 'Tumba de Fellmarg (3×2)' },
+      { x: 4, y: 1, type: 'chest', note: 'Nota D: 84 MO + Diario (+75 XP)' },
       { x: 4, y: 2, type: 'door', edge: 'E', note: 'Conecta R1 con R2' },
 
-      { x: 6, y: 1, type: 'tomb', w: 3, h: 2, note: 'Sarcófago Guardián (3×2)' },
+      { x: 5, y: 1, type: 'tomb', w: 3, h: 2, note: 'Sarcófago Guardián (3×2)' },
       { x: 5, y: 3, type: 'mummy', note: 'Nota C: Momia de Fellmarg (4 DC)' },
       { x: 7, y: 3, type: 'skeleton' },
       { x: 8, y: 2, type: 'door', edge: 'E', note: 'Conecta R2 con R3' },
@@ -372,7 +372,7 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 6, y: 10, type: 'door', edge: 'N', note: 'Sale al pasillo medio (fila 10)' },
 
       { x: 2, y: 8, type: 'door', edge: 'S', note: 'Entrada a R4 desde pasillo' },
-      { x: 2, y: 5, type: 'sorcerer_table', w: 3, h: 2, note: 'Mesa de Hechicero (3×2)' },
+      { x: 1, y: 5, type: 'sorcerer_table', w: 3, h: 2, note: 'Mesa de Hechicero (3×2)' },
       { x: 3, y: 7, type: 'abomination' },
       { x: 2, y: 7, type: 'goblin' },
       { x: 4, y: 6, type: 'door', edge: 'E', note: 'Conecta R4 con R5' },
@@ -505,7 +505,7 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 22, y: 10, type: 'door', edge: 'N', note: 'Desde pasillo este' },
       { x: 21, y: 11, type: 'sorcerer_table', w: 3, h: 2, note: 'Mesa de Hechicero (3×2)' },
       { x: 24, y: 12, type: 'chest', note: 'Nota C: Trampa + 100 MO' },
-      { x: 23, y: 12, type: 'trap_spear', note: 'Trampa Lanza (DES CD 13)' },
+      { x: 24, y: 11, type: 'trap_spear', note: 'Trampa Lanza (DES CD 13)' },
       { x: 21, y: 13, type: 'skeleton' },
 
       // R11: Trono de Ulag (puerta Oeste en col K y puerta Sur en fila 12)
@@ -600,7 +600,7 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 14, y: 7, type: 'sorcerer_table', w: 2, h: 3, note: 'FILACTERIA (3 PC o Arcano CD 14)' },
       { x: 12, y: 9, type: 'sorcerer', note: 'JEFE FINAL: EL SEÑOR BRUJO (LICHE)' },
       { x: 10, y: 8, type: 'mummy' },
-      { x: 14, y: 9, type: 'dread_warrior' },
+      { x: 13, y: 10, type: 'dread_warrior' },
       { x: 11, y: 10, type: 'skeleton' },
       { x: 12, y: 11, type: 'door', edge: 'S', note: 'Gran Puerta de Barak Tor' },
       { x: 12, y: 0, type: 'blocked_double', w: 2, h: 1, note: 'Pasillo derrumbado' },

@@ -527,6 +527,15 @@ function buildProceduralBoardMap({
 }) {
   const items = [];
   const usedCells = new Set();
+  const doorClearance = new Set(); // Casillas junto a puertas: prohibidas para muebles
+  const roomDoorsMap = {}; // { [roomId]: [{ x, y, edge }] }
+
+  const roomById = (rId) => HQ_ROOMS.find((rm) => rm.id === rId);
+  const cellInRoom = (r, x, y) => {
+    if (!r || x < r.x1 || x > r.x2 || y < r.y1 || y > r.y2) return false;
+    if (r.exclude && r.exclude.some((ex) => ex.x === x && ex.y === y)) return false;
+    return true;
+  };
 
   const occupy = (x, y, w = 1, h = 1) => {
     for (let yy = y; yy < y + h; yy++) {
@@ -536,60 +545,302 @@ function buildProceduralBoardMap({
     }
   };
 
-  const canPlace = (x, y, w = 1, h = 1, roomObj) => {
+  const canPlace = (x, y, w, h, r, avoidDoors = true) => {
     for (let yy = y; yy < y + h; yy++) {
       for (let xx = x; xx < x + w; xx++) {
-        if (xx < roomObj.x1 || xx > roomObj.x2 || yy < roomObj.y1 || yy > roomObj.y2) return false;
+        if (!cellInRoom(r, xx, yy)) return false;
         if (usedCells.has(`${xx},${yy}`)) return false;
+        if (avoidDoors && doorClearance.has(`${xx},${yy}`)) return false;
       }
     }
     return true;
   };
 
-  const placeInRoom = (roomId, item) => {
-    const r = HQ_ROOMS.find((rm) => rm.id === roomId);
+  // Registra puerta y marca sus 2 casillas de paso como libres de muebles
+  const addDoor = (doorObj) => {
+    items.push(doorObj);
+    doorClearance.add(`${doorObj.x},${doorObj.y}`);
+    const ox = doorObj.edge === 'W' ? doorObj.x - 1 : doorObj.edge === 'E' ? doorObj.x + 1 : doorObj.x;
+    const oy = doorObj.edge === 'N' ? doorObj.y - 1 : doorObj.edge === 'S' ? doorObj.y + 1 : doorObj.y;
+    doorClearance.add(`${ox},${oy}`);
+    const rA = HQ_ROOMS.find((rm) => cellInRoom(rm, doorObj.x, doorObj.y));
+    const rB = HQ_ROOMS.find((rm) => cellInRoom(rm, ox, oy));
+    if (rA) (roomDoorsMap[rA.id] = roomDoorsMap[rA.id] || []).push({ x: doorObj.x, y: doorObj.y, edge: doorObj.edge });
+    if (rB) (roomDoorsMap[rB.id] = roomDoorsMap[rB.id] || []).push({ x: ox, y: oy, edge: doorObj.edge });
+  };
+
+  // Mueble de pared 3×1 o 1×3: busca una pared sin puertas y lo centra contra el muro
+  const placeWallFurniture = (roomId, item) => {
+    const r = roomById(roomId);
     if (!r) return false;
-    const w = item.w || 1;
-    const h = item.h || 1;
-    for (let y = r.y1; y <= r.y2; y++) {
-      for (let x = r.x1; x <= r.x2; x++) {
-        if (canPlace(x, y, w, h, r)) {
-          occupy(x, y, w, h);
-          items.push({ ...item, x, y, w, h });
-          return true;
-        }
+    const rw = r.x2 - r.x1 + 1;
+    const rh = r.y2 - r.y1 + 1;
+    const candidates = [
+      { x: r.x1 + Math.floor((rw - 3) / 2), y: r.y1, w: 3, h: 1 }, // Pared Norte
+      { x: r.x1 + Math.floor((rw - 3) / 2), y: r.y2, w: 3, h: 1 }, // Pared Sur
+      { x: r.x1, y: r.y1 + Math.floor((rh - 3) / 2), w: 1, h: 3 }, // Pared Oeste
+      { x: r.x2, y: r.y1 + Math.floor((rh - 3) / 2), w: 1, h: 3 }, // Pared Este
+      { x: r.x1, y: r.y1, w: 3, h: 1 },
+      { x: r.x1, y: r.y2, w: 3, h: 1 },
+      { x: r.x1, y: r.y1, w: 1, h: 3 },
+      { x: r.x2, y: r.y1, w: 1, h: 3 },
+    ];
+    for (const c of candidates) {
+      if (canPlace(c.x, c.y, c.w, c.h, r, true)) {
+        occupy(c.x, c.y, c.w, c.h);
+        items.push({ ...item, x: c.x, y: c.y, w: c.w, h: c.h });
+        return true;
       }
     }
     return false;
   };
 
-  // 1. Escaleras en R14 (Inicio)
-  placeInRoom('R14', { type: 'stairs', w: 2, h: 2, label: 'Escaleras de Entrada' });
+  // Mueble central 3×2 o 2×3: lo centra geométricamente en la sala dejando paso en las puertas
+  const placeCenterFurniture = (roomId, item) => {
+    const r = roomById(roomId);
+    if (!r) return false;
+    const rw = r.x2 - r.x1 + 1;
+    const rh = r.y2 - r.y1 + 1;
+    const orientations = rw >= rh ? [[3, 2], [2, 3]] : [[2, 3], [3, 2]];
+    const cx = (r.x1 + r.x2) / 2;
+    const cy = (r.y1 + r.y2) / 2;
+    let best = null;
+    for (const [w, h] of orientations) {
+      for (let y = r.y1; y <= r.y2 - h + 1; y++) {
+        for (let x = r.x1; x <= r.x2 - w + 1; x++) {
+          if (!canPlace(x, y, w, h, r, true)) continue;
+          const dist = Math.hypot(x + (w - 1) / 2 - cx, y + (h - 1) / 2 - cy);
+          if (!best || dist < best.dist) best = { x, y, w, h, dist };
+        }
+      }
+    }
+    if (best) {
+      occupy(best.x, best.y, best.w, best.h);
+      items.push({ ...item, x: best.x, y: best.y, w: best.w, h: best.h });
+      return true;
+    }
+    return false;
+  };
 
-  // 2. Cámara de Alquimia Única Opcional (~72% de probabilidad; 100% en Laboratorio Alquímico)
-  // Solo 1 por misión, protegida por puerta Cerrada con Llave, Sello de Puzzle o Puerta Secreta
+  // Cofre 1×1: siempre en la esquina más alejada de la puerta de entrada
+  const placeCornerChest = (roomId, item) => {
+    const r = roomById(roomId);
+    if (!r) return false;
+    const doors = roomDoorsMap[roomId] || [];
+    const corners = [
+      { x: r.x1, y: r.y1 },
+      { x: r.x2, y: r.y1 },
+      { x: r.x1, y: r.y2 },
+      { x: r.x2, y: r.y2 },
+    ];
+    let best = null;
+    for (const c of corners) {
+      if (!canPlace(c.x, c.y, 1, 1, r, true)) continue;
+      const minDoorDist =
+        doors.length > 0
+          ? Math.min(...doors.map((d) => Math.hypot(c.x - d.x, c.y - d.y)))
+          : 1;
+      if (!best || minDoorDist > best.score) best = { x: c.x, y: c.y, score: minDoorDist };
+    }
+    if (best) {
+      occupy(best.x, best.y, 1, 1);
+      items.push({ ...item, x: best.x, y: best.y, w: 1, h: 1 });
+      return true;
+    }
+    return false;
+  };
+
+  // Monstruo / NPC 1×1: distribución táctica espaciada (nunca amontonados en la esquina ni sobre puertas)
+  const placedMonstersInRoom = {};
+  const placeTacticalUnit = (roomId, item, preferBack = false) => {
+    const r = roomById(roomId);
+    if (!r) return false;
+    const doors = roomDoorsMap[roomId] || [];
+    const allies = placedMonstersInRoom[roomId] || [];
+    const cx = (r.x1 + r.x2) / 2;
+    const cy = (r.y1 + r.y2) / 2;
+
+    let best = null;
+    for (let y = r.y1; y <= r.y2; y++) {
+      for (let x = r.x1; x <= r.x2; x++) {
+        if (!canPlace(x, y, 1, 1, r, true)) continue;
+        const doorDist =
+          doors.length > 0
+            ? Math.min(...doors.map((d) => Math.hypot(x - d.x, y - d.y)))
+            : 2;
+        const allyDist =
+          allies.length > 0
+            ? Math.min(...allies.map((a) => Math.hypot(x - a.x, y - a.y)))
+            : 2.5;
+        const centerDist = Math.hypot(x - cx, y - cy);
+
+        // Puntaje táctico: separa aliados + respeta rol (jefe al fondo, guardias cubriendo el centro)
+        let score = Math.min(allyDist, 3) * 3.0;
+        if (preferBack) {
+          score += doorDist * 1.4 - centerDist * 0.3;
+        } else {
+          // Distancia ideal de 1.8 a 3.2 casillas de la puerta, cerca del centro táctico
+          score += (3 - Math.abs(doorDist - 2.3)) * 1.2 - centerDist * 0.4;
+        }
+        // Pequeña variación para que no todas las salas sean idénticas
+        score += Math.random() * 0.25;
+        if (!best || score > best.score) best = { x, y, score };
+      }
+    }
+    if (!best) {
+      // Fallback: cualquier casilla libre de la sala
+      for (let y = r.y1; y <= r.y2; y++) {
+        for (let x = r.x1; x <= r.x2; x++) {
+          if (canPlace(x, y, 1, 1, r, false)) {
+            best = { x, y, score: 0 };
+            break;
+          }
+        }
+        if (best) break;
+      }
+    }
+    if (best) {
+      occupy(best.x, best.y, 1, 1);
+      (placedMonstersInRoom[roomId] = placedMonstersInRoom[roomId] || []).push({ x: best.x, y: best.y });
+      items.push({ ...item, x: best.x, y: best.y, w: 1, h: 1 });
+      return true;
+    }
+    return false;
+  };
+
+  // ============================================================================
+  // 1. ARQUETIPOS ARQUITECTÓNICOS COHERENTES (3 Diseños Maestros de Mazmorra)
+  // ============================================================================
+  const ARCHETYPES = [
+    {
+      name: 'La Espiral del Bastión',
+      doors: [
+        { room: 'R14', x: 2, y: 14, edge: 'N' }, // R14 -> R12
+        { room: 'R14', x: 4, y: 16, edge: 'E' }, // R14 -> R15 (Bifurcación inicial)
+        { room: 'R12', x: 2, y: 10, edge: 'N' }, // R12 -> Pasillo medio oeste
+        { room: 'R15', x: 6, y: 13, edge: 'N' }, // R15 -> R13
+        { room: 'R13', x: 6, y: 10, edge: 'N' }, // R13 -> Pasillo medio oeste
+        { room: 'R4', x: 2, y: 8, edge: 'S' },   // Pasillo -> R4
+        { room: 'R4', x: 4, y: 6, edge: 'E' },   // R4 -> R5
+        { room: 'R4', x: 2, y: 4, edge: 'N' },   // R4 -> R1
+        { room: 'R1', x: 4, y: 2, edge: 'E' },   // R1 -> R2
+        { room: 'R2', x: 8, y: 2, edge: 'E' },   // R2 -> R3
+        { room: 'R3', x: 10, y: 5, edge: 'S' },  // R3 -> Anillo Norte Central
+        { room: 'R5', x: 8, y: 6, edge: 'E' },   // R5 -> Pasillo Oeste Central
+        { room: 'R11', x: 12, y: 11, edge: 'S' }, // Gran Puerta Sur del Jefe
+        { room: 'R11', x: 15, y: 9, edge: 'E' },  // Salida Este del Jefe
+        { room: 'R7', x: 18, y: 4, edge: 'S' },   // R7 <-> R9
+        { room: 'R9', x: 17, y: 7, edge: 'W' },   // Anillo Este -> R9
+        { room: 'R10', x: 22, y: 8, edge: 'S' },  // Pasillo Medio Este -> R10
+        { room: 'R18', x: 22, y: 10, edge: 'N' }, // Pasillo Medio Este -> R18
+      ],
+      secretDoor: { x: 22, y: 13, edge: 'S', room: 'R21' }, // R18 -> R21 (Almacén Secreto)
+      blockedWalls: [
+        { x: 0, y: 14, type: 'blocked', note: 'Derrumbe: canaliza la ruta por el interior oeste' },
+        { x: 12, y: 0, type: 'blocked_double', w: 2, h: 1, note: 'Muro derrumbado en corredor norte' },
+        { x: 25, y: 14, type: 'blocked', note: 'Derrumbe en pasillo exterior sureste' },
+      ],
+      furnRooms: ['R15', 'R12', 'R5', 'R1', 'R2', 'R7', 'R10', 'R18', 'R21'],
+      combatRooms: ['R15', 'R12', 'R4', 'R5', 'R1', 'R2', 'R9', 'R10', 'R18'],
+      alchemyCandidates: ['R5', 'R7', 'R18', 'R21'],
+      traps: [
+        { type: 'trap_spear', x: 12, y: 12, label: 'Trampa de Lanza ante el Salón del Jefe (DES CD 13)' },
+        { type: 'trap_pit', x: 9, y: 6, label: 'Foso Oculto en el Anillo Central (DES CD 13)' },
+        { type: 'trap_falling_rock', x: 16, y: 9, label: 'Bloque Cayendo en Corredor Este (DES CD 14)' },
+      ],
+    },
+    {
+      name: 'Las Catacumbas del Sur',
+      doors: [
+        { room: 'R14', x: 4, y: 16, edge: 'E' }, // R14 -> R15
+        { room: 'R15', x: 8, y: 15, edge: 'E' }, // R15 -> R16
+        { room: 'R16', x: 11, y: 15, edge: 'E' }, // R16 -> Corredor Central Sur
+        { room: 'R19', x: 14, y: 15, edge: 'W' }, // Corredor Sur -> R19
+        { room: 'R19', x: 17, y: 15, edge: 'E' }, // R19 -> R20
+        { room: 'R20', x: 20, y: 15, edge: 'E' }, // R20 -> R21
+        { room: 'R21', x: 22, y: 14, edge: 'N' }, // R21 -> R18
+        { room: 'R18', x: 22, y: 10, edge: 'N' }, // R18 -> Pasillo Medio Este
+        { room: 'R10', x: 22, y: 8, edge: 'S' },  // Pasillo -> R10
+        { room: 'R10', x: 22, y: 5, edge: 'N' },  // R10 -> R8
+        { room: 'R8', x: 21, y: 2, edge: 'W' },   // R8 -> R7
+        { room: 'R7', x: 17, y: 3, edge: 'W' },   // R7 -> R6
+        { room: 'R6', x: 14, y: 3, edge: 'W' },   // R6 -> Corredor Central Norte
+        { room: 'R11', x: 12, y: 7, edge: 'N' },  // Gran Puerta Norte del Jefe
+        { room: 'R11', x: 12, y: 11, edge: 'S' }, // Puerta Sur de escape
+      ],
+      secretDoor: { x: 1, y: 14, edge: 'N', room: 'R12' }, // Atajo secreto R14 -> R12
+      blockedWalls: [
+        { x: 0, y: 9, type: 'blocked', note: 'Derrumbe sella el ala oeste' },
+        { x: 12, y: 18, type: 'blocked_double', w: 2, h: 1, note: 'Escombros cierran el pasillo sur exterior' },
+      ],
+      furnRooms: ['R15', 'R16', 'R19', 'R21', 'R18', 'R10', 'R8', 'R7'],
+      combatRooms: ['R15', 'R16', 'R19', 'R21', 'R18', 'R10', 'R8', 'R7', 'R6'],
+      alchemyCandidates: ['R19', 'R10', 'R7', 'R18'],
+      traps: [
+        { type: 'trap_pit', x: 12, y: 15, label: 'Foso en el Corredor Central Sur (DES CD 13)' },
+        { type: 'trap_spear', x: 12, y: 6, label: 'Trampa de Lanza ante la Puerta Norte del Jefe (DES CD 13)' },
+        { type: 'trap_falling_rock', x: 20, y: 9, label: 'Techo Inestable en Pasillo Este (DES CD 14)' },
+      ],
+    },
+    {
+      name: 'Asedio de Doble Flanco',
+      doors: [
+        { room: 'R14', x: 2, y: 14, edge: 'N' }, // Flanco Norte: R14 -> R12
+        { room: 'R12', x: 2, y: 10, edge: 'N' }, // R12 -> Pasillo Oeste
+        { room: 'R4', x: 2, y: 8, edge: 'S' },   // Pasillo -> R4
+        { room: 'R4', x: 4, y: 6, edge: 'E' },   // R4 -> R5
+        { room: 'R5', x: 8, y: 6, edge: 'E' },   // R5 -> Anillo Central Oeste
+        { room: 'R14', x: 4, y: 16, edge: 'E' }, // Flanco Sur: R14 -> R15
+        { room: 'R15', x: 8, y: 15, edge: 'E' }, // R15 -> R16
+        { room: 'R16', x: 11, y: 15, edge: 'E' }, // R16 -> Corredor Sur
+        { room: 'R11', x: 10, y: 9, edge: 'W' },  // Puerta Oeste del Jefe
+        { room: 'R11', x: 12, y: 11, edge: 'S' }, // Puerta Sur del Jefe
+        { room: 'R11', x: 15, y: 9, edge: 'E' },  // Salida Este hacia el Tesoro
+        { room: 'R17', x: 17, y: 11, edge: 'W' }, // Anillo Este -> Sala en "L" R17
+        { room: 'R17', x: 20, y: 11, edge: 'E' }, // R17 -> R18
+        { room: 'R9', x: 17, y: 7, edge: 'W' },   // Anillo Este -> R9
+        { room: 'R9', x: 18, y: 5, edge: 'N' },   // R9 -> R7
+      ],
+      secretDoor: { x: 22, y: 13, edge: 'S', room: 'R21' }, // R18 -> Almacén Secreto R21
+      blockedWalls: [
+        { x: 0, y: 4, type: 'blocked', note: 'Derrumbe en ala noroeste' },
+        { x: 25, y: 9, type: 'blocked', note: 'Derrumbe en pasillo exterior este' },
+      ],
+      furnRooms: ['R12', 'R4', 'R5', 'R15', 'R16', 'R7', 'R17', 'R18', 'R21'],
+      combatRooms: ['R12', 'R4', 'R5', 'R15', 'R16', 'R9', 'R7', 'R17', 'R18'],
+      alchemyCandidates: ['R5', 'R7', 'R18', 'R21'],
+      traps: [
+        { type: 'trap_pit', x: 9, y: 9, label: 'Foso frente a la Puerta Oeste del Jefe (DES CD 13)' },
+        { type: 'trap_spear', x: 12, y: 12, label: 'Trampa de Lanza en el Acceso Sur (DES CD 13)' },
+        { type: 'trap_falling_rock', x: 16, y: 11, label: 'Bloque Cayendo hacia la Sala en L (DES CD 14)' },
+      ],
+    },
+  ];
+
+  const arch = pick(ARCHETYPES);
+
+  // 2. Cámara de Alquimia Única Opcional (~72%; 100% en Laboratorio Alquímico)
   const hasAlchemyChamber = biome.id === 'laboratorio_alquimico' || Math.random() < 0.72;
-  const alchemyRoomId = hasAlchemyChamber ? pick(['R5', 'R7', 'R18', 'R21']) : null;
+  const alchemyRoomId = hasAlchemyChamber ? pick(arch.alchemyCandidates) : null;
   const alchemySeal = hasAlchemyChamber
-    ? alchemyRoomId === 'R21'
+    ? alchemyRoomId === arch.secretDoor.room
       ? 'secreta'
       : pick(['cerrada', 'sello_puzzle'])
     : null;
 
-  // Puertas coherentes en todas las salas activas (con estados tácticos)
-  const activeRooms = ['R14', 'R15', 'R12', 'R13', 'R4', 'R5', 'R1', 'R2', 'R11', 'R7', 'R10', 'R18', 'R21'];
-  ROOM_DOORS_PRESETS.filter((d) => activeRooms.includes(d.room)).forEach((d, idx) => {
+  // Colocar puertas del arquetipo con estados tácticos coherentes
+  arch.doors.forEach((d, idx) => {
     let doorState;
     if (d.room === alchemyRoomId && alchemySeal && alchemySeal !== 'secreta') {
       doorState = DOOR_STATES.find((ds) => ds.id === alchemySeal) || DOOR_STATES[1];
-    } else if (d.room === 'R11') {
+    } else if (d.room === 'R11' && idx % 2 === 0) {
       doorState = pick(DOOR_STATES.filter((ds) => ['cerrada', 'atrancada', 'sello_puzzle'].includes(ds.id)));
-    } else if (idx % 4 === 0) {
+    } else if (idx % 5 === 0) {
       doorState = pick(DOOR_STATES.filter((ds) => ds.id !== 'normal'));
     } else {
       doorState = DOOR_STATES[0];
     }
-    items.push({
+    addDoor({
       type: 'door',
       x: d.x,
       y: d.y,
@@ -602,47 +853,59 @@ function buildProceduralBoardMap({
     });
   });
 
-  // 1 Puerta Secreta garantizada hacia R21 (almacén secreto)
-  items.push({
+  // Puerta secreta coherente del arquetipo
+  addDoor({
     type: 'secret_door',
-    x: 20,
-    y: 16,
-    edge: 'E',
-    label: alchemyRoomId === 'R21' ? 'Puerta Secreta a la Cámara de Alquimia' : 'Puerta Secreta al Almacén',
+    x: arch.secretDoor.x,
+    y: arch.secretDoor.y,
+    edge: arch.secretDoor.edge,
+    label:
+      alchemyRoomId === arch.secretDoor.room
+        ? 'Puerta Secreta a la Cámara de Alquimia'
+        : 'Puerta Secreta al Almacén del Tesoro',
   });
 
-  // 3. Mobiliario temático del Bioma + Cofres (dimensiones exactas HeroQuest 2021)
+  // Paredes bloqueadas coherentes en los extremos exteriores
+  arch.blockedWalls.forEach((bw) => items.push(bw));
+
+  // 3. Escaleras 2×2 centradas en R14 (Inicio — deja espacio libre en las puertas)
+  occupy(2, 15, 2, 2);
+  items.push({ type: 'stairs', x: 2, y: 15, w: 2, h: 2, label: 'Escaleras de Entrada (Inicio)' });
+
+  // 4. Mobiliario Inteligente por Sala (Paredes vs Centro vs Esquina — Cero solapes y cero puertas tapadas)
   const nonAlchemyFurniture = biome.furniturePool.filter((f) => f !== 'alchemy_bench');
-  const furnRooms = ['R15', 'R12', 'R5', 'R1', 'R7', 'R10', 'R18', 'R21'];
-  furnRooms.forEach((rId) => {
+  const WALL_TYPES = ['weapon_rack', 'bookcase', 'cupboard', 'fireplace'];
+  const CENTER_TYPES = ['table', 'sorcerer_table', 'torture_rack', 'tomb'];
+
+  arch.furnRooms.forEach((rId) => {
     if (rId === alchemyRoomId) {
-      placeInRoom(rId, {
+      placeCenterFurniture(rId, {
         type: 'alchemy_bench',
-        w: 3,
-        h: 2,
         label: 'Mesa de Alquimia 3×2 (Única en la misión)',
         note: 'Los héroes pueden craftear pociones, antídotos y venenos aquí (tirada d20 de Arcano).',
       });
     } else {
-      const fType = pick(nonAlchemyFurniture.length > 0 ? nonAlchemyFurniture : ['table', 'chest', 'bookcase']);
-      const is3x2 = ['table', 'sorcerer_table', 'torture_rack', 'tomb'].includes(fType);
-      const is3x1 = ['weapon_rack', 'bookcase', 'cupboard', 'fireplace'].includes(fType);
-      const w = is3x2 || is3x1 ? 3 : 1;
-      const h = is3x2 ? 2 : 1;
-      placeInRoom(rId, { type: fType, w, h });
+      const fType = pick(nonAlchemyFurniture.length > 0 ? nonAlchemyFurniture : ['table', 'bookcase', 'cupboard']);
+      if (WALL_TYPES.includes(fType)) {
+        placeWallFurniture(rId, { type: fType });
+      } else if (CENTER_TYPES.includes(fType)) {
+        placeCenterFurniture(rId, { type: fType });
+      } else if (fType === 'chest') {
+        placeCornerChest(rId, { type: 'chest', label: 'Cofre del Tesoro' });
+      } else {
+        placeCornerChest(rId, { type: fType });
+      }
     }
-    if (rId === 'R1' || rId === 'R21' || rId === 'R11') {
-      placeInRoom(rId, { type: 'chest', w: 1, h: 1, label: 'Cofre del Tesoro' });
+    if (rId === 'R1' || rId === 'R21' || rId === arch.secretDoor.room) {
+      placeCornerChest(rId, { type: 'chest', label: 'Cofre del Tesoro' });
     }
   });
 
-  // 4. Monstruos en salas laterales adaptados dinámicamente al número de jugadores (1 a 6)
-  const combatRooms =
-    partySize === 1
-      ? ['R15', 'R12', 'R5', 'R2', 'R7', 'R18'] // En solitario deja más salas de respiro/exploración
-      : ['R15', 'R12', 'R4', 'R5', 'R1', 'R2', 'R7', 'R10', 'R18'];
-  const baseCount = partySize === 1 ? 1 : partySize === 2 ? 1 : partySize >= 5 ? 3 : 2;
-  combatRooms.forEach((rId, idx) => {
+  // 5. Monstruos en Formaciones Tácticas Espaciadas (adaptados a 1–4 héroes)
+  const effectiveCombatRooms =
+    partySize === 1 ? arch.combatRooms.slice(0, 6) : arch.combatRooms;
+  const baseCount = partySize === 1 ? 1 : partySize === 2 ? 1 : 2;
+  effectiveCombatRooms.forEach((rId, idx) => {
     const count =
       partySize === 1
         ? 1
@@ -652,45 +915,61 @@ function buildProceduralBoardMap({
     for (let i = 0; i < count; i++) {
       const mType = pick(biome.monsterPool);
       const alertState = pick(ALERTNESS_LIST);
-      placeInRoom(rId, {
-        type: mType,
-        alertness: alertState,
-        label: `${mType.toUpperCase()} [${alertState}]`,
-      });
+      placeTacticalUnit(
+        rId,
+        {
+          type: mType,
+          alertness: alertState,
+          label: `${mType.toUpperCase()} [${alertState}]`,
+        },
+        i === count - 1
+      );
     }
   });
 
-  // 5. Sala del Jefe Central (R11) + Trono/Altar + Escoltas según jugadores
-  placeInRoom('R11', { type: 'throne', w: 1, h: 1, label: 'Trono / Foco del Jefe' });
-  placeInRoom('R11', { type: 'chest', w: 1, h: 1, label: 'Cofre de Reliquia' });
+  // 6. Gran Salón del Jefe (R11): Trono centrado en pared norte + Chimenea/Altar + Cofre en esquina + Jefe al fondo + Escoltas
+  if (canPlace(12, 7, 1, 1, roomById('R11'), true)) {
+    occupy(12, 7, 1, 1);
+    items.push({ type: 'throne', x: 12, y: 7, w: 1, h: 1, label: `Trono de ${bossName}` });
+  }
+  placeCornerChest('R11', { type: 'chest', label: 'Cofre de Reliquia del Jefe' });
   const bossType = pick(biome.bossPool);
-  placeInRoom('R11', {
-    type: bossType,
-    isBoss: true,
-    alertness: 'Guardia',
-    label: `JEFE: ${bossName}`,
-  });
+  placeTacticalUnit(
+    'R11',
+    {
+      type: bossType,
+      isBoss: true,
+      alertness: 'Guardia',
+      label: `JEFE: ${bossName}`,
+    },
+    true
+  );
   const bossEscorts = partySize === 1 ? 0 : partySize === 2 ? 1 : Math.max(2, partySize - 1);
   for (let i = 0; i < bossEscorts; i++) {
-    placeInRoom('R11', {
-      type: pick(biome.monsterPool),
-      alertness: 'Guardia',
-      label: 'Escolta del Jefe',
-    });
+    placeTacticalUnit(
+      'R11',
+      {
+        type: pick(biome.monsterPool),
+        alertness: 'Guardia',
+        label: 'Escolta del Jefe',
+      },
+      false
+    );
   }
 
-  // 6. NPC / Prisionero en R10 o R1
-  placeInRoom(plot.id === 'rescate' ? 'R10' : 'R1', {
-    type: 'npc',
-    label: plot.id === 'rescate' ? 'Prisionero a Rescatar (Objetivo)' : 'Explorador Herido (Misión Secundaria)',
-  });
-
-  // 7. Trampas tácticas en pasillos y accesos
-  items.push(
-    { type: 'trap_pit', x: 9, y: 12, label: 'Foso Oculto (DES CD 13)' },
-    { type: 'trap_spear', x: 12, y: 6, label: 'Trampa de Lanza (DES CD 13)' },
-    { type: 'trap_pit', x: 16, y: 9, label: 'Trampa de Foso Este (DES CD 14)' }
+  // 7. NPC / Prisionero en una sala secundaria activa
+  const npcRoom = arch.furnRooms.includes('R10') ? 'R10' : arch.furnRooms[arch.furnRooms.length - 1];
+  placeTacticalUnit(
+    npcRoom,
+    {
+      type: 'npc',
+      label: plot.id === 'rescate' ? 'Prisionero a Rescatar (Objetivo)' : 'Explorador Herido (Misión Secundaria)',
+    },
+    true
   );
+
+  // 8. Trampas tácticas ubicadas sobre la ruta real del arquetipo
+  arch.traps.forEach((t) => items.push(t));
 
   // Notas de sala estructuradas (compatibles 100% con TacticalBoard SVG y pestaña Notas)
   const notes = [
