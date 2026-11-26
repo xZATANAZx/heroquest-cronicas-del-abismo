@@ -265,31 +265,63 @@ export default function QuestsPanel({
 
               {/* Misiones One-Shot Recientes */}
               <div className="grimoire-panel rounded-2xl p-4 space-y-2.5">
-                <h3 className="font-display text-sm font-bold uppercase tracking-wider text-amber-300">
-                  📜 Misiones Procedurales Guardadas ({proceduralQuests.length})
-                </h3>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-display text-sm font-bold uppercase tracking-wider text-amber-300">
+                    📜 Misiones Creadas ({proceduralQuests.length})
+                  </h3>
+                  {proceduralQuests.length >= 2 && (
+                    <button
+                      onClick={() => {
+                        setProceduralQuests?.([]);
+                        setSelectedProcQuest(null);
+                      }}
+                      className="px-2 py-1 rounded-lg bg-rose-950/60 hover:bg-rose-800 border border-rose-700/60 text-rose-200 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                      title="Eliminar todas las misiones procedurales guardadas"
+                    >
+                      <Trash2 className="w-3 h-3" /> Borrar todas
+                    </button>
+                  )}
+                </div>
                 {proceduralQuests.length === 0 ? (
                   <p className="text-xs text-stone-500 italic">Genera una misión One-Shot arriba o acepta una en la Taberna.</p>
                 ) : (
                   <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
                     {proceduralQuests.map((q) => (
-                      <button
+                      <div
                         key={q.id}
                         onClick={() => setSelectedProcQuest(q)}
-                        className={`w-full p-2.5 rounded-xl border text-left text-xs flex items-center justify-between cursor-pointer ${
+                        className={`w-full p-2.5 rounded-xl border text-left text-xs flex items-center justify-between gap-2 cursor-pointer transition ${
                           selectedProcQuest?.id === q.id
                             ? 'bg-amber-600/20 border-amber-400 text-amber-100'
-                            : 'bg-stone-900/70 border-stone-800 text-stone-300'
+                            : 'bg-stone-900/70 border-stone-800 text-stone-300 hover:border-stone-600'
                         }`}
                       >
-                        <div>
-                          <div className="font-bold">{q.title}</div>
-                          <div className="text-[11px] text-stone-400">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold truncate">{q.title}</div>
+                          <div className="text-[11px] text-stone-400 truncate">
                             {q.biome.icon} {q.biome.name} · Nv.{q.partyLevel}
                           </div>
                         </div>
-                        {completedQuests.includes(q.id) && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
-                      </button>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {completedQuests.includes(q.id) && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setProceduralQuests?.((prev) => {
+                                const next = prev.filter((item) => item.id !== q.id);
+                                if (selectedProcQuest?.id === q.id) {
+                                  setSelectedProcQuest(next[0] || null);
+                                }
+                                return next;
+                              });
+                            }}
+                            className="p-1.5 rounded-lg bg-stone-950/80 hover:bg-rose-900/80 text-stone-400 hover:text-rose-200 border border-stone-800 cursor-pointer transition"
+                            title="Borrar esta misión creada"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}
