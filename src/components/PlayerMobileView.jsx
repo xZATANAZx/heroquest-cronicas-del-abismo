@@ -242,6 +242,7 @@ export default function PlayerMobileView({ initialPlayerParam }) {
   const [craftOutcome, setCraftOutcome] = useState(null);
   const [cityOpen, setCityOpen] = useState(false);
   const [cityModeMobile, setCityModeMobile] = useState('relaxed');
+  const [cityVisitId, setCityVisitId] = useState(0);
   const [cityPhase, setCityPhase] = useState('gate'); // 'gate' | 'event' | 'districts'
   const [arrivalStory, setArrivalStory] = useState('');
   const [personalCityEvent, setPersonalCityEvent] = useState(null);
@@ -316,14 +317,35 @@ export default function PlayerMobileView({ initialPlayerParam }) {
           if (cRes.ok) {
             const cData = await cRes.json();
             const isOpen = Boolean(cData.cityOpen);
+            const serverVisitId = Number(cData.visitId || 0);
+            const serverMode = cData.cityMode || 'relaxed';
             setCityOpen(isOpen);
-            if (cData.cityMode) setCityModeMobile(cData.cityMode);
-            if (isOpen && cData.visitId && cData.visitId !== lastCityVisitIdRef.current) {
-              lastCityVisitIdRef.current = cData.visitId;
-              setCityPhase('gate');
-              setPersonalCityEvent(null);
-              setPersonalEventOutcome('');
-              setArrivalStory('');
+            setCityModeMobile(serverMode);
+            if (!isOpen) {
+              // El DM cerró la ciudad: limpiar estado para la próxima vez que la abra
+              lastCityVisitIdRef.current = 0;
+              setCityVisitId(0);
+            } else if (serverVisitId && serverVisitId !== lastCityVisitIdRef.current) {
+              lastCityVisitIdRef.current = serverVisitId;
+              setCityVisitId(serverVisitId);
+              // Verificar si ESTE héroe ya entró durante esta misma apertura de Ciudad
+              let alreadyEntered = false;
+              try {
+                alreadyEntered =
+                  localStorage.getItem(`hq_city_entered_${heroId}`) === String(serverVisitId);
+              } catch {
+                // ignore
+              }
+              if (alreadyEntered) {
+                setCityPhase('districts');
+              } else {
+                setCityPhase('gate');
+                setPersonalCityEvent(null);
+                setPersonalEventOutcome('');
+                setArrivalStory(
+                  generatePersonalCityArrival(found || hero, serverMode)
+                );
+              }
             }
             if (isOpen) {
               const ctRes = await fetch('/api/contracts', { cache: 'no-store' });
@@ -2486,9 +2508,11 @@ export default function PlayerMobileView({ initialPlayerParam }) {
             return Math.max(10, Math.round(baseVal * sellRate));
           };
 
-          const displayArrival = arrivalStory || generatePersonalCityArrival(hero, cityModeMobile);
+          const displayArrival =
+            arrivalStory ||
+            `Las grandes puertas de piedra de El Bastión se abren ante ti, ${hero.name}. Es tu momento de recorrer la ciudad a tu ritmo.`;
 
-          // PASO 1 (INDIVIDUAL POR CELULAR): PORTADA NARRATIVA DE ENTRADA A LA CIUDAD
+          // PASO 1 (INDIVIDUAL POR CELULAR): PORTADA NARRATIVA DE ENTRADA A LA CIUDAD (FIJA, NO CAMBIA)
           if (cityPhase === 'gate') {
             return (
               <div className="space-y-4">
@@ -2512,7 +2536,13 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                     type="button"
                     onClick={() => {
                       const ev = generatePersonalCityEvent(hero, cityModeMobile);
-                      setArrivalStory(displayArrival);
+                      if (cityVisitId) {
+                        try {
+                          localStorage.setItem(`hq_city_entered_${hero.id}`, String(cityVisitId));
+                        } catch {
+                          // ignore
+                        }
+                      }
                       setPersonalCityEvent(ev);
                       setPersonalEventOutcome('');
                       setCityPhase('event');
