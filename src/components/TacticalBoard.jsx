@@ -671,10 +671,12 @@ export default function TacticalBoard({
     setQuickHP({});
   };
 
-  // Adapta automáticamente los monstruos del tablero (incluso en Mapas Oficiales) para 1 o 2 jugadores
+  // Mapas oficiales SIEMPRE conservan 100% de sus miniaturas en sus casillas exactas del Libro de Misiones.
+  // Solo los mapas procedurales filtran escoltas en partidas de 1–2 jugadores.
   const allMapItems = useMemo(() => {
     const baseItems = currentMap.items || [];
-    if (partySize >= 3) {
+    const isProcedural = Boolean(currentMap._questRef || currentMap.isProcedural);
+    if (!isProcedural || partySize >= 3) {
       return [...baseItems, ...dynamicItems];
     }
 
@@ -1017,10 +1019,21 @@ export default function TacticalBoard({
   const selectedRoomObj = getRoomObj(selectedRoomId);
   const roomNotes = (currentMap.notes || []).filter((n) => n.room === selectedRoomId);
 
-  // Salas que SÍ participan en esta misión (tienen puerta conectada, monstruo, mueble o nota)
-  // Las salas sin usar se atenúan estilo Libro de Misiones Oficial 2021 para claridad total
+  // Salas que SÍ participan en esta misión:
+  // Si el mapa tiene darkCells oficiales (<dark> del Libro de Misiones), una sala está activa
+  // si y solo si NO está cubierta por darkCells (coincidencia 100% exacta con el libro oficial).
   const activeMissionRooms = useMemo(() => {
     const set = new Set();
+    if (Array.isArray(currentMap.darkCells) && currentMap.darkCells.length > 0) {
+      const darkSet = new Set(currentMap.darkCells);
+      for (const r of HQ_ROOMS) {
+        const cells = getRoomCells(r);
+        if (cells.some((c) => !darkSet.has(`${c.x},${c.y}`))) {
+          set.add(r.id);
+        }
+      }
+      return set;
+    }
     if (currentMap.startRoom) set.add(currentMap.startRoom);
     (allMapItems || []).forEach((it) => {
       const rA = getRoomAt(it.x, it.y);
@@ -1031,9 +1044,6 @@ export default function TacticalBoard({
         const rB = getRoomAt(ox, oy);
         if (rB !== 'CORRIDOR') set.add(rB);
       }
-    });
-    (currentMap.notes || []).forEach((n) => {
-      if (n.room && n.room !== 'CORRIDOR') set.add(n.room);
     });
     return set;
   }, [allMapItems, currentMap]);
@@ -1599,15 +1609,27 @@ export default function TacticalBoard({
               );
             })}
 
-            {/* Insignias de Notas Oficiales (A, B, C, D, E, BOSS) en esquina superior derecha de cada sala */}
-            {(currentMap.notes || []).map((n) => {
-              const r = getRoomObj(n.room);
-              if (!r) return null;
-              const bx = MARGIN_LEFT + (r.x2 + 1) * CELL - 12;
-              const by = MARGIN_TOP + r.y1 * CELL + 12;
+            {/* Insignias de Notas Oficiales (A, B, C, D, E, X, XX) en su casilla exacta del Libro de Misiones */}
+            {(currentMap.notes || []).map((n, nIdx) => {
+              let bx;
+              let by;
+              if (typeof n.x === 'number' && typeof n.y === 'number') {
+                bx = MARGIN_LEFT + n.x * CELL + CELL / 2;
+                by = MARGIN_TOP + n.y * CELL + CELL / 2;
+              } else {
+                const r = getRoomObj(n.room);
+                if (!r) return null;
+                bx = MARGIN_LEFT + (r.x2 + 1) * CELL - 12;
+                by = MARGIN_TOP + r.y1 * CELL + 12;
+              }
               return (
-                <g key={n.code} onClick={() => setSelectedRoomId(n.room)} className="cursor-pointer">
-                  <circle cx={bx} cy={by} r="10" fill="#991b1b" stroke="#fde047" strokeWidth="2" />
+                <g
+                  key={`${n.code}-${nIdx}`}
+                  onClick={() => setSelectedRoomId(n.room || 'CORRIDOR')}
+                  className="cursor-pointer"
+                >
+                  <title>{`${n.code}: ${n.title}`}</title>
+                  <circle cx={bx} cy={by} r="10.5" fill="#991b1b" stroke="#fde047" strokeWidth="2" />
                   <text x={bx} y={by + 3.5} textAnchor="middle" fontSize="8.5" fontWeight="900" fill="#fef08a">
                     {n.code.slice(0, 2)}
                   </text>
