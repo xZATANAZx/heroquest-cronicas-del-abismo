@@ -586,6 +586,18 @@ export default function CharacterForge({
                     <p className="text-[11px] text-stone-300 mt-2 leading-snug">
                       <RichRuleText text={c.coreAbility} onSelectKeyword={setActiveKeyword} />
                     </p>
+                    {Array.isArray(c.startingGear) && c.startingGear.length > 0 && (
+                      <div className="mt-2.5 pt-2 border-t border-stone-800/80 space-y-0.5">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                          🎒 Equipo Inicial:
+                        </div>
+                        {c.startingGear.map((g, gi) => (
+                          <div key={gi} className="text-[10px] text-stone-300 leading-tight">
+                            • {g}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </button>
                 );
               })}

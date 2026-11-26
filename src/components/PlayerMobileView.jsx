@@ -23,6 +23,7 @@ import {
   CLASSES,
   RACES,
   LEVEL_TABLE,
+  EQUIPMENT_CATALOG,
   SPELLS_CATALOG,
   SPELL_UPGRADE_TIERS,
   getHeroUnlockedSpells,
@@ -41,6 +42,7 @@ import PuzzleModal from './PuzzleModal';
 import { getRarityMeta } from '../data/lootCatalog';
 import { MATERIALS_CATALOG, CRAFTING_RECIPES, getMaterialById } from '../data/craftingSystem';
 import { PROFESSIONS, TAVERN_FEASTS, FAMILIARS, getHeroFameTier } from '../data/citySystem';
+import { OFFICIAL_ALCHEMY_DECK } from '../data/officialCards';
 
 // Enriquece automáticamente cualquier objeto (incluyendo equipo inicial de clase) para que SIEMPRE muestre tipo real, dados y efecto claro
 function enrichGearItem(raw) {
@@ -234,6 +236,8 @@ export default function PlayerMobileView({ initialPlayerParam }) {
   const [cityOpen, setCityOpen] = useState(false);
   const [cityContracts, setCityContracts] = useState([]);
   const [contractVotes, setContractVotes] = useState({});
+  const [mobileCitySection, setMobileCitySection] = useState('posada'); // 'posada' | 'herreria' | 'alquimista' | 'gremio' | 'banco'
+  const [mobileBankAmt, setMobileBankAmt] = useState(50);
   const [activePuzzle, setActivePuzzle] = useState(null);
   const dismissedPuzzleIdsRef = useRef(new Set());
   const lastVersionRef = useRef(null);
@@ -2487,8 +2491,36 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                     <strong>{myProf.icon} {myProf.name}:</strong> {myProf.cityBonus}
                   </div>
                 )}
+
+                {/* Selector de Secciones de la Ciudad (1 sección a la vez, ordenado y sin amontonar) */}
+                <div className="grid grid-cols-5 gap-1 pt-2 border-t border-slate-800">
+                  {[
+                    { id: 'posada', icon: '🍺', label: 'Posada' },
+                    { id: 'herreria', icon: '⚒️', label: 'Herrería' },
+                    { id: 'alquimista', icon: '🧪', label: 'Alquimia' },
+                    { id: 'gremio', icon: '🐾', label: 'Gremio' },
+                    { id: 'banco', icon: '🏦', label: 'Banco' },
+                  ].map((sec) => (
+                    <button
+                      key={sec.id}
+                      type="button"
+                      onClick={() => setMobileCitySection(sec.id)}
+                      className={`py-2 px-1 rounded-xl text-[10px] font-black flex flex-col items-center gap-0.5 border cursor-pointer transition ${
+                        mobileCitySection === sec.id
+                          ? 'bg-amber-500 text-slate-950 border-amber-300 shadow'
+                          : 'bg-slate-900/90 text-slate-300 border-slate-800 hover:border-amber-600/60'
+                      }`}
+                    >
+                      <span className="text-sm leading-none">{sec.icon}</span>
+                      <span>{sec.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
+              {/* ==================== SECCIÓN 1: POSADA, BANQUETES Y CONTRATOS ==================== */}
+              {mobileCitySection === 'posada' && (
+                <div className="space-y-4">
               {/* Tablón de Contratos de la Taberna (Votación en Vivo — Sin Spoilers) */}
               {cityContracts.length > 0 && (
                 <div className="grimoire-panel rounded-2xl p-4 space-y-2.5 border-amber-500/50">
@@ -2649,6 +2681,59 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                   })}
                 </div>
               </div>
+                </div>
+              )}
+
+              {/* ==================== SECCIÓN 2: HERRERÍA (ARMERÍA + FORJA + VENDER) ==================== */}
+              {mobileCitySection === 'herreria' && (
+                <div className="space-y-4">
+                  {/* Armería: Comprar Armas, Armaduras y Herramientas */}
+                  <div className="grimoire-panel rounded-2xl p-4 space-y-2.5 border-amber-700/50">
+                    <div className="text-xs font-bold uppercase tracking-wider text-amber-300">
+                      ⚔️ Armería (Armas, Armaduras y Herramientas)
+                    </div>
+                    <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+                      {EQUIPMENT_CATALOG.filter((e) => e.price > 0).map((e) => {
+                        const price = calcMyPrice(e.price, 'herreria');
+                        return (
+                          <div key={e.id} className="p-2.5 rounded-xl bg-slate-900/85 border border-slate-800 flex items-center justify-between gap-2 text-xs">
+                            <div className="min-w-0">
+                              <div className="font-bold text-slate-100">
+                                {e.name} <span className="text-emerald-300">({e.dice})</span>
+                              </div>
+                              <div className="text-[10px] text-slate-400 leading-snug">{e.traits}</div>
+                            </div>
+                            <button
+                              disabled={(hero.gold || 0) < price}
+                              onClick={async () => {
+                                await pushHeroUpdate({
+                                  ...hero,
+                                  gold: (hero.gold || 0) - price,
+                                  inventory: [
+                                    ...(hero.inventory || []),
+                                    {
+                                      id: `mob-gear-${Date.now()}`,
+                                      name: e.name,
+                                      type: e.type,
+                                      dice: e.dice,
+                                      traits: e.traits,
+                                      special: e.traits,
+                                      equipped: false,
+                                      qty: 1,
+                                    },
+                                  ],
+                                });
+                                showToast(`⚔️ Compraste ${e.name} por ${price} MO.`);
+                              }}
+                              className="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-black text-[10px] cursor-pointer shrink-0"
+                            >
+                              {price} MO
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
 
               {/* Forja de Equipo por Rareza (Exclusivo de Ciudad) */}
               <div className="grimoire-panel rounded-2xl p-4 space-y-2.5 border-sky-700/50">
@@ -2717,6 +2802,102 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                   })}
                 </div>
               </div>
+
+              {/* Mercado: Vender Botín Sobrante para Conseguir Oro */}
+              <div className="grimoire-panel rounded-2xl p-4 space-y-2 border-amber-700/50">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-xs font-bold uppercase tracking-wider text-amber-300">
+                    💰 Vender Botín Sobrante ({Math.round(sellRate * 100)}% valor)
+                  </div>
+                </div>
+                {(hero.inventory || []).filter((it) => !it.equipped).length === 0 ? (
+                  <p className="text-[11px] text-slate-400 italic">
+                    No tienes objetos sin equipar en tu mochila para vender (desequipa primero si quieres vender algo).
+                  </p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {(hero.inventory || [])
+                      .filter((it) => !it.equipped)
+                      .map((it) => {
+                        const val = getSellPrice(it);
+                        return (
+                          <div key={it.id} className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between gap-2 text-xs">
+                            <div className="min-w-0">
+                              <div className="font-bold text-slate-100 truncate">{it.name}</div>
+                              <div className="text-[10px] text-slate-400">{it.type || 'Objeto'} · {it.rarity || 'común'}</div>
+                            </div>
+                            <button
+                              onClick={async () => {
+                                await pushHeroUpdate({
+                                  ...hero,
+                                  gold: (hero.gold || 0) + val,
+                                  inventory: (hero.inventory || []).filter((x) => x.id !== it.id),
+                                });
+                                showToast(`💰 Vendiste ${it.name} por +${val} MO.`);
+                              }}
+                              className="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[10px] cursor-pointer shrink-0"
+                            >
+                              Vender +{val} MO
+                            </button>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+                </div>
+              )}
+
+              {/* ==================== SECCIÓN 3: TORRE DEL ALQUIMISTA (POCIONES + MEJORAR HECHIZOS) ==================== */}
+              {mobileCitySection === 'alquimista' && (
+                <div className="space-y-4">
+                  {/* Botica Oficial de Alquimia (20 Pociones) */}
+                  <div className="grimoire-panel rounded-2xl p-4 space-y-2.5 border-emerald-700/50">
+                    <div className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+                      🧪 Botica Oficial de Alquimia ({OFFICIAL_ALCHEMY_DECK.length} Pociones)
+                    </div>
+                    <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
+                      {OFFICIAL_ALCHEMY_DECK.map((pot) => {
+                        const price = calcMyPrice(pot.price || 150, 'alquimista');
+                        return (
+                          <div key={pot.id} className="p-2.5 rounded-xl bg-slate-900/85 border border-slate-800 flex items-center justify-between gap-2 text-xs">
+                            <div className="min-w-0">
+                              <div className="font-bold text-emerald-200">
+                                {pot.name} <span className="text-amber-300 text-[10px]">({pot.dice || '1 uso'})</span>
+                              </div>
+                              <div className="text-[10px] text-slate-300 leading-snug">{pot.text}</div>
+                            </div>
+                            <button
+                              disabled={(hero.gold || 0) < price}
+                              onClick={async () => {
+                                await pushHeroUpdate({
+                                  ...hero,
+                                  gold: (hero.gold || 0) - price,
+                                  inventory: [
+                                    ...(hero.inventory || []),
+                                    {
+                                      id: `mob-pot-${Date.now()}`,
+                                      name: pot.name,
+                                      type: 'Poción',
+                                      dice: pot.dice || '1 uso',
+                                      traits: pot.text,
+                                      special: pot.text,
+                                      equipped: false,
+                                      qty: 1,
+                                    },
+                                  ],
+                                });
+                                showToast(`🧪 Compraste ${pot.name} por ${price} MO.`);
+                              }}
+                              className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-black text-[10px] cursor-pointer shrink-0"
+                            >
+                              {price} MO
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
 
               {/* Torre del Alquimista: Mejorar Mis Hechizos (Tope = Mi Nivel de Héroe) */}
               {getHeroUnlockedSpells(hero).length > 0 && (() => {
@@ -2812,50 +2993,12 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                   </div>
                 );
               })()}
-
-              {/* Mercado: Vender Botín Sobrante para Conseguir Oro */}
-              <div className="grimoire-panel rounded-2xl p-4 space-y-2 border-amber-700/50">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="text-xs font-bold uppercase tracking-wider text-amber-300">
-                    💰 Vender Botín Sobrante ({Math.round(sellRate * 100)}% valor)
-                  </div>
                 </div>
-                {(hero.inventory || []).filter((it) => !it.equipped).length === 0 ? (
-                  <p className="text-[11px] text-slate-400 italic">
-                    No tienes objetos sin equipar en tu mochila para vender (desequipa primero si quieres vender algo).
-                  </p>
-                ) : (
-                  <div className="space-y-1.5">
-                    {(hero.inventory || [])
-                      .filter((it) => !it.equipped)
-                      .map((it) => {
-                        const val = getSellPrice(it);
-                        return (
-                          <div key={it.id} className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between gap-2 text-xs">
-                            <div className="min-w-0">
-                              <div className="font-bold text-slate-100 truncate">{it.name}</div>
-                              <div className="text-[10px] text-slate-400">{it.type || 'Objeto'} · {it.rarity || 'común'}</div>
-                            </div>
-                            <button
-                              onClick={async () => {
-                                await pushHeroUpdate({
-                                  ...hero,
-                                  gold: (hero.gold || 0) + val,
-                                  inventory: (hero.inventory || []).filter((x) => x.id !== it.id),
-                                });
-                                showToast(`💰 Vendiste ${it.name} por +${val} MO.`);
-                              }}
-                              className="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[10px] cursor-pointer shrink-0"
-                            >
-                              Vender +{val} MO
-                            </button>
-                          </div>
-                        );
-                      })}
-                  </div>
-                )}
-              </div>
+              )}
 
+              {/* ==================== SECCIÓN 4: GREMIO (FAMILIARES) ==================== */}
+              {mobileCitySection === 'gremio' && (
+                <div className="space-y-4">
               {/* Familiares de Utilidad */}
               <div className="grimoire-panel rounded-2xl p-4 space-y-2.5">
                 <div>
@@ -2897,6 +3040,74 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                   })}
                 </div>
               </div>
+                </div>
+              )}
+
+              {/* ==================== SECCIÓN 5: BANCO DEL BASTIÓN ==================== */}
+              {mobileCitySection === 'banco' && (
+                <div className="grimoire-panel rounded-2xl p-4 space-y-3 border-amber-600/50 text-xs">
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-amber-300">
+                      🏦 Banco del Bastión (Oro Seguro)
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Guarda tu oro para protegerlo de robos en Modo Supervivencia o retirarlo cuando vayas a comprar.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-center">
+                    <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                      <div className="text-[10px] text-slate-400 uppercase font-bold">En Bolsillo</div>
+                      <div className="text-base font-black text-amber-300">{hero.gold || 0} MO</div>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-slate-900 border border-emerald-700/50">
+                      <div className="text-[10px] text-slate-400 uppercase font-bold">En Banco</div>
+                      <div className="text-base font-black text-emerald-300">{hero.bankedGold || 0} MO</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={10}
+                      step={10}
+                      value={mobileBankAmt}
+                      onChange={(e) => setMobileBankAmt(Math.max(0, Number(e.target.value) || 0))}
+                      className="w-24 px-2.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-amber-200 font-bold text-center"
+                    />
+                    <button
+                      disabled={(hero.gold || 0) <= 0 || mobileBankAmt <= 0}
+                      onClick={async () => {
+                        const amt = Math.min(hero.gold || 0, mobileBankAmt);
+                        if (amt <= 0) return;
+                        await pushHeroUpdate({
+                          ...hero,
+                          gold: (hero.gold || 0) - amt,
+                          bankedGold: (hero.bankedGold || 0) + amt,
+                        });
+                        showToast(`🏦 Depositaste ${amt} MO en el Banco.`);
+                      }}
+                      className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-black cursor-pointer"
+                    >
+                      Depositar
+                    </button>
+                    <button
+                      disabled={(hero.bankedGold || 0) <= 0 || mobileBankAmt <= 0}
+                      onClick={async () => {
+                        const amt = Math.min(hero.bankedGold || 0, mobileBankAmt);
+                        if (amt <= 0) return;
+                        await pushHeroUpdate({
+                          ...hero,
+                          gold: (hero.gold || 0) + amt,
+                          bankedGold: (hero.bankedGold || 0) - amt,
+                        });
+                        showToast(`💰 Retiraste ${amt} MO del Banco.`);
+                      }}
+                      className="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-black cursor-pointer"
+                    >
+                      Retirar
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}
