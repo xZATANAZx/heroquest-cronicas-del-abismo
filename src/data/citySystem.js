@@ -746,3 +746,419 @@ export const TOWN_EVENTS_TABLE = [
 export function rollTownEvent() {
   return TOWN_EVENTS_TABLE[Math.floor(Math.random() * TOWN_EVENTS_TABLE.length)];
 }
+
+// ============================================================================
+// ENTRADA NARRATIVA + EVENTOS PERSONALES INDEPENDIENTES DE CIUDAD (CELULAR)
+// Adaptados a Rasgo (Quirk), Profesión, Clase, Raza y Modo Supervivencia
+// ============================================================================
+export function generatePersonalCityArrival(hero, cityMode = 'relaxed') {
+  const name = hero?.name || 'Aventurero';
+  const isSurv = cityMode === 'survival';
+  const scenes = isSurv
+    ? [
+        `Las puertas de hierro de El Bastión chirrían bajo una lluvia fría. Los guardias revisan cada capa con recelo y el aire huele a hierro y carbón. ${name}, en Modo Supervivencia cada moneda cuenta y las sombras de los callejones observan...`,
+        `Las antorchas parpadean en la plaza empedrada mientras las campanas anuncian el toque de queda. Mercaderes nerviosos cierran sus puestos temprano. ${name}, cruzar las murallas hoy exige astucia y mantener tu oro a salvo.`,
+      ]
+    : [
+        `Las grandes puertas de piedra de El Bastión se abren ante ti. El aroma a pan recién horneado, acero templado y especias alquímicas llena la avenida principal. ${name}, el murmullo de la taberna y el brillo de la forja te dan la bienvenida.`,
+        `Banderines dorados ondean sobre las torres del Bastión mientras los bardos afinan sus laúdes en la plaza. Al reconocerte por tus hazañas, varios ciudadanos apartan el paso con admiración. ¿Qué te espera hoy en las calles, ${name}?`,
+        `La niebla del camino queda atrás y las farolas cálidas iluminan el mercado del Bastión. Herreros golpean el yunque al compás de las risas en El Grifo Dorado. Es tu momento de recorrer la ciudad a tu ritmo, ${name}.`,
+      ];
+  return scenes[Math.floor(Math.random() * scenes.length)];
+}
+
+export function generatePersonalCityEvent(hero, cityMode = 'relaxed') {
+  const isSurv = cityMode === 'survival';
+  const quirkId = hero?.quirk?.id || '';
+  const profId = hero?.professionId || '';
+  const clsId = hero?.classId || '';
+  const raceId = hero?.raceId || '';
+  const gold = Number(hero?.gold || 0);
+
+  const personalPool = [];
+
+  // --- 1. EVENTOS POR RASGO DE PERSONALIDAD (QUIRK) ---
+  if (quirkId === 'piromano') {
+    personalPool.push({
+      id: 'pe_quirk_piromano',
+      tag: '🔥 Tu Rasgo: Pirómano Fascinado',
+      title: 'La Fragua Desbocada del Callejón',
+      story: 'Un aprendiz de herrero perdió el control de su crisol y las chispas amenazan un carro de heno. ¡El fuego te hipnotiza, pero también sabes exactamente cómo domarlo!',
+      choices: [
+        {
+          label: '🔥 Domar las llamas con estilo (+1 Polvo Rúnico, +15 MO)',
+          goldDelta: 15,
+          materialId: 'polvo_runico',
+          materialQty: 1,
+          outcome: 'Controlas la llamarada con una sonrisa fascinante; el herrero agradecido te regala 15 MO y ceniza rúnica.',
+        },
+        {
+          label: '💥 Aprovechar las brasas para un truco (+1 Aceite, +1 Fama)',
+          fameDelta: 1,
+          materialId: 'aceite_alquitran',
+          materialQty: 1,
+          outcome: 'La multitud aplaude tu espectáculo ígneo. Ganas +1 Fama y 1 Aceite de Alquitrán.',
+        },
+      ],
+    });
+  }
+  if (quirkId === 'gloton_heroico') {
+    personalPool.push({
+      id: 'pe_quirk_gloton',
+      tag: '🍖 Tu Rasgo: Glotón de Taberna',
+      title: 'Reto del Estofado de Dragón',
+      story: 'El tabernero de El Grifo Dorado te reta a terminar un caldero picante ante toda la posada.',
+      choices: [
+        {
+          label: '🍲 ¡Aceptar el reto! (+1 Ración y +2 PC temporales)',
+          materialId: 'racion_mazmorra',
+          materialQty: 1,
+          buff: { id: 'city_estofado', label: '🍲 Estofado Heroico (+2 PC temp)', type: 'buff', duration: 99 },
+          outcome: '¡Lo devoras sin pestañear! Te llevas +1 Ración gratis y empiezas la próxima misión con vigor (+2 PC temp).',
+        },
+        {
+          label: '🍺 Invitar una ronda rápida (-10 MO, +1 Fama)',
+          goldDelta: -10,
+          fameDelta: 1,
+          outcome: 'Brindas con los parroquianos y todos corean tu nombre (+1 Fama).',
+        },
+      ],
+    });
+  }
+  if (quirkId === 'coleccionista_huesos') {
+    personalPool.push({
+      id: 'pe_quirk_coleccionista',
+      tag: '🦴 Tu Rasgo: Coleccionista de Trofeos',
+      title: 'El Anticuario de Curiosidades',
+      story: 'Un coleccionista excéntrico te detiene en el mercado y señala tu mochila buscando piezas raras de mazmorra.',
+      choices: [
+        {
+          label: '🦴 Intercambiar historias y piezas (+1 Huesos y Colmillos, +20 MO)',
+          goldDelta: 20,
+          materialId: 'colmillos_hueso',
+          materialQty: 1,
+          outcome: 'Te compra un relato detallado y te entrega 20 MO + 1 Huesos y Colmillos.',
+        },
+        {
+          label: '💎 Comprar su caja misteriosa (-25 MO → +1 Esencia Espectral)',
+          goldDelta: -25,
+          materialId: 'esencia_espectral',
+          materialQty: 1,
+          outcome: '¡Dentro de la caja había ectoplasma sellado! Consigues +1 Esencia Espectral.',
+        },
+      ],
+    });
+  }
+  if (quirkId === 'negociador_nato') {
+    personalPool.push({
+      id: 'pe_quirk_negociador',
+      tag: '💬 Tu Rasgo: Lengua de Plata',
+      title: 'Disputa en la Subasta del Puerto',
+      story: 'Dos mercaderes discuten acaloradamente por un cargamento sellado. Tu labia puede resolverlo a tu favor.',
+      choices: [
+        {
+          label: '🤝 Mediar el trato por comisión (+35 MO)',
+          goldDelta: 35,
+          outcome: 'Ambos quedan satisfechos y te pagan 35 MO por cerrar el acuerdo.',
+        },
+        {
+          label: '🏅 Ceder la ganancia al Gremio (+1 Reputación)',
+          repDelta: 1,
+          outcome: 'El Gremio reconoce tu honorabilidad y te otorga +1 Ficha de Reputación.',
+        },
+      ],
+    });
+  }
+  if (quirkId === 'insomne') {
+    personalPool.push({
+      id: 'pe_quirk_insomne',
+      tag: '👁️ Tu Rasgo: Insomne Alerta',
+      title: 'Sombras en el Tejado de la Plaza',
+      story: 'Mientras todos descansan, tus ojos atentos descubren a un espía dejando un paquete tras una gárgola.',
+      choices: [
+        {
+          label: '👁️ Interceptar el paquete (+25 MO y +1 Pólvora Negra)',
+          goldDelta: 25,
+          materialId: 'polvora_negra',
+          materialQty: 1,
+          outcome: 'El espía huye dejando 25 MO y 1 carga de Pólvora Negra.',
+        },
+        {
+          label: '🛡️ Avisar a la Guardia Imperial (+1 Reputación)',
+          repDelta: 1,
+          outcome: 'El capitán de la guardia agradece tu vigilancia nocturna (+1 Reputación).',
+        },
+      ],
+    });
+  }
+  if (quirkId === 'fanatico_acero') {
+    personalPool.push({
+      id: 'pe_quirk_acero',
+      tag: '⚔️ Tu Rasgo: Obsesionado con el Filo',
+      title: 'Duelo Amistoso en el Patio de Armas',
+      story: 'Un veterano de la Guardia del Rey te reta a un intercambio con espadas romas frente a los reclutas.',
+      choices: [
+        {
+          label: '⚔️ Aceptar el duelo (+1 Acero Templado y +25 XP)',
+          xpDelta: 25,
+          materialId: 'chatarra_acero',
+          materialQty: 1,
+          outcome: 'Tu técnica impresiona al instructor: ganas +25 XP y un lingote de Acero Templado.',
+        },
+        {
+          label: '✨ Pedirle que afile tu hoja (+1 DC en tu primer combate)',
+          buff: { id: 'city_filo_maestro', label: '⚔️ Filo Afilado (+1 DC 1er combate)', type: 'buff', duration: 99, attackMod: 1 },
+          outcome: 'Tu arma brilla con un filo impecable para la próxima misión.',
+        },
+      ],
+    });
+  }
+  if (quirkId === 'supersticioso' || quirkId === 'temerario') {
+    personalPool.push({
+      id: 'pe_quirk_runa_puerta',
+      tag: quirkId === 'supersticioso' ? '🔮 Tu Rasgo: Supersticioso' : '🚪 Tu Rasgo: Rompe-Puertas',
+      title: 'El Reloj Antiguo de la Torre',
+      story: 'Un mecanismo rúnico en la entrada del mercado se atascó y bloquea el paso de una carreta llena de suministros.',
+      choices: [
+        {
+          label: '⚙️ Desatascarlo a tu manera (+20 MO y +1 Hierba Lunar)',
+          goldDelta: 20,
+          materialId: 'hierba_lunar',
+          materialQty: 1,
+          outcome: 'Logras abrir el paso y el cochero te recompensa con 20 MO y 1 Hierba Lunar.',
+        },
+        {
+          label: '🙏 Pedir una bendición rápida (+1 PM y +15 XP)',
+          xpDelta: 15,
+          healPM: 2,
+          outcome: 'Un acólito cercano bendice tu camino: recuperas mente y ganas +15 XP.',
+        },
+      ],
+    });
+  }
+
+  // --- 2. EVENTOS POR PROFESIÓN ---
+  if (profId === 'herrero' || profId === 'minero') {
+    personalPool.push({
+      id: 'pe_prof_forja',
+      tag: '⚒️ Tu Profesión en Acción',
+      title: 'Encargo Urgente de la Guardia',
+      story: 'El sargento necesita reparar bisagras y hebillas de escudo antes del cambio de guardia.',
+      choices: [
+        {
+          label: '⚒️ Hacer el trabajo rápido (+30 MO y +1 Acero Templado)',
+          goldDelta: 30,
+          materialId: 'chatarra_acero',
+          materialQty: 1,
+          outcome: 'Trabajo impecable: te pagan 30 MO y te quedas con 1 Acero Templado sobrante.',
+        },
+        {
+          label: '🏅 Hacerlo gratis por la ciudad (+1 Reputación)',
+          repDelta: 1,
+          outcome: 'La guardia recuerda tu gesto generoso (+1 Reputación).',
+        },
+      ],
+    });
+  } else if (profId === 'alquimista' || profId === 'escriba') {
+    personalPool.push({
+      id: 'pe_prof_arcano',
+      tag: '🧪 Tu Profesión en Acción',
+      title: 'Consulta en la Torre del Sabio',
+      story: 'Un erudito te pide ayuda para estabilizar una tinta rúnica y clasificar hierbas recién traídas de Elethorn.',
+      choices: [
+        {
+          label: '✨ Estabilizar la fórmula (+1 Polvo Rúnico y +1 Hierba Lunar)',
+          materialId: 'polvo_runico',
+          materialQty: 1,
+          goldDelta: 15,
+          outcome: 'Tu precisión evita un desastre: recibes 15 MO y 1 Polvo Rúnico.',
+        },
+        {
+          label: '📜 Copiar notas secretas (+30 XP)',
+          xpDelta: 30,
+          outcome: 'Aprendes secretos de antiguos conjuros (+30 XP).',
+        },
+      ],
+    });
+  } else if (profId === 'sacerdote' || profId === 'cazador' || profId === 'explorador' || profId === 'mercader') {
+    personalPool.push({
+      id: 'pe_prof_gremio',
+      tag: '🧭 Tu Profesión en Acción',
+      title: 'Rumor Valioso en el Gremio',
+      story: 'Un mensajero agotado llega desde las fronteras con noticias sobre las hordas de Zargon y busca a alguien con tu oficio.',
+      choices: [
+        {
+          label: '🗺️ Ayudarlo y cobrar la tarifa (+25 MO y +1 Ración)',
+          goldDelta: 25,
+          materialId: 'racion_mazmorra',
+          materialQty: 1,
+          outcome: 'Te entrega 25 MO y provisiones frescas para tu próxima incursión.',
+        },
+        {
+          label: '🎯 Estudiar sus mapas tácticos (+25 XP y +1 Fama)',
+          xpDelta: 25,
+          fameDelta: 1,
+          outcome: 'Compartes inteligencia clave con el Bastión (+25 XP y +1 Fama).',
+        },
+      ],
+    });
+  }
+
+  // --- 3. EVENTOS POR CLASE / RAZA ---
+  if (['mago', 'brujo', 'nigromante', 'mago_batalla', 'exorcista'].includes(clsId)) {
+    personalPool.push({
+      id: 'pe_cls_arcano',
+      tag: '🔮 Resonancia de tu Clase Mágica',
+      title: 'El Cristal Vibrante de la Fuente',
+      story: 'Al pasar junto a la fuente central, tu sensibilidad arcana detecta un eco mágico latente bajo el agua.',
+      choices: [
+        {
+          label: '✨ Absorber la chispa (+1 Polvo Rúnico y PM al máximo)',
+          materialId: 'polvo_runico',
+          materialQty: 1,
+          healPM: 6,
+          outcome: 'La energía arcana fluye por tus venas: recuperas PM y recoges 1 Polvo Rúnico.',
+        },
+        {
+          label: '📖 Compartir el hallazgo con el Escriba (+25 MO y +20 XP)',
+          goldDelta: 25,
+          xpDelta: 20,
+          outcome: 'El Escriba documenta la anomalía y te recompensa con 25 MO y +20 XP.',
+        },
+      ],
+    });
+  } else if (['picaro', 'explorador', 'tirador_asedio'].includes(clsId) || ['elfo_oscuro', 'mediano', 'feliniano'].includes(raceId)) {
+    personalPool.push({
+      id: 'pe_cls_sombras',
+      tag: '🗡️ Oportunidad en los Callejones',
+      title: 'El Susurro del Mercado Nocturno',
+      story: 'Un contacto encapuchado te reconoce y te ofrece información o suministros discretos.',
+      choices: [
+        {
+          label: '🧪 Comprar toxina barata (-15 MO → +1 Glándula de Veneno)',
+          goldDelta: -15,
+          materialId: 'glandula_veneno',
+          materialQty: 1,
+          outcome: 'Consigues una Glándula de Veneno de primera calidad a precio de calle.',
+        },
+        {
+          label: '🎲 Apostar a los dados cargados (+25 MO)',
+          goldDelta: 25,
+          outcome: 'Notas su truco antes que él y le ganas 25 MO limpiamente.',
+        },
+      ],
+    });
+  } else {
+    personalPool.push({
+      id: 'pe_cls_vanguardia',
+      tag: '🛡️ Orgullo de Guerrero',
+      title: 'Aclamación en la Plaza de Armas',
+      story: 'Un grupo de jóvenes reclutas te pide consejos para enfrentarse a Orcos y No Muertos.',
+      choices: [
+        {
+          label: '⚔️ Darles una clase rápida (+25 XP y +1 Fama)',
+          xpDelta: 25,
+          fameDelta: 1,
+          outcome: 'Los reclutas te ovacionan; tu nombre corre por toda la ciudad (+25 XP, +1 Fama).',
+        },
+        {
+          label: '🛡️ Aceptar su tributo de gratitud (+20 MO)',
+          goldDelta: 20,
+          outcome: 'Reúnen 20 MO para agradecer tu tiempo y consejos.',
+        },
+      ],
+    });
+  }
+
+  // --- 4. EVENTOS DE MODO SUPERVIVENCIA (SI ESTÁ ACTIVO) ---
+  if (isSurv) {
+    personalPool.push({
+      id: 'pe_surv_carterista',
+      tag: '🔥 Evento de Supervivencia',
+      title: '¡Carterista entre la Multitud!',
+      story: `Un ladrón ágil roza tu cinturón al cruzar el mercado abarrotado${gold > 80 ? ' atraído por el sonido de tus monedas' : ''}.`,
+      choices: [
+        {
+          label: '🏃 Perseguirlo y encararlo (-1 PC de esfuerzo, recuperas todo +15 MO)',
+          goldDelta: 15,
+          pcDelta: -1,
+          outcome: 'Tras un choque en el callejón lo atrapas, recuperas tu bolsa y le quitas 15 MO de su botín.',
+        },
+        {
+          label: '💰 Dejarlo escapar y proteger tu salud (-15 MO)',
+          goldDelta: -15,
+          outcome: 'Evitas una emboscada en el callejón, pero perdiste 15 MO en el roce.',
+        },
+      ],
+    });
+  }
+
+  // --- 5. EVENTOS GENERALES DIVERTIDOS ---
+  const generalPool = [
+    {
+      id: 'pe_gen_perro',
+      tag: '🐕 Encuentro Callejero',
+      title: 'El Perro Callejero con un Pañuelo',
+      story: 'Un perro simpático tira de tu capa y te guía hasta un callejón donde brilla una bolsa caída detrás de unos barriles.',
+      choices: [
+        {
+          label: '🍖 Darle un bocado y revisar la bolsa (+25 MO)',
+          goldDelta: 25,
+          outcome: 'El perro mueve la cola feliz mientras recoges 25 MO perdidas.',
+        },
+        {
+          label: '🔎 Buscar al dueño en la plaza (+1 Fama y +15 XP)',
+          fameDelta: 1,
+          xpDelta: 15,
+          outcome: 'Devuelves la bolsa a una panadera agradecida; tu fama crece en el Bastión.',
+        },
+      ],
+    },
+    {
+      id: 'pe_gen_bardo',
+      tag: '🎵 Ambiente de El Bastión',
+      title: 'Un Bardo Canta tu Nombre',
+      story: 'En la esquina de la taberna un juglar improvisa una canción exagerada sobre tu última pelea.',
+      choices: [
+        {
+          label: '🪙 Tirarle unas monedas (-10 MO → +1 Fama y PM al máximo)',
+          goldDelta: -10,
+          fameDelta: 1,
+          healPM: 6,
+          outcome: 'La canción sube tu moral al cielo: recuperas PM y ganas +1 Fama.',
+        },
+        {
+          label: '😄 Reír y corregir los detalles (+20 XP)',
+          xpDelta: 20,
+          outcome: 'Todos ríen con tus anécdotas reales y ganas +20 XP.',
+        },
+      ],
+    },
+    {
+      id: 'pe_gen_carro',
+      tag: '⚗️ Caos en el Mercado',
+      title: 'Carro de Suministros Volcado',
+      story: 'Una rueda se rompió en plena avenida y frascos, hierbas y piezas rodaron por los adoquines.',
+      choices: [
+        {
+          label: '🤝 Ayudar a recoger todo (+1 Hierba Lunar y +15 MO)',
+          goldDelta: 15,
+          materialId: 'hierba_lunar',
+          materialQty: 1,
+          outcome: 'El comerciante te agradece con 15 MO y 1 Hierba Lunar.',
+        },
+        {
+          label: '⚙️ Reparar la rueda rota (+1 Acero Templado)',
+          materialId: 'chatarra_acero',
+          materialQty: 1,
+          outcome: 'Usas tu ingenio para fijar el eje y te regalan 1 Acero Templado.',
+        },
+      ],
+    },
+  ];
+
+  // 70% probabilidad de evento temático de SU héroe (Quirk/Profesión/Clase/Supervivencia), 30% evento divertido general
+  const usePersonal = personalPool.length > 0 && Math.random() < 0.72;
+  const chosenPool = usePersonal ? personalPool : generalPool;
+  return chosenPool[Math.floor(Math.random() * chosenPool.length)];
+}

@@ -200,7 +200,7 @@ export default function App() {
       await fetch('/api/city-mode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cityOpen: true }),
+        body: JSON.stringify({ cityOpen: true, cityMode }),
       });
     } catch {
       // ignore
@@ -216,7 +216,7 @@ export default function App() {
       await fetch('/api/city-mode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cityOpen: next }),
+        body: JSON.stringify({ cityOpen: next, cityMode }),
       });
     } catch {
       // ignore

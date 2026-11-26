@@ -17,6 +17,8 @@ const isCreatorMachine = () =>
 const ACTIONS_STORE = [];
 const ACTIVE_PUZZLES = {}; // { [heroId]: { id, puzzle, sentAt } }
 let CITY_MODE_OPEN = false;
+let CITY_SURVIVAL_MODE = 'relaxed';
+let CITY_VISIT_ID = 0;
 let CONTRACTS_BOARD = { contracts: [], votes: {} };
 
 // Migrar archivo antiguo si existe para no perder héroes ya creados
@@ -203,9 +205,21 @@ function localSyncAndTunnelPlugin() {
         res.setHeader('Cache-Control', 'no-store');
         if (req.method === 'POST') {
           const payload = await parseBody(req);
-          CITY_MODE_OPEN = Boolean(payload.cityOpen);
+          const nextOpen = Boolean(payload.cityOpen);
+          if (nextOpen && !CITY_MODE_OPEN) {
+            CITY_VISIT_ID = Date.now();
+          }
+          CITY_MODE_OPEN = nextOpen;
+          if (payload.cityMode) CITY_SURVIVAL_MODE = payload.cityMode;
         }
-        res.end(JSON.stringify({ ok: true, cityOpen: CITY_MODE_OPEN }));
+        res.end(
+          JSON.stringify({
+            ok: true,
+            cityOpen: CITY_MODE_OPEN,
+            cityMode: CITY_SURVIVAL_MODE,
+            visitId: CITY_VISIT_ID,
+          })
+        );
       });
 
       server.middlewares.use('/api/contracts', async (req, res) => {

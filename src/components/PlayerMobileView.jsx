@@ -41,7 +41,14 @@ import CharacterForge from './CharacterForge';
 import PuzzleModal from './PuzzleModal';
 import { getRarityMeta } from '../data/lootCatalog';
 import { MATERIALS_CATALOG, CRAFTING_RECIPES, getMaterialById } from '../data/craftingSystem';
-import { PROFESSIONS, TAVERN_FEASTS, FAMILIARS, getHeroFameTier } from '../data/citySystem';
+import {
+  PROFESSIONS,
+  TAVERN_FEASTS,
+  FAMILIARS,
+  getHeroFameTier,
+  generatePersonalCityArrival,
+  generatePersonalCityEvent,
+} from '../data/citySystem';
 import { OFFICIAL_ALCHEMY_DECK } from '../data/officialCards';
 
 // Enriquece automáticamente cualquier objeto (incluyendo equipo inicial de clase) para que SIEMPRE muestre tipo real, dados y efecto claro
@@ -234,6 +241,12 @@ export default function PlayerMobileView({ initialPlayerParam }) {
   const [craftRollInput, setCraftRollInput] = useState('');
   const [craftOutcome, setCraftOutcome] = useState(null);
   const [cityOpen, setCityOpen] = useState(false);
+  const [cityModeMobile, setCityModeMobile] = useState('relaxed');
+  const [cityPhase, setCityPhase] = useState('gate'); // 'gate' | 'event' | 'districts'
+  const [arrivalStory, setArrivalStory] = useState('');
+  const [personalCityEvent, setPersonalCityEvent] = useState(null);
+  const [personalEventOutcome, setPersonalEventOutcome] = useState('');
+  const lastCityVisitIdRef = useRef(0);
   const [cityContracts, setCityContracts] = useState([]);
   const [contractVotes, setContractVotes] = useState({});
   const [mobileCitySection, setMobileCitySection] = useState('posada'); // 'posada' | 'herreria' | 'alquimista' | 'gremio' | 'banco'
@@ -304,6 +317,14 @@ export default function PlayerMobileView({ initialPlayerParam }) {
             const cData = await cRes.json();
             const isOpen = Boolean(cData.cityOpen);
             setCityOpen(isOpen);
+            if (cData.cityMode) setCityModeMobile(cData.cityMode);
+            if (isOpen && cData.visitId && cData.visitId !== lastCityVisitIdRef.current) {
+              lastCityVisitIdRef.current = cData.visitId;
+              setCityPhase('gate');
+              setPersonalCityEvent(null);
+              setPersonalEventOutcome('');
+              setArrivalStory('');
+            }
             if (isOpen) {
               const ctRes = await fetch('/api/contracts', { cache: 'no-store' });
               if (ctRes.ok) {
@@ -2464,6 +2485,131 @@ export default function PlayerMobileView({ initialPlayerParam }) {
               rar === 'legendario' ? 500 : rar === 'epico' ? 300 : rar === 'raro' ? 180 : rar === 'poco_comun' ? 90 : 35;
             return Math.max(10, Math.round(baseVal * sellRate));
           };
+
+          const displayArrival = arrivalStory || generatePersonalCityArrival(hero, cityModeMobile);
+
+          // PASO 1 (INDIVIDUAL POR CELULAR): PORTADA NARRATIVA DE ENTRADA A LA CIUDAD
+          if (cityPhase === 'gate') {
+            return (
+              <div className="space-y-4">
+                <div className="grimoire-panel rounded-3xl p-5 border-amber-500/60 bg-gradient-to-b from-amber-950/35 to-slate-950 space-y-4 text-center shadow-2xl">
+                  <div className="text-4xl">🏛️</div>
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-amber-400">
+                      El Bastión de los Héroes {cityModeMobile === 'survival' ? '· 🔥 Supervivencia' : ''}
+                    </div>
+                    <h2 className="font-display text-2xl font-black text-amber-100 mt-1">
+                      Llegada a la Ciudad
+                    </h2>
+                  </div>
+                  <p className="font-lore text-sm italic text-amber-50/95 leading-relaxed bg-black/35 p-4 rounded-2xl border border-amber-800/40 text-left">
+                    “{displayArrival}”
+                  </p>
+                  <p className="text-[11px] text-slate-400">
+                    Al cruzar las puertas vivirás un <strong>evento personal único para {hero.name}</strong> (independiente del resto del grupo).
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const ev = generatePersonalCityEvent(hero, cityModeMobile);
+                      setArrivalStory(displayArrival);
+                      setPersonalCityEvent(ev);
+                      setPersonalEventOutcome('');
+                      setCityPhase('event');
+                    }}
+                    className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-display font-black text-base shadow-xl cursor-pointer"
+                  >
+                    🚪 Entrar a la Ciudad
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          // PASO 2 (INDIVIDUAL POR CELULAR): EVENTO PERSONAL INTERACTIVO DE ESTE HÉROE
+          if (cityPhase === 'event' && personalCityEvent) {
+            return (
+              <div className="space-y-4">
+                <div className="grimoire-panel rounded-3xl p-5 border-purple-500/70 bg-gradient-to-b from-purple-950/35 to-slate-950 space-y-4 shadow-2xl">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-purple-600/30 border border-purple-400/60 text-purple-200">
+                      {personalCityEvent.tag}
+                    </span>
+                    <span className="text-[11px] font-bold text-amber-300">{hero.name}</span>
+                  </div>
+                  <h3 className="font-display text-xl font-black text-amber-100">
+                    {personalCityEvent.title}
+                  </h3>
+                  <p className="text-xs text-slate-200 leading-relaxed bg-black/35 p-3.5 rounded-2xl border border-slate-800">
+                    {personalCityEvent.story}
+                  </p>
+
+                  {!personalEventOutcome ? (
+                    <div className="space-y-2 pt-1">
+                      <div className="text-[11px] font-bold text-amber-300 uppercase tracking-wider">
+                        ¿Qué decides hacer?
+                      </div>
+                      {personalCityEvent.choices.map((ch, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={async () => {
+                            const nextMats = { ...(hero.materials || {}) };
+                            if (ch.materialId && ch.materialQty) {
+                              nextMats[ch.materialId] =
+                                Number(nextMats[ch.materialId] || 0) + Number(ch.materialQty);
+                            }
+                            let nextEffects = [...(hero.activeEffects || [])];
+                            if (ch.buff) {
+                              nextEffects = [
+                                ...nextEffects.filter((e) => e.id !== ch.buff.id),
+                                ch.buff,
+                              ];
+                            }
+                            await pushHeroUpdate({
+                              ...hero,
+                              gold: Math.max(0, (hero.gold || 0) + (ch.goldDelta || 0)),
+                              xp: (hero.xp || 0) + (ch.xpDelta || 0),
+                              fame: Math.max(0, (hero.fame || 0) + (ch.fameDelta || 0)),
+                              reputation: Math.max(0, (hero.reputation || 0) + (ch.repDelta || 0)),
+                              currentPC: Math.max(
+                                1,
+                                Math.min(hero.maxPC, (hero.currentPC ?? hero.maxPC) + (ch.pcDelta || 0))
+                              ),
+                              currentPM: Math.max(
+                                0,
+                                Math.min(hero.maxPM, (hero.currentPM ?? hero.maxPM) + (ch.healPM || 0))
+                              ),
+                              materials: nextMats,
+                              activeEffects: nextEffects,
+                            });
+                            setPersonalEventOutcome(ch.outcome);
+                            showToast(`✨ Evento resuelto para ${hero.name}`);
+                          }}
+                          className="w-full py-3 px-3.5 rounded-xl bg-slate-900 hover:bg-amber-500/20 border border-amber-600/60 text-left text-xs font-bold text-amber-100 cursor-pointer transition"
+                        >
+                          {ch.label}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-3 pt-1">
+                      <div className="p-3.5 rounded-2xl bg-emerald-950/45 border border-emerald-500/60 text-xs text-emerald-100 leading-relaxed">
+                        <strong className="text-emerald-300">Resultado:</strong> {personalEventOutcome}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setCityPhase('districts')}
+                        className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-display font-black text-sm cursor-pointer shadow-lg"
+                      >
+                        🏛️ Continuar a los Distritos
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          }
 
           return (
             <div className="space-y-4">
