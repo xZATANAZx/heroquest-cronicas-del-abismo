@@ -1084,24 +1084,103 @@ export function generatePersonalCityEvent(hero, cityMode = 'relaxed') {
     });
   }
 
-  // --- 4. EVENTOS DE MODO SUPERVIVENCIA (SI ESTÁ ACTIVO) ---
+  // --- 4. EVENTOS DE MODO SUPERVIVENCIA (SI ESTÁ ACTIVO — PÉRDIDA PROPORCIONAL AL ORO EN BOLSILLO) ---
+  const survivalPool = [];
   if (isSurv) {
-    personalPool.push({
+    const pctLoss = (pct, minAmt, maxAmt) => {
+      if (gold <= 0) return 0;
+      return Math.min(gold, Math.max(minAmt, Math.min(maxAmt, Math.round(gold * pct))));
+    };
+    const stolenAmt = pctLoss(0.18, 10, 45);
+    const taxAmt = pctLoss(0.15, 10, 40);
+    const ambushLoss = pctLoss(0.22, 15, 55);
+    const escapeLoss = pctLoss(0.14, 10, 35);
+    const upkeepLoss = pctLoss(0.12, 10, 30);
+
+    // 4A. Inevitable: Carterista Experto (si usó el Banco, no le quitan nada!)
+    survivalPool.push({
       id: 'pe_surv_carterista',
-      tag: '🔥 Evento de Supervivencia',
-      title: '¡Carterista entre la Multitud!',
-      story: `Un ladrón ágil roza tu cinturón al cruzar el mercado abarrotado${gold > 80 ? ' atraído por el sonido de tus monedas' : ''}.`,
+      tag: '🔥 Supervivencia · Inevitable',
+      title: 'Manos Rápidas en la Multitud',
+      story: 'Al cruzar el bullicio del mercado sientes un tirón fugaz en tu cinturón. Cuando volteas, el ladrón ya desapareció entre las capas y carretas.',
       choices: [
         {
-          label: '🏃 Perseguirlo y encararlo (-1 PC de esfuerzo, recuperas todo +15 MO)',
-          goldDelta: 15,
-          pcDelta: -1,
-          outcome: 'Tras un choque en el callejón lo atrapas, recuperas tu bolsa y le quitas 15 MO de su botín.',
+          label: '😣 Revisar tu bolsa de monedas',
+          goldDelta: -stolenAmt,
+          outcome:
+            stolenAmt > 0
+              ? `¡Te vaciaron parte del cinturón! Perdiste ${stolenAmt} MO. (Consejo: guarda tu oro en el Banco antes de salir).`
+              : '¡Tuviste suerte! Al no cargar oro suelto fuera del Banco, el carterista se fue con las manos vacías.',
+        },
+      ],
+    });
+
+    // 4B. Inevitable: Impuesto de Guerra Imperial
+    survivalPool.push({
+      id: 'pe_surv_impuesto',
+      tag: '🔥 Supervivencia · Inevitable',
+      title: 'Peaje de Guerra en las Murallas',
+      story: 'Los recaudadores de la Guardia Imperial cierran el paso con alabardas y exigen el tributo obligatorio de defensa contra las hordas de Zargon.',
+      choices: [
+        {
+          label: '🪙 Entregar el tributo a los guardias',
+          goldDelta: -taxAmt,
+          outcome:
+            taxAmt > 0
+              ? `Pagaste ${taxAmt} MO de peaje de guerra para cruzar las murallas del Bastión.`
+              : 'Al ver tu bolsa vacía, el capitán te deja pasar con una advertencia severa.',
+        },
+      ],
+    });
+
+    // 4C. Complicado de superar: Emboscada en el Callejón (difícil)
+    survivalPool.push({
+      id: 'pe_surv_callejon',
+      tag: '🔥 Supervivencia · Alto Riesgo',
+      title: 'Emboscada en el Callejón Neblinoso',
+      story: 'Tres rufianes armados con cachiporras te cierran el paso en un atajo oscuro hacia la posada y exigen tu bolsa.',
+      choices: [
+        {
+          label: '⚔️ Plantar cara e intentar abrirte paso',
+          riskyCheck: {
+            successChance: ['guerrero', 'barbaro', 'caballero', 'paladin', 'picaro', 'monje', 'maestro_armas', 'caballero_runico'].includes(clsId) ? 0.42 : 0.30,
+            success: {
+              xpDelta: 25,
+              outcome: '¡Contra todo pronóstico logras desarmar al líder y los rufianes huyen! Conservas todo tu oro y ganas +25 XP.',
+            },
+            fail: {
+              goldDelta: -ambushLoss,
+              pcDelta: -2,
+              outcome: `Te superan en número: recibes un golpe fuerte (-2 PC)${ambushLoss > 0 ? ` y te arrebatan ${ambushLoss} MO antes de escapar` : ' antes de lograr zafarte'}.`,
+            },
+          },
         },
         {
-          label: '💰 Dejarlo escapar y proteger tu salud (-15 MO)',
-          goldDelta: -15,
-          outcome: 'Evitas una emboscada en el callejón, pero perdiste 15 MO en el roce.',
+          label: '🏃 Lanzar monedas al suelo y correr',
+          goldDelta: -escapeLoss,
+          outcome:
+            escapeLoss > 0
+              ? `Mientras se pelean por las ${escapeLoss} MO en el suelo, escapas ileso hacia la avenida principal.`
+              : 'Logras escabullirte entre la niebla sin sufrir heridas.',
+        },
+      ],
+    });
+
+    // 4D. Inevitable: Mantenimiento de Emergencia
+    survivalPool.push({
+      id: 'pe_surv_asedio',
+      tag: '🔥 Supervivencia · Escasez',
+      title: 'Escasez de Suministros en El Bastión',
+      story: 'El asedio encareció el cuero, las correas y las provisiones básicas. Tu equipo necesita reparaciones inmediatas para no fallar en la próxima mazmorra.',
+      choices: [
+        {
+          label: '🛠️ Pagar el mantenimiento de emergencia',
+          goldDelta: -upkeepLoss,
+          pcDelta: 1,
+          outcome:
+            upkeepLoss > 0
+              ? `Gastaste ${upkeepLoss} MO en reparaciones y vendas de emergencia (+1 PC).`
+              : 'El artesano te fía un remiendo básico al verte sin monedas (+1 PC).',
         },
       ],
     });
@@ -1171,10 +1250,16 @@ export function generatePersonalCityEvent(hero, cityMode = 'relaxed') {
     },
   ];
 
-  // 70% probabilidad de evento temático de SU héroe (Quirk/Profesión/Clase/Supervivencia), 30% evento divertido general
-  const usePersonal = personalPool.length > 0 && Math.random() < 0.72;
-  const chosenPool = usePersonal ? personalPool : generalPool;
-  const rawEv = chosenPool[Math.floor(Math.random() * chosenPool.length)];
+  // En Modo Supervivencia: 45% probabilidad de disparar un evento duro de Supervivencia (más alto si lleva mucho oro suelto)
+  const survChance = isSurv ? (gold >= 80 ? 0.55 : 0.40) : 0;
+  let rawEv;
+  if (isSurv && survivalPool.length > 0 && Math.random() < survChance) {
+    rawEv = survivalPool[Math.floor(Math.random() * survivalPool.length)];
+  } else {
+    const usePersonal = personalPool.length > 0 && Math.random() < 0.72;
+    const chosenPool = usePersonal ? personalPool : generalPool;
+    rawEv = chosenPool[Math.floor(Math.random() * chosenPool.length)];
+  }
   // Limpiar cualquier spoiler de recompensas/costes en los botones: el jugador elige por pura narrativa y descubre el resultado después
   return {
     ...rawEv,

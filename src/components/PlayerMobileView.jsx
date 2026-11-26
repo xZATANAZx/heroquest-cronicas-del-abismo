@@ -2584,36 +2584,41 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                           key={idx}
                           type="button"
                           onClick={async () => {
+                            const eff = ch.riskyCheck
+                              ? Math.random() < (ch.riskyCheck.successChance ?? 0.35)
+                                ? ch.riskyCheck.success
+                                : ch.riskyCheck.fail
+                              : ch;
                             const nextMats = { ...(hero.materials || {}) };
-                            if (ch.materialId && ch.materialQty) {
-                              nextMats[ch.materialId] =
-                                Number(nextMats[ch.materialId] || 0) + Number(ch.materialQty);
+                            if (eff.materialId && eff.materialQty) {
+                              nextMats[eff.materialId] =
+                                Number(nextMats[eff.materialId] || 0) + Number(eff.materialQty);
                             }
                             let nextEffects = [...(hero.activeEffects || [])];
-                            if (ch.buff) {
+                            if (eff.buff) {
                               nextEffects = [
-                                ...nextEffects.filter((e) => e.id !== ch.buff.id),
-                                ch.buff,
+                                ...nextEffects.filter((e) => e.id !== eff.buff.id),
+                                eff.buff,
                               ];
                             }
                             await pushHeroUpdate({
                               ...hero,
-                              gold: Math.max(0, (hero.gold || 0) + (ch.goldDelta || 0)),
-                              xp: (hero.xp || 0) + (ch.xpDelta || 0),
-                              fame: Math.max(0, (hero.fame || 0) + (ch.fameDelta || 0)),
-                              reputation: Math.max(0, (hero.reputation || 0) + (ch.repDelta || 0)),
+                              gold: Math.max(0, (hero.gold || 0) + (eff.goldDelta || 0)),
+                              xp: (hero.xp || 0) + (eff.xpDelta || 0),
+                              fame: Math.max(0, (hero.fame || 0) + (eff.fameDelta || 0)),
+                              reputation: Math.max(0, (hero.reputation || 0) + (eff.repDelta || 0)),
                               currentPC: Math.max(
                                 1,
-                                Math.min(hero.maxPC, (hero.currentPC ?? hero.maxPC) + (ch.pcDelta || 0))
+                                Math.min(hero.maxPC, (hero.currentPC ?? hero.maxPC) + (eff.pcDelta || 0))
                               ),
                               currentPM: Math.max(
                                 0,
-                                Math.min(hero.maxPM, (hero.currentPM ?? hero.maxPM) + (ch.healPM || 0))
+                                Math.min(hero.maxPM, (hero.currentPM ?? hero.maxPM) + (eff.healPM || 0))
                               ),
                               materials: nextMats,
                               activeEffects: nextEffects,
                             });
-                            setPersonalEventOutcome(ch.outcome);
+                            setPersonalEventOutcome(eff.outcome);
                             showToast(`✨ Evento resuelto para ${hero.name}`);
                           }}
                           className="w-full py-3 px-3.5 rounded-xl bg-slate-900 hover:bg-amber-500/20 border border-amber-600/60 text-left text-xs font-bold text-amber-100 cursor-pointer transition"
