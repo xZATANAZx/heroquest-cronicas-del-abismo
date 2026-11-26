@@ -428,7 +428,7 @@ export const CLASSES = [
     resourceName: 'Puntos de Maná (= PM) + 3 Escuelas',
     primaryAttrs: ['INT', 'SAB'],
     proficientSkills: ['arcano', 'investigacion', 'medicina'],
-    startingGear: ['Bastón Rúnico (1 DC, Diagonal)', 'Grimorio (3 Escuelas: 9 hechizos)', 'Poción de Clarividencia'],
+    startingGear: ['Bastón Rúnico (1 DC, Diagonal)', 'Capa de Aprendiz Arcano (+1 Def)', 'Poción de Clarividencia (+2 PM)'],
     coreAbility: 'Canalizar Éter: Gastas 1 PM para potenciar tu próximo hechizo (+1 DC mágico) o recargar 1 hechizo de Nivel 1 ya usado.',
     subclasses: [
       { id: 'piromante', name: 'Archimago de la Evocación', desc: 'Tus hechizos ofensivos añaden +1 Dado de Combate y nunca dañan a aliados.' },
@@ -462,7 +462,7 @@ export const CLASSES = [
     resourceName: 'Acordes de Valor (3/misión) + Cantos',
     primaryAttrs: ['CAR', 'DES', 'SAB'],
     proficientSkills: ['persuasion', 'percepcion', 'arcano', 'medicina'],
-    startingGear: ['Estoque (2 DC, Diagonal)', 'Laúd Rúnico', '3 Cantos Espirituales'],
+    startingGear: ['Estoque (2 DC, Diagonal)', 'Laúd Rúnico (+1 Persuasión)', 'Poción de Clarividencia (+2 PM)'],
     coreAbility: 'Canción de Valor: Como acción gratuita, gastas 1 Acorde para dar +1 Dado de Combate o +1d6 a una prueba d20 de un aliado, o restaurar 1 PM perdido (vital contra Espíritus).',
     subclasses: [
       { id: 'valor', name: 'Colegio del Valor', desc: 'Puedes usar escudo y armadura ligera (+1 Def) y tu Canción afecta a 2 aliados a la vez.' },
@@ -496,7 +496,7 @@ export const CLASSES = [
     resourceName: 'Pactos del Velo (2 ranuras recargables)',
     primaryAttrs: ['CAR', 'INT'],
     proficientSkills: ['arcano', 'intimidacion', 'investigacion'],
-    startingGear: ['Varita de Sombras (2 DC a distancia)', 'Túnica del Velo', '3 Hechizos de Sombras'],
+    startingGear: ['Varita de Sombras (2 DC, Mágico)', 'Túnica del Velo (+1 Def)', 'Poción de Curación Menor (+2 PC)'],
     coreAbility: 'Descarga Sobrenatural y Maldición: Tu varita ataca a cualquier enemigo en LdV con 2 DC mágicos (dañando incluso a Etéreos). Puedes maldecir un enemigo para que defienda con -1 DC.',
     subclasses: [
       { id: 'demonio', name: 'Pacto del Abismo', desc: 'Cada vez que matas a un enemigo, recuperas 1 PC o 1 PM a elección.' },
@@ -564,7 +564,7 @@ export const CLASSES = [
     resourceName: 'Forma Salvaje (2/misión) + Magia Natural',
     primaryAttrs: ['SAB', 'CON', 'INT'],
     proficientSkills: ['supervivencia', 'medicina', 'percepcion'],
-    startingGear: ['Bastón de Roble (2 DC, Diagonal)', 'Armadura de Cuero', '3 Hechizos de Tierra/Agua'],
+    startingGear: ['Bastón de Roble (2 DC, Diagonal)', 'Armadura de Cuero (+1 Def)', 'Poción de Curación Menor (+2 PC)'],
     coreAbility: 'Forma Salvaje: Como acción gratuita te transformas en Oso (PC +3 temporales, At 3 DC) o Lobo (Mov 10, ataque diagonal) durante 3 turnos.',
     subclasses: [
       { id: 'luna', name: 'Círculo de la Luna', desc: 'Puedes transformarte en Tigre Dientes de Sable (At 4 DC, Def 3 DC) y curarte 1 PC al cambiar.' },
@@ -632,7 +632,7 @@ export const CLASSES = [
     resourceName: 'Frascos Alquímicos (4/misión) + Crafteo',
     primaryAttrs: ['INT', 'DES'],
     proficientSkills: ['arcano', 'investigacion', 'medicina'],
-    startingGear: ['Kit de Alquimia Avanzado', 'Ballesta Ligera (2 DC)', 'Poción de Curación Menor'],
+    startingGear: ['Ballesta Ligera (2 DC)', 'Estuche de Alquimia de Campo (+2 Arcano)', 'Poción de Curación Menor (+2 PC)'],
     coreAbility: 'Bombas y Elixires Rápidos: Gastas 1 Frasco para lanzar una Bomba de Fuego/Ácido (3 DC en 1 casilla + 1 daño adyacente) o crear un Elixir instantáneo (+2 PC o +2 PM) sin necesitar mesa.',
     subclasses: [
       { id: 'pirotecnico', name: 'Maestro Pirotécnico', desc: 'Tus bombas queman regeneración de Trolls/Momias y afectan un área de 3x3 casillas.' },
@@ -666,7 +666,7 @@ export const CLASSES = [
     resourceName: 'Esencia Espiritual (3/misión)',
     primaryAttrs: ['SAB', 'INT', 'CAR'],
     proficientSkills: ['arcano', 'medicina', 'percepcion'],
-    startingGear: ['Farol de Almas (2 DC mágicos)', 'Agua Bendita (2 usos)', '3 Hechizos de Espíritu'],
+    startingGear: ['Farol de Almas (2 DC, Mágico)', 'Agua Bendita (2 usos)', 'Símbolo Exorcista (+1 vs Espíritus)'],
     coreAbility: 'Sello del Exorcista: Tus ataques dañan completamente a Espectros y No Muertos. Cuando un enemigo muere a 4 casillas, puedes gastar 1 Esencia para invocar un Espíritu Guardián aliado por 2 turnos.',
     subclasses: [
       { id: 'cazafantasmas', name: 'Inquisidor Espectral', desc: 'Absorbes daño de PM dirigido a aliados y lo conviertes en +1 DC en tu siguiente ataque.' },
@@ -802,7 +802,7 @@ export const CLASSES = [
     resourceName: 'Filo Elemental (3/misión) + 1 Escuela',
     primaryAttrs: ['INT', 'DES', 'FUE'],
     proficientSkills: ['arcano', 'atletismo', 'investigacion'],
-    startingGear: ['Espada Corta Rúnica (2 DC)', 'Capa de Protección (+1 Def)', '3 Hechizos de Fuego o Aire'],
+    startingGear: ['Espada Corta Rúnica (2 DC)', 'Capa de Protección (+1 Def)', 'Poción de Clarividencia (+2 PM)'],
     coreAbility: 'Filo Elemental: Acción gratuita (3/misión): imbuyes tu espada con Fuego o Rayo durante 2 turnos (+1 DC mágico, daña Etéreos y quema regeneración).',
     subclasses: [
       { id: 'hoja_fuego', name: 'Danzarín de Brasas', desc: 'Al matar con Filo Elemental infliges 1 daño de fuego automático a un enemigo adyacente.' },
@@ -2036,3 +2036,120 @@ export const HEROIC_TITLES = [
   { id: 'tit_salvador', name: 'Héroe del Bastión', icon: '🛡️', requirement: 'Completar 3 Objetivos Secundarios', perk: '-10% permanente en todos los servicios de la Ciudad.' },
   { id: 'tit_ingeniero', name: 'Manos de Relojero', icon: '⚙️', requirement: 'Desarmar 5 trampas sin fallar', perk: '+2 permanente a Desarmar Trampas.' },
 ];
+
+// ============================================================================
+// CONSTRUCTOR COHERENTE DE EQUIPO INICIAL POR CLASE
+// Clasifica cada objeto en Arma / Armadura / Poción / Herramienta / Consumible / Accesorio
+// con sus dados y función real en mesa (sin clasificar kits como armas ni meter hechizos como ítems)
+// ============================================================================
+export function buildStartingInventory(cls) {
+  const gearList = Array.isArray(cls?.startingGear) ? cls.startingGear : [];
+  let weaponEquipped = false;
+
+  return gearList.map((raw, idx) => {
+    const lower = `${raw}`.toLowerCase();
+    const parenMatch = raw.match(/\(([^)]+)\)/);
+    const cleanName = raw.replace(/\s*\([^)]+\)\s*/g, '').trim();
+    const inside = parenMatch ? parenMatch[1] : '';
+
+    let type = 'Herramienta';
+    let dice = inside || '';
+    let traits = 'Equipo representativo inicial de tu clase.';
+    let equipped = false;
+
+    if (
+      lower.includes('espada') ||
+      lower.includes('hacha') ||
+      lower.includes('daga') ||
+      lower.includes('arco') ||
+      lower.includes('ballesta') ||
+      lower.includes('bastón') ||
+      lower.includes('estoque') ||
+      lower.includes('varita') ||
+      lower.includes('maza') ||
+      lower.includes('puños') ||
+      lower.includes('farol de almas')
+    ) {
+      type = 'Arma';
+      const dcMatch = inside.match(/\d+\s*DC/i);
+      dice = dcMatch ? dcMatch[0].toUpperCase() : inside || `${cls?.baseAttackDice || 2} DC`;
+      if (lower.includes('diagonal')) traits = 'Permite atacar en diagonal además de ortogonal.';
+      else if (lower.includes('distancia') || lower.includes('ballesta') || lower.includes('arco'))
+        traits = 'Ataque a distancia en Línea de Visión (sin enemigos adyacentes).';
+      else if (lower.includes('mágico') || lower.includes('plata') || lower.includes('varita'))
+        traits = 'Ataque mágico/plata: daña normalmente a Espectros Etéreos.';
+      else if (lower.includes('arrojadiza')) traits = 'Arma ligera arrojadiza (hasta 4 casillas).';
+      else traits = 'Arma principal equilibrada de tu clase.';
+      if (!weaponEquipped) {
+        equipped = true;
+        weaponEquipped = true;
+      }
+    } else if (
+      lower.includes('escudo') ||
+      lower.includes('cota') ||
+      lower.includes('armadura') ||
+      lower.includes('capa') ||
+      lower.includes('túnica')
+    ) {
+      type = 'Armadura';
+      dice = inside || '+1 Def';
+      traits = lower.includes('escudo')
+        ? 'Mano secundaria: +1 Dado de Defensa (no combinable con armas a 2 manos).'
+        : 'Protección equipada de tu clase (+1 Dado de Defensa).';
+      equipped = true;
+    } else if (lower.includes('poción') || lower.includes('agua bendita')) {
+      type = 'Poción';
+      if (lower.includes('curación')) {
+        dice = '+2 PC';
+        traits = 'Acción gratuita: restaura 2 PC al instante (evita morir al llegar a 0 PC).';
+      } else if (lower.includes('clarividencia')) {
+        dice = '+2 PM';
+        traits = 'Acción gratuita: restaura 2 PM y te saca del Estado de Shock.';
+      } else if (lower.includes('agua bendita')) {
+        dice = '2 usos';
+        traits = 'Arrojadiza (4 casillas): 3 DC indefendibles contra No Muertos y Espectros.';
+      }
+    } else if (
+      lower.includes('bomba') ||
+      lower.includes('abrojos') ||
+      lower.includes('aceites') ||
+      lower.includes('cepo')
+    ) {
+      type = 'Consumible';
+      dice = inside || '1 uso';
+      if (lower.includes('bomba de humo')) traits = 'Anula Zona de Control de 1 enemigo durante 1 turno.';
+      else if (lower.includes('abrojos')) traits = 'Ralentiza a la mitad a enemigos que crucen esa casilla.';
+      else if (lower.includes('aceites')) traits = 'Impregna tu arma (+2 DC contra una familia elegida).';
+      else if (lower.includes('cepo')) traits = 'Colócalo en 1 casilla: 2 DC e inmoviliza 1 turno.';
+    } else if (lower.includes('laúd') || lower.includes('símbolo') || lower.includes('carcaj')) {
+      type = 'Accesorio';
+      dice = inside || 'Foco de clase';
+      if (lower.includes('laúd')) traits = 'Foco musical para Cantos Espirituales y +1 en pruebas de Persuasión.';
+      else if (lower.includes('símbolo')) traits = 'Foco sagrado/exorcista: +1 en pruebas contra No Muertos y Espíritus.';
+      else if (lower.includes('carcaj')) traits = 'Munición lista para disparos continuos con Arco.';
+    } else {
+      type = 'Herramienta';
+      if (lower.includes('alquimia')) {
+        dice = '+2 Arcano';
+        traits = 'Herramienta de campo: +2 a pruebas de Arcano al destilar o hacer Mezclas Experimentales.';
+      } else if (lower.includes('herramientas')) {
+        dice = '+2 Trampas';
+        traits = 'Permite desarmar trampas mecánicas y forzar cerraduras con Ventaja.';
+      } else if (lower.includes('cuerda')) {
+        dice = 'Utilidad';
+        traits = 'Ventaja en Atletismo para cruzar fosos, trepar o asegurar rescates.';
+      }
+    }
+
+    return {
+      id: `init-${cls?.id || 'hero'}-${idx}`,
+      name: cleanName,
+      type,
+      dice,
+      traits,
+      special: traits,
+      equipped,
+      qty: 1,
+    };
+  });
+}

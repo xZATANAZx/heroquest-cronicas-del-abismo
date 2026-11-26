@@ -32,6 +32,7 @@ import {
   LEVEL_TABLE,
   EQUIPMENT_CATALOG,
   SPELLS_CATALOG,
+  buildStartingInventory,
   getModifier,
   formatMod,
 } from '../data/characterSystem';
@@ -207,14 +208,7 @@ export default function CharacterForge({
       motivation: null,
       perks: [],
       flaws: [],
-      inventory: cls.startingGear.map((g, idx) => ({
-        id: `init-${idx}`,
-        name: g,
-        type: idx === 0 ? 'Arma' : 'Equipo',
-        traits: 'Equipo inicial de clase',
-        equipped: idx === 0,
-        qty: 1,
-      })),
+      inventory: buildStartingInventory(cls),
       professionId,
       professionName: PROFESSIONS.find((p) => p.id === professionId)?.name || 'Herrero de Batalla',
       quirk: QUIRKS.find((q) => q.id === quirkId) || null,
