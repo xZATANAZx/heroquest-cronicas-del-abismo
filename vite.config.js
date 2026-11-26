@@ -9,7 +9,11 @@ import { bin as cloudflaredBin, install as installCloudflared } from 'cloudflare
 
 const DATA_DIR = path.resolve(process.cwd(), '.hq_data');
 const DATA_FILE = path.resolve(DATA_DIR, 'campaign_heroes.json');
+const CREATOR_NOTES_FILE = path.resolve(DATA_DIR, 'creator_notes.json');
 const LEGACY_DATA_FILE = path.resolve(process.cwd(), 'campaign_heroes.json');
+const isCreatorMachine = () =>
+  fs.existsSync(path.resolve(process.cwd(), '.hq_creator')) ||
+  fs.existsSync(path.resolve(process.cwd(), '.git'));
 const ACTIONS_STORE = [];
 const ACTIVE_PUZZLES = {}; // { [heroId]: { id, puzzle, sentAt } }
 let CITY_MODE_OPEN = false;
@@ -421,6 +425,50 @@ function localSyncAndTunnelPlugin() {
 
         res.statusCode = 400;
         res.end(JSON.stringify({ error: 'Solicitud inválida' }));
+      });
+
+      // Detección de PC del Creador (solo true en la PC con .git o .hq_creator; false en PCs de amigos)
+      server.middlewares.use('/api/creator-status', (_req, res) => {
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'no-store');
+        res.end(JSON.stringify({ isCreator: isCreatorMachine() }));
+      });
+
+      // Notas privadas del creador (guardadas solo en .hq_data local)
+      server.middlewares.use('/api/creator-notes', async (req, res) => {
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'no-store');
+        if (!isCreatorMachine()) {
+          res.statusCode = 403;
+          res.end(JSON.stringify({ notes: [] }));
+          return;
+        }
+        if (req.method === 'GET') {
+          try {
+            if (fs.existsSync(CREATOR_NOTES_FILE)) {
+              const parsed = JSON.parse(fs.readFileSync(CREATOR_NOTES_FILE, 'utf-8'));
+              res.end(JSON.stringify({ notes: parsed.notes || [] }));
+              return;
+            }
+          } catch {
+            // ignore
+          }
+          res.end(JSON.stringify({ notes: [] }));
+          return;
+        }
+        if (req.method === 'POST') {
+          const payload = await parseBody(req);
+          const notes = Array.isArray(payload.notes) ? payload.notes : [];
+          try {
+            fs.writeFileSync(CREATOR_NOTES_FILE, JSON.stringify({ notes }, null, 2), 'utf-8');
+          } catch {
+            // ignore
+          }
+          res.end(JSON.stringify({ ok: true, notes }));
+          return;
+        }
+        res.statusCode = 405;
+        res.end(JSON.stringify({ error: 'Método no permitido' }));
       });
     },
   };

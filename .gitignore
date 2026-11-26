@@ -7,6 +7,7 @@ releases/
 # Datos privados de campaña, héroes y versión local (CADA PC GUARDA LOS SUYOS)
 .hq_data/
 .hq_version
+.hq_creator
 campaign_heroes.json
 
 # Scripts exclusivos del creador (no se suben a GitHub)

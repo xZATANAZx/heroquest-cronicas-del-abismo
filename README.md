@@ -58,6 +58,10 @@
 
 Todas las versiones oficiales y sus cambios detallados se publican en la pestaña [**Releases**](https://github.com/xZATANAZx/heroquest-cronicas-del-abismo/releases).
 
+### 🏷️ `v2.1.0` — Buzón de Sugerencias y Reporte de Bugs
+- 💬 Nuevo botón **`Sugerencias`** en la barra superior para enviar reportes de bugs, ideas nuevas, qué mejorar/renovar, qué gustó o qué quitar directamente al creador (sin necesitar cuenta ni registro).
+- 👑 Panel privado exclusivo del creador para gestionar la hoja de ruta de mejoras pendientes.
+
 ### 🏷️ `v2.0.0` — Crónicas del Abismo (Lanzamiento Oficial HQ-D20 v2)
 - ✨ Lanzamiento completo del sistema **HQ-D20 v2** para mesa física (1–4 aventureros + DM).
 - ✨ **Auto-actualizador integrado** en `ABRIR_HEROQUEST_DM.bat` e instalador en 1 clic `INSTALAR_HEROQUEST_DM.bat`.

@@ -19,6 +19,7 @@ import {
   RotateCcw,
   QrCode,
   Smartphone,
+  MessageSquarePlus,
 } from 'lucide-react';
 import DecksPanel from './components/DecksPanel';
 import BestiaryPanel from './components/BestiaryPanel';
@@ -31,6 +32,7 @@ import CityHubPanel from './components/CityHubPanel';
 import PlayerMobileView from './components/PlayerMobileView';
 import ActionResolverBanner from './components/ActionResolverBanner';
 import TravelModal from './components/TravelModal';
+import FeedbackModal from './components/FeedbackModal';
 import { getMaterialById } from './data/craftingSystem';
 import { generateProceduralQuest } from './data/proceduralEngine';
 
@@ -151,6 +153,15 @@ export default function App() {
   const [cityMode, setCityMode] = useState(saved?.cityMode || 'relaxed');
   const [cityOpenToPhones, setCityOpenToPhones] = useState(false);
   const [travelModalOpen, setTravelModalOpen] = useState(false);
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [isCreator, setIsCreator] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/creator-status', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : { isCreator: false }))
+      .then((d) => setIsCreator(!!d.isCreator))
+      .catch(() => setIsCreator(false));
+  }, []);
 
   const handleApplyTravelOutcome = (outcome) => {
     if (!outcome || heroes.length === 0) return;
@@ -801,6 +812,15 @@ export default function App() {
                   <Dices className="w-4 h-4" /> Dados
                 </button>
 
+                {/* Botón de Sugerencias y Reporte de Bugs */}
+                <button
+                  onClick={() => setFeedbackModalOpen(true)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-amber-400/70 text-amber-200 font-bold flex items-center gap-1.5 cursor-pointer transition"
+                  title="Enviar sugerencias, ideas o reportar bugs al creador"
+                >
+                  <MessageSquarePlus className="w-4 h-4" /> Sugerencias
+                </button>
+
                 {/* Backup / Import */}
                 <button
                   onClick={exportBackup}
@@ -1096,6 +1116,14 @@ export default function App() {
           </main>
         </div>
       </div>
+
+      {/* Modal de Sugerencias y Reportes de Bugs (con Panel Privado solo para el Creador) */}
+      <FeedbackModal
+        isOpen={feedbackModalOpen}
+        onClose={() => setFeedbackModalOpen(false)}
+        isCreator={isCreator}
+        showToast={showToast}
+      />
     </AppErrorBoundary>
   );
 }
