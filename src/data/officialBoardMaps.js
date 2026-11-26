@@ -3,6 +3,7 @@
 // Geometría EXACTA 26×19 del Tablero Oficial MODERNO 2021 (22 Salas Reales)
 // Incluye las 2 salas gemelas 2×3 (R13 / R13b) y la Sala en "L" (R17) + Muesca (R19)
 // ============================================================================
+import { getOfficialBlueprint } from './officialBlueprints';
 
 export const BOARD_COLS = 26;
 export const BOARD_ROWS = 19;
@@ -221,85 +222,7 @@ export const OFFICIAL_QUEST_MAPS = [
       },
       { code: 'BO', room: 'R11', title: 'Verag, la Gárgola (Gran Sala Central)', text: 'JEFE: Si antes examinaron la Biblioteca (R8) con Arcano/Investigación CD 12, descubren la runa que reduce -1 Def a Verag.' },
     ],
-    items: [
-      // Inicio R14 (x:1..4, y:14..17) — Puerta al Norte (R12) y Puerta al Este (R15)
-      { x: 2, y: 15, type: 'stairs', w: 2, h: 2, note: 'Escaleras de Inicio y Escape' },
-      { x: 2, y: 14, type: 'door', edge: 'N', note: 'Conecta R14 con R12' },
-      { x: 4, y: 15, type: 'door', edge: 'E', note: 'Conecta R14 con R15' },
-
-      // R15 (x:5..8, y:13..17) — Sale al pasillo central (x:9..11 o y:18)
-      { x: 6, y: 15, type: 'orc', note: 'Orco centinela' },
-      { x: 6, y: 17, type: 'door', edge: 'S', note: 'Salida al pasillo sur (fila 19)' },
-
-      // R12 (x:1..4, y:10..13) — Armería Nota A (en muro oeste para dejar libres puerta norte y puerta sur)
-      { x: 1, y: 10, type: 'weapon_rack', w: 1, h: 3, note: 'Nota A: Armería oxidada' },
-      { x: 2, y: 12, type: 'orc' },
-      { x: 3, y: 11, type: 'goblin' },
-      { x: 4, y: 11, type: 'door', edge: 'E', note: 'Conecta R12 con R13' },
-      { x: 2, y: 10, type: 'door', edge: 'N', note: 'Sale al pasillo medio oeste (fila 10)' },
-
-      // R13 (x:5..8, y:10..12)
-      { x: 6, y: 11, type: 'orc' },
-      { x: 8, y: 11, type: 'door', edge: 'E', note: 'Sale al pasillo anillo central (col J)' },
-
-      // R4 (x:1..4, y:4..8) — Entrada desde pasillo medio (y=9) y sube a R1
-      { x: 2, y: 8, type: 'door', edge: 'S', note: 'Entrada desde pasillo medio oeste' },
-      { x: 2, y: 5, type: 'abomination', note: 'Abominación (Fimir)' },
-      { x: 3, y: 6, type: 'goblin' },
-      { x: 4, y: 6, type: 'door', edge: 'E', note: 'Conecta R4 con R5' },
-      { x: 2, y: 4, type: 'door', edge: 'N', note: 'Sube a la Cripta R1' },
-
-      // R5 (x:5..8, y:4..8) — Nota B Cofre + Guerrero Terror
-      { x: 6, y: 6, type: 'dread_warrior', note: 'Guerrero del Terror' },
-      { x: 7, y: 4, type: 'chest', note: 'Nota B: Cofre del Guardia' },
-      { x: 8, y: 6, type: 'door', edge: 'E', note: 'Sale al anillo central (col J)' },
-
-      // R1 (x:1..4, y:1..3) y R2 (x:5..8, y:1..3) — Tumbas de Fellmarg (Notas C y D)
-      { x: 1, y: 1, type: 'tomb', w: 3, h: 2, note: 'Tumba de Fellmarg (3×2)' },
-      { x: 4, y: 1, type: 'chest', note: 'Nota D: 84 MO + Diario (+75 XP)' },
-      { x: 4, y: 2, type: 'door', edge: 'E', note: 'Conecta R1 con R2' },
-
-      { x: 5, y: 1, type: 'tomb', w: 3, h: 2, note: 'Sarcófago Guardián (3×2)' },
-      { x: 5, y: 3, type: 'mummy', note: 'Nota C: Momia de Fellmarg (4 DC)' },
-      { x: 7, y: 3, type: 'skeleton' },
-      { x: 8, y: 2, type: 'door', edge: 'E', note: 'Conecta R2 con R3' },
-
-      // R3 (x:9..11, y:1..5) — Conecta al pasillo norte-centro (y=6)
-      { x: 10, y: 3, type: 'zombie' },
-      { x: 10, y: 5, type: 'door', edge: 'S', note: 'Baja al anillo norte de la Sala Central' },
-
-      // R11 (Gran Sala Central x:10..15, y:7..11) — VERAG
-      { x: 12, y: 7, type: 'throne', note: 'Trono de Verag' },
-      { x: 13, y: 7, type: 'fireplace', w: 3, h: 1, note: 'Chimenea (3×1)' },
-      { x: 12, y: 9, type: 'gargoyle', note: 'JEFE: Verag (Gárgola)' },
-      { x: 11, y: 9, type: 'dread_warrior', note: 'Guerrero del Terror' },
-      { x: 14, y: 9, type: 'abomination', note: 'Abominación escolta' },
-      { x: 12, y: 11, type: 'door', edge: 'S', note: 'Gran Puerta Sur de la Sala Central' },
-      { x: 15, y: 9, type: 'door', edge: 'E', note: 'Puerta Este hacia Ala Derecha' },
-
-      // Ala Derecha conectada desde el pasillo este (y=9 / x=16): R8, R10, R18, R21
-      { x: 21, y: 1, type: 'bookcase', w: 3, h: 1, note: 'Biblioteca: Runa vs Verag (CD 12)' },
-      { x: 22, y: 3, type: 'orc' },
-      { x: 22, y: 4, type: 'door', edge: 'S', note: 'Conecta R8 con R10' },
-
-      { x: 22, y: 6, type: 'sorcerer_table', w: 3, h: 2, note: 'Mesa de Hechicero (3×2)' },
-      { x: 21, y: 7, type: 'goblin' },
-      { x: 22, y: 8, type: 'door', edge: 'S', note: 'Sale al pasillo medio este (fila 10)' },
-
-      { x: 22, y: 10, type: 'door', edge: 'N', note: 'Entrada desde pasillo medio este' },
-      { x: 22, y: 11, type: 'table', w: 3, h: 2, note: 'Mesa Táctica 3×2 (volcable)' },
-      { x: 21, y: 11, type: 'skeleton' },
-      { x: 22, y: 13, type: 'door', edge: 'S', note: 'Baja a la Cámara del Tesoro R21' },
-
-      { x: 21, y: 17, type: 'cupboard', w: 3, h: 1, note: 'Armario' },
-      { x: 24, y: 16, type: 'chest', note: 'Nota E: 120 MO + Tesoro' },
-      { x: 22, y: 16, type: 'skeleton' },
-
-      // Muros de pasillo coherentes (blocked_double cierra corredor central 2×1; blocked cierra corredores de 1 casilla)
-      { x: 0, y: 14, type: 'blocked', note: 'Derrumbe en pasillo exterior oeste-sur' },
-      { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Derrumbe sella corredor central norte (2×1)' },
-      { x: 25, y: 14, type: 'blocked', note: 'Derrumbe en pasillo exterior este-sur' },
-    ],
+    items: getOfficialBlueprint(1).items,
   },
   {
     id: 'm2_sir_ragnar',
@@ -360,55 +283,7 @@ export const OFFICIAL_QUEST_MAPS = [
       },
       { code: 'NP', room: 'R8', title: 'Celda de Sir Ragnar', text: 'Sir Ragnar (2 PC, mueve 1d6; +2 mov si lo curan con Medicina CD 11 o poción).' },
     ],
-    items: [
-      { x: 2, y: 15, type: 'stairs', w: 2, h: 2, note: 'Escaleras de Escape' },
-      { x: 2, y: 14, type: 'door', edge: 'N', note: 'Conecta R14 con R12' },
-
-      { x: 2, y: 11, type: 'goblin' },
-      { x: 4, y: 11, type: 'door', edge: 'E', note: 'Conecta R12 con R13' },
-
-      { x: 5, y: 10, type: 'weapon_rack', w: 1, h: 3, note: 'Estante de Armas (1×3)' },
-      { x: 6, y: 11, type: 'orc' },
-      { x: 6, y: 10, type: 'door', edge: 'N', note: 'Sale al pasillo medio (fila 10)' },
-
-      { x: 2, y: 8, type: 'door', edge: 'S', note: 'Entrada a R4 desde pasillo' },
-      { x: 1, y: 5, type: 'sorcerer_table', w: 3, h: 2, note: 'Mesa de Hechicero (3×2)' },
-      { x: 3, y: 7, type: 'abomination' },
-      { x: 2, y: 7, type: 'goblin' },
-      { x: 4, y: 6, type: 'door', edge: 'E', note: 'Conecta R4 con R5' },
-
-      { x: 6, y: 6, type: 'orc' },
-      { x: 8, y: 6, type: 'door', edge: 'E', note: 'Sale al corredor central norte' },
-
-      // R6 (Botín Nota B) accesible desde pasillo central (col N / x=13)
-      { x: 14, y: 3, type: 'door', edge: 'W', note: 'Entrada a R6 desde pasillo central' },
-      { x: 15, y: 1, type: 'chest', note: 'Nota B: 60 MO + Poción Curación' },
-      { x: 14, y: 2, type: 'dread_warrior', note: 'Carcelero Élite' },
-      { x: 15, y: 4, type: 'orc' },
-      { x: 16, y: 3, type: 'door', edge: 'E', note: 'Conecta R6 con R7' },
-
-      // R7 -> Puerta a la celda R8
-      { x: 17, y: 1, type: 'cupboard', w: 3, h: 1 },
-      { x: 18, y: 3, type: 'goblin' },
-      { x: 19, y: 3, type: 'orc' },
-      { x: 20, y: 2, type: 'door', edge: 'E', note: '¡PUERTA DE LA CELDA! (Dispara Alarma)' },
-
-      // R8 (Celda de Sir Ragnar + Puerta Secreta Sur hacia R10)
-      { x: 23, y: 2, type: 'npc', note: 'SIR RAGNAR (Escoltar a R14)' },
-      { x: 22, y: 4, type: 'secret_door', edge: 'S', note: 'Puerta Secreta hacia R10' },
-
-      // R10 (Nota A: Cofre Trampa + salida al pasillo este para escapar rápido)
-      { x: 24, y: 7, type: 'chest', note: 'Nota A: Cofre Trampa' },
-      { x: 23, y: 7, type: 'trap_spear', note: 'Aguja Envenenada (DES CD 13)' },
-      { x: 22, y: 5, type: 'fireplace', w: 3, h: 1, note: 'Chimenea (3×1)' },
-      { x: 21, y: 7, type: 'orc' },
-      { x: 22, y: 8, type: 'door', edge: 'S', note: 'Atajo de escape al pasillo medio este' },
-
-      // Bloqueos coherentes de pasillo (canalizan el rescate y el escape)
-      { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Derrumbe sella corredor central norte (2×1)' },
-      { x: 0, y: 9, type: 'blocked', note: 'Derrumbe cierra corredor exterior oeste' },
-      { x: 12, y: 17, type: 'blocked_double', w: 2, h: 1, note: 'Escombros cierran corredor central sur (2×1)' },
-    ],
+    items: getOfficialBlueprint(2).items,
   },
   {
     id: 'm3_caudillo_orco',
@@ -476,51 +351,7 @@ export const OFFICIAL_QUEST_MAPS = [
       },
       { code: 'BO', room: 'R11', title: 'Ulag, el Caudillo Orco', text: 'Jefe Orco escoltado en la Gran Sala Central.' },
     ],
-    items: [
-      { x: 2, y: 15, type: 'stairs', w: 2, h: 2 },
-      { x: 2, y: 14, type: 'door', edge: 'N' },
-      { x: 2, y: 11, type: 'goblin' },
-      { x: 3, y: 12, type: 'goblin' },
-      { x: 4, y: 11, type: 'door', edge: 'E' },
-
-      { x: 5, y: 10, type: 'weapon_rack', w: 1, h: 3, note: 'Nota A: Bastón + Estandarte (1×3)' },
-      { x: 6, y: 11, type: 'orc' },
-      { x: 6, y: 11, type: 'door', edge: 'E', note: 'Conecta R13 con R13b' },
-      { x: 7, y: 11, type: 'goblin' },
-      { x: 8, y: 11, type: 'door', edge: 'E', note: 'Sale al anillo de la Sala Central' },
-
-      { x: 2, y: 8, type: 'door', edge: 'S' },
-      { x: 2, y: 5, type: 'torture_rack', w: 3, h: 2, note: 'Potro de Tortura (3×2)' },
-      { x: 3, y: 7, type: 'abomination' },
-      { x: 2, y: 4, type: 'door', edge: 'N' },
-
-      { x: 1, y: 1, type: 'bookcase', w: 3, h: 1 },
-      { x: 3, y: 2, type: 'dread_warrior' },
-
-      { x: 14, y: 3, type: 'door', edge: 'W', note: 'Entrada desde corredor central norte a R6' },
-      { x: 17, y: 3, type: 'door', edge: 'W', note: 'Conecta R6 con R7' },
-      { x: 17, y: 1, type: 'cupboard', w: 3, h: 1, note: 'Nota B: 24 MO + Poción' },
-      { x: 18, y: 3, type: 'orc' },
-      { x: 19, y: 3, type: 'goblin' },
-
-      { x: 22, y: 10, type: 'door', edge: 'N', note: 'Desde pasillo este' },
-      { x: 21, y: 11, type: 'sorcerer_table', w: 3, h: 2, note: 'Mesa de Hechicero (3×2)' },
-      { x: 24, y: 12, type: 'chest', note: 'Nota C: Trampa + 100 MO' },
-      { x: 24, y: 11, type: 'trap_spear', note: 'Trampa Lanza (DES CD 13)' },
-      { x: 21, y: 13, type: 'skeleton' },
-
-      // R11: Trono de Ulag (puerta Oeste en col K y puerta Sur en fila 12)
-      { x: 12, y: 7, type: 'throne', note: 'Trono de Ulag' },
-      { x: 11, y: 9, type: 'table', w: 3, h: 2, note: 'Gran Mesa del Caudillo' },
-      { x: 13, y: 8, type: 'orc', note: 'JEFE: ULAG EL CAUDILLO ORCO' },
-      { x: 10, y: 8, type: 'orc' },
-      { x: 15, y: 8, type: 'goblin' },
-      { x: 10, y: 9, type: 'door', edge: 'W', note: 'Entrada Oeste Sala del Trono' },
-      { x: 12, y: 11, type: 'door', edge: 'S', note: 'Entrada Sur Sala del Trono' },
-
-      { x: 0, y: 4, type: 'blocked', note: 'Bloquea borde oeste-norte' },
-      { x: 12, y: 17, type: 'blocked_double', w: 2, h: 1, note: 'Cierra corredor central sur (2×1)' },
-    ],
+    items: getOfficialBlueprint(3).items,
   },
   {
     id: 'm4_oro_magnus',
@@ -541,35 +372,7 @@ export const OFFICIAL_QUEST_MAPS = [
       { code: 'B', room: 'R8', title: 'Tercer Cofre del Príncipe', text: 'Custodiado por 1 Abominación y 2 Orcos.' },
       { code: 'MI', room: 'R18', title: '¡Emboscada de Mímico!', text: 'El cofre de R18 es un Mímico de Cofre (At 4 DC, PC 4).' },
     ],
-    items: [
-      { x: 2, y: 15, type: 'stairs', w: 2, h: 2 },
-      { x: 4, y: 15, type: 'door', edge: 'E' },
-      { x: 6, y: 15, type: 'orc' },
-      { x: 7, y: 14, type: 'goblin' },
-      { x: 6, y: 13, type: 'door', edge: 'N', note: 'Conecta hacia R13' },
-      { x: 6, y: 11, type: 'door', edge: 'E', note: 'Conecta R13 con R13b' },
-      { x: 8, y: 11, type: 'door', edge: 'E', note: 'Sale al anillo central' },
-
-      { x: 12, y: 8, type: 'dread_warrior', note: 'JEFE: Gulthor' },
-      { x: 11, y: 7, type: 'chest', note: 'Cofre Oficial #1' },
-      { x: 14, y: 7, type: 'chest', note: 'Cofre Oficial #2' },
-      { x: 13, y: 10, type: 'orc' },
-      { x: 12, y: 11, type: 'door', edge: 'S' },
-      { x: 15, y: 9, type: 'door', edge: 'E' },
-
-      { x: 22, y: 4, type: 'door', edge: 'S', note: 'Conecta desde R10' },
-      { x: 22, y: 8, type: 'door', edge: 'S', note: 'Entrada desde pasillo este' },
-      { x: 23, y: 1, type: 'chest', note: 'Cofre Oficial #3' },
-      { x: 22, y: 2, type: 'abomination' },
-      { x: 23, y: 3, type: 'orc' },
-
-      { x: 22, y: 10, type: 'door', edge: 'N' },
-      { x: 23, y: 11, type: 'mimic', note: '¡MÍMICO DE COFRE HQ-D20!' },
-
-      { x: 12, y: 13, type: 'trap_pit', note: 'Foso Oculto (DES CD 13)' },
-      { x: 0, y: 9, type: 'blocked', note: 'Bloquea borde oeste' },
-      { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Cierra corredor central norte (2×1)' },
-    ],
+    items: getOfficialBlueprint(4).items,
   },
   {
     id: 'm14_barak_tor',
@@ -589,24 +392,7 @@ export const OFFICIAL_QUEST_MAPS = [
       { code: 'FI', room: 'R11', title: 'Altar de la Filacteria', text: 'Mientras el Altar siga intacto (3 PC o Arcano CD 14), el Señor Brujo regenera 2 PC cada turno.' },
       { code: 'BO', room: 'R11', title: 'El Señor Brujo (Liche)', text: 'Invoca 1 Esqueleto cada turno. En Fase 2 (mitad de PC) libera Onda de Terror (SAB CD 14 o -2 PM).' },
     ],
-    items: [
-      { x: 2, y: 15, type: 'stairs', w: 2, h: 2 },
-      { x: 4, y: 15, type: 'door', edge: 'E' },
-      { x: 6, y: 15, type: 'skeleton' },
-      { x: 7, y: 15, type: 'zombie' },
-      { x: 8, y: 15, type: 'door', edge: 'E', note: 'Conecta con R16' },
-      { x: 10, y: 15, type: 'mummy' },
-      { x: 10, y: 13, type: 'door', edge: 'N', note: 'Sale al anillo frente a la Sala Central' },
-
-      { x: 11, y: 7, type: 'tomb', w: 3, h: 2, note: 'Tumba del Señor Brujo (3×2)' },
-      { x: 14, y: 7, type: 'sorcerer_table', w: 2, h: 3, note: 'FILACTERIA (3 PC o Arcano CD 14)' },
-      { x: 12, y: 9, type: 'sorcerer', note: 'JEFE FINAL: EL SEÑOR BRUJO (LICHE)' },
-      { x: 10, y: 8, type: 'mummy' },
-      { x: 13, y: 10, type: 'dread_warrior' },
-      { x: 11, y: 10, type: 'skeleton' },
-      { x: 12, y: 11, type: 'door', edge: 'S', note: 'Gran Puerta de Barak Tor' },
-      { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Corredor central norte derrumbado (2×1)' },
-    ],
+    items: getOfficialBlueprint(14).items,
   },
   {
     id: 'exp_luna_terror',

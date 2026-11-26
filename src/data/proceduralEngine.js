@@ -4,7 +4,8 @@
 // Salas de Peligro, Mazo de Pistas, Puertas Tácticas y Contadores de Zargon
 // ============================================================================
 
-import { HQ_ROOMS } from './officialBoardMaps';
+import { HQ_ROOMS, PIECE_TYPES, getRoomAt } from './officialBoardMaps';
+import { OFFICIAL_BLUEPRINTS } from './officialBlueprints';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -602,622 +603,155 @@ function buildProceduralBoardMap({
   bossName,
   partyLevel,
   partySize,
-  hazardAssignments,
   narrative,
 }) {
+  // ============================================================================
+  // BASE ARQUITECTÓNICA REAL: 14 PLANOS OFICIALES DE HEROQUEST (HeroScribe GPL-2.0)
+  // Conserva la estructura maestra exacta de puertas, pasillos, muros bloqueados,
+  // trampas y muebles del Libro de Misiones Original, y la re-tematiza dinámicamente
+  // al Bioma, Trama, Número de Jugadores (1–4), Alquimia y Salas de Peligro HQ-D20 v2.
+  // ============================================================================
+  const bp = pickFresh('official_bp', OFFICIAL_BLUEPRINTS, (b) => b.id);
+  const startRoom = bp.startRoom || 'R14';
+
   const items = [];
-  const usedCells = new Set();
-  const doorClearance = new Set(); // Casillas junto a puertas: prohibidas para muebles
-  const roomDoorsMap = {}; // { [roomId]: [{ x, y, edge }] }
+  const monstersByRoom = {};
+  const roomsWithChest = new Set();
+  const roomsWithFurniture = new Set();
+  let alchemyCount = 0;
 
-  const roomById = (rId) => HQ_ROOMS.find((rm) => rm.id === rId);
-  const cellInRoom = (r, x, y) => {
-    if (!r || x < r.x1 || x > r.x2 || y < r.y1 || y > r.y2) return false;
-    if (r.exclude && r.exclude.some((ex) => ex.x === x && ex.y === y)) return false;
-    return true;
-  };
+  // 1. Copiar arquitectura exacta (escaleras, puertas, puertas secretas, muros bloqueados, trampas y muebles)
+  bp.items.forEach((raw) => {
+    const info = PIECE_TYPES[raw.type];
+    if (!info) return;
 
-  const occupy = (x, y, w = 1, h = 1) => {
-    for (let yy = y; yy < y + h; yy++) {
-      for (let xx = x; xx < x + w; xx++) {
-        usedCells.add(`${xx},${yy}`);
+    if (info.monsterId) {
+      const rId = getRoomAt(raw.x, raw.y);
+      if (!monstersByRoom[rId]) monstersByRoom[rId] = [];
+      monstersByRoom[rId].push(raw);
+      return;
+    }
+
+    if (raw.type === 'alchemy_bench') {
+      alchemyCount += 1;
+      if (alchemyCount > 1) {
+        // Garantizar máximo 1 Mesa de Alquimia por misión: las demás se vuelven Mesa o Altar
+        items.push({ ...raw, type: 'table', note: 'Mesa de Laboratorio' });
+        return;
       }
+      items.push({
+        ...raw,
+        label: 'Mesa de Alquimia 3×2 (Única en la misión)',
+        note: 'Los héroes pueden destilar pociones aquí con tirada d20 de Arcano.',
+      });
+      return;
     }
-  };
 
-  const canPlace = (x, y, w, h, r, avoidDoors = true) => {
-    for (let yy = y; yy < y + h; yy++) {
-      for (let xx = x; xx < x + w; xx++) {
-        if (!cellInRoom(r, xx, yy)) return false;
-        if (usedCells.has(`${xx},${yy}`)) return false;
-        if (avoidDoors && doorClearance.has(`${xx},${yy}`)) return false;
+    if (raw.type === 'chest') {
+      const rId = getRoomAt(raw.x, raw.y);
+      if (rId !== 'CORRIDOR') roomsWithChest.add(rId);
+    }
+    if (info.category === 'Mobiliario') {
+      const rId = getRoomAt(raw.x, raw.y);
+      if (rId !== 'CORRIDOR') roomsWithFurniture.add(rId);
+    }
+
+    if (raw.type === 'door') {
+      const ds = Math.random() < 0.18 ? pick(DOOR_STATES.filter((d) => d.id !== 'normal')) : DOOR_STATES[0];
+      items.push({
+        ...raw,
+        doorState: ds.id,
+        label: `${ds.label} (${ds.badge})`,
+      });
+      return;
+    }
+
+    items.push({ ...raw });
+  });
+
+  // 2. Elegir sala del Jefe (prioriza R11 si tiene enemigos; si no, la sala con más enemigos)
+  const combatRoomIds = Object.keys(monstersByRoom).filter((r) => r !== 'CORRIDOR' && r !== startRoom);
+  let bossRoom = 'R11';
+  if (!monstersByRoom['R11'] || monstersByRoom['R11'].length === 0) {
+    bossRoom =
+      combatRoomIds.sort((a, b) => (monstersByRoom[b]?.length || 0) - (monstersByRoom[a]?.length || 0))[0] ||
+      'R11';
+  }
+
+  // 3. Re-tematizar los monstruos al Bioma elegido y escalar densidad a 1–4 aventureros
+  const bossType = pick(biome.bossPool);
+  let bossPlaced = false;
+
+  Object.entries(monstersByRoom).forEach(([rId, list]) => {
+    // En 1 Jugador (Solo): máximo 1 enemigo por sala (y el Jefe lucha sin escoltas)
+    // En 2 Jugadores: máximo 2 enemigos por sala
+    // En 3–4 Jugadores: densidad completa del plano oficial
+    const maxAllowed =
+      partySize === 1
+        ? 1
+        : partySize === 2
+        ? Math.max(1, Math.ceil(list.length * 0.65))
+        : list.length;
+
+    const kept = list.slice(0, maxAllowed);
+    kept.forEach((rawMon, idx) => {
+      const isBossSlot = !bossPlaced && rId === bossRoom && idx === 0;
+      if (isBossSlot) {
+        bossPlaced = true;
+        items.push({
+          x: rawMon.x,
+          y: rawMon.y,
+          type: bossType,
+          isBoss: true,
+          alertness: 'Guardia',
+          label: `JEFE: ${bossName}`,
+          note: `JEFE: ${bossName}`,
+        });
+      } else {
+        const themedType = pick(biome.monsterPool);
+        const alertState = pick(ALERTNESS_LIST);
+        items.push({
+          x: rawMon.x,
+          y: rawMon.y,
+          type: themedType,
+          alertness: alertState,
+          label: `${themedType.toUpperCase()} [${alertState}]`,
+        });
       }
-    }
-    return true;
-  };
-
-  // Registra puerta y marca sus 2 casillas de paso como libres de muebles
-  const addDoor = (doorObj) => {
-    items.push(doorObj);
-    doorClearance.add(`${doorObj.x},${doorObj.y}`);
-    const ox = doorObj.edge === 'W' ? doorObj.x - 1 : doorObj.edge === 'E' ? doorObj.x + 1 : doorObj.x;
-    const oy = doorObj.edge === 'N' ? doorObj.y - 1 : doorObj.edge === 'S' ? doorObj.y + 1 : doorObj.y;
-    doorClearance.add(`${ox},${oy}`);
-    const rA = HQ_ROOMS.find((rm) => cellInRoom(rm, doorObj.x, doorObj.y));
-    const rB = HQ_ROOMS.find((rm) => cellInRoom(rm, ox, oy));
-    if (rA) (roomDoorsMap[rA.id] = roomDoorsMap[rA.id] || []).push({ x: doorObj.x, y: doorObj.y, edge: doorObj.edge });
-    if (rB) (roomDoorsMap[rB.id] = roomDoorsMap[rB.id] || []).push({ x: ox, y: oy, edge: doorObj.edge });
-  };
-
-  // Mueble de pared 3×1 o 1×3: busca una pared sin puertas y lo centra contra el muro
-  const placeWallFurniture = (roomId, item) => {
-    const r = roomById(roomId);
-    if (!r) return false;
-    const rw = r.x2 - r.x1 + 1;
-    const rh = r.y2 - r.y1 + 1;
-    const candidates = [
-      { x: r.x1 + Math.floor((rw - 3) / 2), y: r.y1, w: 3, h: 1 }, // Pared Norte
-      { x: r.x1 + Math.floor((rw - 3) / 2), y: r.y2, w: 3, h: 1 }, // Pared Sur
-      { x: r.x1, y: r.y1 + Math.floor((rh - 3) / 2), w: 1, h: 3 }, // Pared Oeste
-      { x: r.x2, y: r.y1 + Math.floor((rh - 3) / 2), w: 1, h: 3 }, // Pared Este
-      { x: r.x1, y: r.y1, w: 3, h: 1 },
-      { x: r.x1, y: r.y2, w: 3, h: 1 },
-      { x: r.x1, y: r.y1, w: 1, h: 3 },
-      { x: r.x2, y: r.y1, w: 1, h: 3 },
-    ];
-    for (const c of candidates) {
-      if (canPlace(c.x, c.y, c.w, c.h, r, true)) {
-        occupy(c.x, c.y, c.w, c.h);
-        items.push({ ...item, x: c.x, y: c.y, w: c.w, h: c.h });
-        return true;
-      }
-    }
-    return false;
-  };
-
-  // Mueble central 3×2 o 2×3: lo centra geométricamente en la sala dejando paso en las puertas
-  const placeCenterFurniture = (roomId, item) => {
-    const r = roomById(roomId);
-    if (!r) return false;
-    const rw = r.x2 - r.x1 + 1;
-    const rh = r.y2 - r.y1 + 1;
-    const orientations = rw >= rh ? [[3, 2], [2, 3]] : [[2, 3], [3, 2]];
-    const cx = (r.x1 + r.x2) / 2;
-    const cy = (r.y1 + r.y2) / 2;
-    let best = null;
-    for (const [w, h] of orientations) {
-      for (let y = r.y1; y <= r.y2 - h + 1; y++) {
-        for (let x = r.x1; x <= r.x2 - w + 1; x++) {
-          if (!canPlace(x, y, w, h, r, true)) continue;
-          const dist = Math.hypot(x + (w - 1) / 2 - cx, y + (h - 1) / 2 - cy);
-          if (!best || dist < best.dist) best = { x, y, w, h, dist };
-        }
-      }
-    }
-    if (best) {
-      occupy(best.x, best.y, best.w, best.h);
-      items.push({ ...item, x: best.x, y: best.y, w: best.w, h: best.h });
-      return true;
-    }
-    return false;
-  };
-
-  // Cofre 1×1: siempre en la esquina más alejada de la puerta de entrada
-  const placeCornerChest = (roomId, item) => {
-    const r = roomById(roomId);
-    if (!r) return false;
-    const doors = roomDoorsMap[roomId] || [];
-    const corners = [
-      { x: r.x1, y: r.y1 },
-      { x: r.x2, y: r.y1 },
-      { x: r.x1, y: r.y2 },
-      { x: r.x2, y: r.y2 },
-    ];
-    let best = null;
-    for (const c of corners) {
-      if (!canPlace(c.x, c.y, 1, 1, r, true)) continue;
-      const minDoorDist =
-        doors.length > 0
-          ? Math.min(...doors.map((d) => Math.hypot(c.x - d.x, c.y - d.y)))
-          : 1;
-      if (!best || minDoorDist > best.score) best = { x: c.x, y: c.y, score: minDoorDist };
-    }
-    if (best) {
-      occupy(best.x, best.y, 1, 1);
-      items.push({ ...item, x: best.x, y: best.y, w: 1, h: 1 });
-      return true;
-    }
-    return false;
-  };
-
-  // Monstruo / NPC 1×1: distribución táctica espaciada (nunca amontonados en la esquina ni sobre puertas)
-  const placedMonstersInRoom = {};
-  const placeTacticalUnit = (roomId, item, preferBack = false) => {
-    const r = roomById(roomId);
-    if (!r) return false;
-    const doors = roomDoorsMap[roomId] || [];
-    const allies = placedMonstersInRoom[roomId] || [];
-    const cx = (r.x1 + r.x2) / 2;
-    const cy = (r.y1 + r.y2) / 2;
-
-    let best = null;
-    for (let y = r.y1; y <= r.y2; y++) {
-      for (let x = r.x1; x <= r.x2; x++) {
-        if (!canPlace(x, y, 1, 1, r, true)) continue;
-        const doorDist =
-          doors.length > 0
-            ? Math.min(...doors.map((d) => Math.hypot(x - d.x, y - d.y)))
-            : 2;
-        const allyDist =
-          allies.length > 0
-            ? Math.min(...allies.map((a) => Math.hypot(x - a.x, y - a.y)))
-            : 2.5;
-        const centerDist = Math.hypot(x - cx, y - cy);
-
-        // Puntaje táctico: separa aliados + respeta rol (jefe al fondo, guardias cubriendo el centro)
-        let score = Math.min(allyDist, 3) * 3.0;
-        if (preferBack) {
-          score += doorDist * 1.4 - centerDist * 0.3;
-        } else {
-          // Distancia ideal de 1.8 a 3.2 casillas de la puerta, cerca del centro táctico
-          score += (3 - Math.abs(doorDist - 2.3)) * 1.2 - centerDist * 0.4;
-        }
-        // Pequeña variación para que no todas las salas sean idénticas
-        score += Math.random() * 0.25;
-        if (!best || score > best.score) best = { x, y, score };
-      }
-    }
-    if (!best) {
-      // Fallback: cualquier casilla libre de la sala
-      for (let y = r.y1; y <= r.y2; y++) {
-        for (let x = r.x1; x <= r.x2; x++) {
-          if (canPlace(x, y, 1, 1, r, false)) {
-            best = { x, y, score: 0 };
-            break;
-          }
-        }
-        if (best) break;
-      }
-    }
-    if (best) {
-      occupy(best.x, best.y, 1, 1);
-      (placedMonstersInRoom[roomId] = placedMonstersInRoom[roomId] || []).push({ x: best.x, y: best.y });
-      items.push({ ...item, x: best.x, y: best.y, w: 1, h: 1 });
-      return true;
-    }
-    return false;
-  };
-
-  // ============================================================================
-  // 1. 5 ARQUETIPOS BASADOS EN PASILLOS (ESTILO LIBRO OFICIAL DE HEROQUEST)
-  // Principios reales de diseño:
-  //  - La mayoría de las puertas (~70%) abren DESDE LOS PASILLOS hacia las salas
-  //    (los héroes exploran corredores, buscan trampas/puertas secretas y eligen qué puerta abrir).
-  //  - Solo 2-3 puertas conectan sala↔sala (cámaras interiores / antesalas).
-  //  - CADA muro bloqueado (blocked 1×1 / blocked_double 2×1) cierra un corte exacto
-  //    de un pasillo activo para dar dirección real al recorrido (0 muros al azar).
-  // ============================================================================
-  const ARCHETYPES = [
-    {
-      name: 'Corredor Oeste y Anillo Central',
-      startRoom: 'R14',
-      stairsPos: { x: 2, y: 15 },
-      doors: [
-        // Salida directa al Pasillo Exterior Oeste (x=0) y al Pasillo Sur (y=18)
-        { room: 'R14', x: 1, y: 15, edge: 'W' },  // R14 -> Pasillo Oeste (x=0)
-        // Puertas desde el Pasillo Oeste (x=0) y Pasillo Medio Oeste (y=9) hacia las salas
-        { room: 'R12', x: 1, y: 11, edge: 'W' },  // Pasillo Oeste -> R12
-        { room: 'R12', x: 3, y: 10, edge: 'N' },  // R12 -> Pasillo Medio Oeste (y=9)
-        { room: 'R13', x: 5, y: 10, edge: 'N' },  // Pasillo Medio -> R13 (2×3)
-        { room: 'R15', x: 6, y: 17, edge: 'S' },  // Pasillo Sur (y=18) -> R15
-        { room: 'R4', x: 1, y: 6, edge: 'W' },    // Pasillo Oeste -> R4
-        { room: 'R4', x: 3, y: 8, edge: 'S' },    // Pasillo Medio (y=9) -> R4
-        { room: 'R5', x: 6, y: 8, edge: 'S' },    // Pasillo Medio (y=9) -> R5
-        { room: 'R5', x: 8, y: 6, edge: 'E' },    // R5 -> Anillo Central Oeste (x=9)
-        { room: 'R1', x: 2, y: 1, edge: 'N' },    // Pasillo Norte (y=0) -> R1
-        { room: 'R2', x: 6, y: 1, edge: 'N' },    // Pasillo Norte (y=0) -> R2
-        { room: 'R3', x: 10, y: 5, edge: 'S' },   // Anillo Norte (y=6) -> R3
-        // Gran Sala Central (R11) accesible desde el Anillo Central
-        { room: 'R11', x: 10, y: 9, edge: 'W' },  // Anillo Oeste (x=9) -> R11
-        { room: 'R11', x: 12, y: 11, edge: 'S' }, // Anillo Sur (y=12) -> R11
-        // Ala Este accesible desde el Anillo Este (x=16) y Pasillo Medio Este (y=9)
-        { room: 'R9', x: 17, y: 7, edge: 'W' },   // Anillo Este -> R9
-        { room: 'R9', x: 18, y: 5, edge: 'N' },   // Conexión interna R9 -> R7 (Cámara Interior)
-        { room: 'R10', x: 22, y: 8, edge: 'S' },  // Pasillo Medio Este (y=9) -> R10
-        { room: 'R18', x: 22, y: 10, edge: 'N' }, // Pasillo Medio Este (y=9) -> R18
-      ],
-      secretDoor: { x: 22, y: 13, edge: 'S', room: 'R21' }, // Puerta secreta R18 -> R21
-      blockedWalls: [
-        // Cierra el pasillo sur justo debajo de R14: obliga a subir por el Pasillo Oeste (x=0)
-        { x: 0, y: 17, type: 'blocked', note: 'Derrumbe al sur de R14: canaliza el avance hacia el Norte por el Pasillo Oeste' },
-        // Cierra el corredor central norte (2×1) para que el anillo norte sea un punto estratégico
-        { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Derrumbe en el Corredor Central Norte (2×1)' },
-        // Cierra el pasillo exterior este para que el ala este se explore desde el pasillo medio (y=9)
-        { x: 25, y: 8, type: 'blocked', note: 'Escombros cierran el pasillo exterior este' },
-      ],
-      furnRooms: ['R12', 'R15', 'R4', 'R5', 'R1', 'R2', 'R7', 'R10', 'R18', 'R21'],
-      combatRooms: ['R12', 'R4', 'R5', 'R1', 'R2', 'R3', 'R9', 'R10', 'R18'],
-      alchemyCandidates: ['R5', 'R7', 'R18', 'R21'],
-      traps: [
-        { type: 'trap_pit', x: 0, y: 9, label: 'Foso en el Cruce del Pasillo Oeste (DES CD 13)' },
-        { type: 'trap_spear', x: 9, y: 9, label: 'Trampa de Lanza frente a la Puerta Oeste del Jefe (DES CD 13)' },
-        { type: 'trap_falling_rock', x: 18, y: 9, label: 'Bloque Cayendo en el Pasillo Medio Este (DES CD 14)' },
-      ],
-    },
-    {
-      name: 'La Ruta del Corredor Sur y Este',
-      startRoom: 'R14',
-      stairsPos: { x: 2, y: 15 },
-      doors: [
-        // Salida directa al Pasillo Exterior Sur (y=18)
-        { room: 'R14', x: 2, y: 17, edge: 'S' },  // R14 -> Pasillo Sur (y=18)
-        // Puertas desde el Pasillo Sur (y=18) y Corredor Central Sur (x=12..13)
-        { room: 'R15', x: 6, y: 17, edge: 'S' },  // Pasillo Sur -> R15
-        { room: 'R16', x: 10, y: 17, edge: 'S' }, // Pasillo Sur -> R16
-        { room: 'R16', x: 11, y: 15, edge: 'E' }, // R16 -> Corredor Central Sur (x=12..13)
-        { room: 'R19', x: 14, y: 15, edge: 'W' }, // Corredor Central Sur -> R19
-        { room: 'R20', x: 19, y: 17, edge: 'S' }, // Pasillo Sur -> R20
-        { room: 'R21', x: 22, y: 17, edge: 'S' }, // Pasillo Sur -> R21
-        // Subida por el Pasillo Exterior Este (x=25) hacia el Norte
-        { room: 'R18', x: 24, y: 11, edge: 'E' }, // Pasillo Este (x=25) -> R18
-        { room: 'R17', x: 19, y: 10, edge: 'N' }, // Pasillo Medio Este (y=9) -> Sala en "L" R17
-        { room: 'R10', x: 24, y: 6, edge: 'E' },  // Pasillo Este (x=25) -> R10
-        { room: 'R10', x: 22, y: 8, edge: 'S' },  // Pasillo Medio Este (y=9) -> R10
-        { room: 'R8', x: 24, y: 2, edge: 'E' },   // Pasillo Este -> R8
-        { room: 'R7', x: 18, y: 1, edge: 'N' },   // Pasillo Norte (y=0) -> R7
-        { room: 'R6', x: 14, y: 3, edge: 'W' },   // Corredor Central Norte (x=12..13) -> R6
-        // Gran Sala Central (R11) desde el Anillo Norte y Anillo Este
-        { room: 'R11', x: 12, y: 7, edge: 'N' },  // Anillo Norte (y=6) -> R11
-        { room: 'R11', x: 15, y: 9, edge: 'E' },  // Anillo Este (x=16) -> R11
-      ],
-      secretDoor: { x: 2, y: 14, edge: 'N', room: 'R12' }, // Puerta secreta R14 -> R12
-      blockedWalls: [
-        // Cierra el pasillo oeste arriba de R14: obliga a avanzar por el Pasillo Sur (y=18)
-        { x: 0, y: 14, type: 'blocked', note: 'Derrumbe cierra el Pasillo Oeste: obliga a tomar el Corredor Sur' },
-        // Cierra el acceso directo al norte por el corredor central sur (obliga a rodear por el Este)
-        { x: 12, y: 13, type: 'blocked_double', w: 2, h: 1, note: 'Muro derrumbado bloquea el atajo directo al Jefe (2×1)' },
-        // Cierra el pasillo norte hacia el oeste para centrar la batalla en el ala este y central
-        { x: 11, y: 0, type: 'blocked', note: 'Escombros cierran el Pasillo Norte hacia el Oeste' },
-      ],
-      furnRooms: ['R15', 'R16', 'R19', 'R21', 'R18', 'R17', 'R10', 'R8', 'R7'],
-      combatRooms: ['R15', 'R16', 'R19', 'R21', 'R18', 'R17', 'R10', 'R8', 'R7'],
-      alchemyCandidates: ['R19', 'R10', 'R7', 'R18'],
-      traps: [
-        { type: 'trap_pit', x: 12, y: 18, label: 'Foso en el Pasillo Exterior Sur (DES CD 13)' },
-        { type: 'trap_falling_rock', x: 25, y: 9, label: 'Bloque Cayendo en el Cruce del Pasillo Este (DES CD 14)' },
-        { type: 'trap_spear', x: 12, y: 6, label: 'Trampa de Lanza ante la Puerta Norte del Jefe (DES CD 13)' },
-      ],
-    },
-    {
-      name: 'Incursión por el Pasillo Norte (Inicio Noreste)',
-      startRoom: 'R8',
-      stairsPos: { x: 22, y: 2 },
-      doors: [
-        // Salida directa al Pasillo Exterior Norte (y=0) y al Pasillo Este (x=25)
-        { room: 'R8', x: 22, y: 1, edge: 'N' },   // R8 -> Pasillo Norte (y=0)
-        { room: 'R8', x: 24, y: 3, edge: 'E' },   // R8 -> Pasillo Este (x=25)
-        // Puertas desde el Pasillo Norte (y=0) y Corredor Central Norte (x=12..13)
-        { room: 'R7', x: 18, y: 1, edge: 'N' },   // Pasillo Norte -> R7
-        { room: 'R6', x: 14, y: 3, edge: 'W' },   // Corredor Central Norte -> R6
-        { room: 'R3', x: 11, y: 3, edge: 'E' },   // Corredor Central Norte -> R3
-        { room: 'R2', x: 6, y: 1, edge: 'N' },    // Pasillo Norte -> R2
-        { room: 'R5', x: 8, y: 6, edge: 'E' },    // Anillo Oeste (x=9) -> R5
-        { room: 'R4', x: 3, y: 8, edge: 'S' },    // Pasillo Medio Oeste (y=9) -> R4
-        // Puertas desde el Pasillo Este (x=25) y Pasillo Medio Este (y=9)
-        { room: 'R10', x: 24, y: 6, edge: 'E' },  // Pasillo Este -> R10
-        { room: 'R10', x: 22, y: 8, edge: 'S' },  // Pasillo Medio Este -> R10
-        { room: 'R18', x: 22, y: 10, edge: 'N' }, // Pasillo Medio Este -> R18
-        { room: 'R17', x: 17, y: 11, edge: 'W' }, // Anillo Este (x=16) -> Sala en "L" R17
-        // Gran Sala Central (R11) desde el Anillo Norte y Anillo Este
-        { room: 'R11', x: 12, y: 7, edge: 'N' },  // Anillo Norte (y=6) -> R11
-        { room: 'R11', x: 15, y: 9, edge: 'E' },  // Anillo Este (x=16) -> R11
-      ],
-      secretDoor: { x: 4, y: 2, edge: 'E', room: 'R1' }, // Puerta secreta R2 -> R1 (Cripta Oculta)
-      blockedWalls: [
-        // Cierra el pasillo este hacia el sur: canaliza hacia el Pasillo Medio Este (y=9)
-        { x: 25, y: 10, type: 'blocked', note: 'Derrumbe sella el Pasillo Exterior Sureste' },
-        // Cierra el corredor central sur (2×1) para mantener la acción en las alas Norte y Central
-        { x: 12, y: 13, type: 'blocked_double', w: 2, h: 1, note: 'Corredor Central Sur derrumbado (2×1)' },
-        // Cierra el pasillo exterior oeste debajo del pasillo medio
-        { x: 0, y: 10, type: 'blocked', note: 'Escombros cierran el ala Suroeste' },
-      ],
-      furnRooms: ['R7', 'R10', 'R18', 'R17', 'R2', 'R5', 'R4', 'R1'],
-      combatRooms: ['R7', 'R6', 'R10', 'R18', 'R17', 'R3', 'R2', 'R5', 'R4'],
-      alchemyCandidates: ['R7', 'R18', 'R5', 'R1'],
-      traps: [
-        { type: 'trap_pit', x: 13, y: 0, label: 'Foso en el Pasillo Exterior Norte (DES CD 13)' },
-        { type: 'trap_spear', x: 16, y: 9, label: 'Trampa de Lanza ante la Puerta Este del Jefe (DES CD 13)' },
-        { type: 'trap_falling_rock', x: 21, y: 9, label: 'Bloque Cayendo en el Pasillo Medio Este (DES CD 14)' },
-      ],
-    },
-    {
-      name: 'Descenso por el Corredor Sureste (Inicio R21)',
-      startRoom: 'R21',
-      stairsPos: { x: 22, y: 15 },
-      doors: [
-        // Salida directa al Pasillo Exterior Sur (y=18) y al Pasillo Este (x=25)
-        { room: 'R21', x: 22, y: 17, edge: 'S' }, // R21 -> Pasillo Sur (y=18)
-        { room: 'R21', x: 24, y: 15, edge: 'E' }, // R21 -> Pasillo Este (x=25)
-        // Puertas desde el Pasillo Sur (y=18) y Corredor Central Sur (x=12..13)
-        { room: 'R20', x: 19, y: 17, edge: 'S' }, // Pasillo Sur -> R20
-        { room: 'R19', x: 14, y: 15, edge: 'W' }, // Corredor Central Sur -> R19
-        { room: 'R16', x: 11, y: 15, edge: 'E' }, // Corredor Central Sur -> R16
-        { room: 'R15', x: 6, y: 17, edge: 'S' },  // Pasillo Sur -> R15
-        { room: 'R13', x: 5, y: 10, edge: 'N' },  // Pasillo Medio Oeste (y=9) -> R13
-        // Puertas desde el Pasillo Este (x=25) y Pasillo Medio Este (y=9)
-        { room: 'R18', x: 24, y: 11, edge: 'E' }, // Pasillo Este -> R18
-        { room: 'R17', x: 19, y: 10, edge: 'N' }, // Pasillo Medio Este -> Sala en "L" R17
-        { room: 'R9', x: 17, y: 7, edge: 'W' },   // Anillo Este -> R9
-        { room: 'R10', x: 22, y: 8, edge: 'S' },  // Pasillo Medio Este -> R10
-        // Gran Sala Central (R11) desde el Anillo Sur y Anillo Oeste
-        { room: 'R11', x: 12, y: 11, edge: 'S' }, // Anillo Sur (y=12) -> R11
-        { room: 'R11', x: 10, y: 9, edge: 'W' },  // Anillo Oeste (x=9) -> R11
-      ],
-      secretDoor: { x: 22, y: 5, edge: 'N', room: 'R8' }, // Puerta secreta R10 -> R8
-      blockedWalls: [
-        // Cierra el corredor central norte (2×1) para centrar el asalto desde el Sur/Este
-        { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Corredor Central Norte sellado (2×1)' },
-        // Cierra el pasillo este hacia el norte de R10
-        { x: 25, y: 5, type: 'blocked', note: 'Escombros cierran el extremo Noreste del pasillo' },
-        // Cierra el pasillo sur-oeste pasando R15
-        { x: 4, y: 18, type: 'blocked', note: 'Derrumbe cierra la esquina Suroeste' },
-      ],
-      furnRooms: ['R20', 'R19', 'R18', 'R17', 'R16', 'R15', 'R10', 'R8'],
-      combatRooms: ['R20', 'R19', 'R18', 'R17', 'R16', 'R15', 'R9', 'R10'],
-      alchemyCandidates: ['R19', 'R18', 'R15', 'R8'],
-      traps: [
-        { type: 'trap_pit', x: 12, y: 12, label: 'Foso frente a la Gran Puerta Sur (DES CD 13)' },
-        { type: 'trap_spear', x: 25, y: 13, label: 'Trampa de Lanza en el Pasillo Exterior Este (DES CD 13)' },
-        { type: 'trap_falling_rock', x: 16, y: 9, label: 'Bloque Cayendo en el Cruce Este del Anillo (DES CD 14)' },
-      ],
-    },
-    {
-      name: 'Asedio al Anillo Central (Doble Corredor)',
-      startRoom: 'R14',
-      stairsPos: { x: 2, y: 15 },
-      doors: [
-        // Doble salida a pasillos: Oeste (x=0) y Sur (y=18)
-        { room: 'R14', x: 1, y: 15, edge: 'W' },  // R14 -> Pasillo Oeste (x=0)
-        { room: 'R14', x: 2, y: 17, edge: 'S' },  // R14 -> Pasillo Sur (y=18)
-        // Flanco Norte por Pasillo Oeste (x=0) y Pasillo Medio Oeste (y=9)
-        { room: 'R12', x: 1, y: 11, edge: 'W' },  // Pasillo Oeste -> R12
-        { room: 'R4', x: 2, y: 8, edge: 'S' },    // Pasillo Medio (y=9) -> R4
-        { room: 'R5', x: 6, y: 8, edge: 'S' },    // Pasillo Medio (y=9) -> R5
-        // Flanco Sur por Pasillo Sur (y=18) y Corredor Central Sur (x=12..13)
-        { room: 'R15', x: 6, y: 17, edge: 'S' },  // Pasillo Sur -> R15
-        { room: 'R16', x: 11, y: 15, edge: 'E' }, // Corredor Central Sur -> R16
-        // Gran Sala Central (R11) con 3 accesos al Anillo Central
-        { room: 'R11', x: 10, y: 9, edge: 'W' },  // Anillo Oeste -> R11
-        { room: 'R11', x: 12, y: 11, edge: 'S' }, // Anillo Sur -> R11
-        { room: 'R11', x: 15, y: 9, edge: 'E' },  // Anillo Este -> R11
-        // Ala Este desde Anillo Este (x=16) y Pasillo Medio Este (y=9)
-        { room: 'R17', x: 17, y: 11, edge: 'W' }, // Anillo Este -> Sala en "L" R17
-        { room: 'R18', x: 22, y: 10, edge: 'N' }, // Pasillo Medio Este -> R18
-        { room: 'R9', x: 17, y: 7, edge: 'W' },   // Anillo Este -> R9
-        { room: 'R7', x: 18, y: 4, edge: 'S' },   // Conexión interna R9 -> R7
-      ],
-      secretDoor: { x: 22, y: 13, edge: 'S', room: 'R21' }, // Puerta secreta R18 -> R21
-      blockedWalls: [
-        // Cierra el pasillo oeste arriba de R4: canaliza el flanco norte por el Pasillo Medio (y=9)
-        { x: 0, y: 8, type: 'blocked', note: 'Derrumbe en el Pasillo Oeste: dirige el flanco norte hacia el centro' },
-        // Cierra el corredor central norte (2×1)
-        { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Corredor Central Norte derrumbado (2×1)' },
-        // Cierra el pasillo sur pasando el corredor central: canaliza el flanco sur hacia el Jefe
-        { x: 14, y: 18, type: 'blocked', note: 'Escombros cierran el Pasillo Sur hacia el Este' },
-      ],
-      furnRooms: ['R12', 'R4', 'R5', 'R15', 'R16', 'R7', 'R17', 'R18', 'R21'],
-      combatRooms: ['R12', 'R4', 'R5', 'R15', 'R16', 'R9', 'R7', 'R17', 'R18'],
-      alchemyCandidates: ['R5', 'R7', 'R18', 'R21'],
-      traps: [
-        { type: 'trap_pit', x: 5, y: 9, label: 'Foso en el Pasillo Medio Oeste (DES CD 13)' },
-        { type: 'trap_spear', x: 12, y: 12, label: 'Trampa de Lanza en el Acceso Sur al Jefe (DES CD 13)' },
-        { type: 'trap_falling_rock', x: 16, y: 9, label: 'Bloque Cayendo en el Anillo Este (DES CD 14)' },
-      ],
-    },
-  ];
-
-  const arch = pickFresh('archetype', ARCHETYPES, (a) => a.name);
-
-  // 2. Cámara de Alquimia Única Opcional (~72%; 100% en Laboratorio Alquímico)
-  const hasAlchemyChamber = biome.id === 'laboratorio_alquimico' || Math.random() < 0.72;
-  const alchemyRoomId = hasAlchemyChamber ? pick(arch.alchemyCandidates) : null;
-  const alchemySeal = hasAlchemyChamber
-    ? alchemyRoomId === arch.secretDoor.room
-      ? 'secreta'
-      : pick(['cerrada', 'sello_puzzle'])
-    : null;
-
-  // Colocar puertas del arquetipo con estados tácticos coherentes
-  arch.doors.forEach((d, idx) => {
-    let doorState;
-    if (d.room === alchemyRoomId && alchemySeal && alchemySeal !== 'secreta') {
-      doorState = DOOR_STATES.find((ds) => ds.id === alchemySeal) || DOOR_STATES[1];
-    } else if (d.room === 'R11' && idx % 2 === 0) {
-      doorState = pick(DOOR_STATES.filter((ds) => ['cerrada', 'atrancada', 'sello_puzzle'].includes(ds.id)));
-    } else if (idx % 5 === 0) {
-      doorState = pick(DOOR_STATES.filter((ds) => ds.id !== 'normal'));
-    } else {
-      doorState = DOOR_STATES[0];
-    }
-    addDoor({
-      type: 'door',
-      x: d.x,
-      y: d.y,
-      edge: d.edge,
-      doorState: doorState.id,
-      label:
-        d.room === alchemyRoomId
-          ? `Puerta de Alquimia · ${doorState.label} (${doorState.badge})`
-          : `${doorState.label} (${doorState.badge})`,
     });
   });
 
-  // Puerta secreta coherente del arquetipo
-  addDoor({
-    type: 'secret_door',
-    x: arch.secretDoor.x,
-    y: arch.secretDoor.y,
-    edge: arch.secretDoor.edge,
-    label:
-      alchemyRoomId === arch.secretDoor.room
-        ? 'Puerta Secreta a la Cámara de Alquimia'
-        : 'Puerta Secreta al Almacén del Tesoro',
+  // 4. Salas de Peligro: asignar SOLO en 2 salas activas con combate de este plano (0 en salas vacías)
+  const hazCandidates = combatRoomIds.filter((r) => r !== bossRoom && r !== startRoom);
+  const chosenHazRooms = [...hazCandidates].sort(() => Math.random() - 0.5).slice(0, 2);
+  const shuffledHazList = [...HAZARD_ROOMS].sort(() => Math.random() - 0.5);
+  const realHazards = {};
+  chosenHazRooms.forEach((rId, idx) => {
+    if (shuffledHazList[idx]) realHazards[rId] = shuffledHazList[idx];
   });
 
-  // Paredes bloqueadas coherentes
-  arch.blockedWalls.forEach((bw) => items.push(bw));
-
-  // 3. Escaleras 2×2 centradas en la sala de inicio del arquetipo (R14, R8 o R21)
-  occupy(arch.stairsPos.x, arch.stairsPos.y, 2, 2);
-  items.push({
-    type: 'stairs',
-    x: arch.stairsPos.x,
-    y: arch.stairsPos.y,
-    w: 2,
-    h: 2,
-    label: `Escaleras de Entrada (${arch.startRoom} · ${arch.name})`,
-  });
-
-  // 4. Mobiliario Inteligente por Sala (Paredes vs Centro vs Esquina — Cero solapes y cero puertas tapadas)
-  const nonAlchemyFurniture = biome.furniturePool.filter((f) => f !== 'alchemy_bench');
-  const WALL_TYPES = ['weapon_rack', 'bookcase', 'cupboard', 'fireplace'];
-  const CENTER_TYPES = ['table', 'sorcerer_table', 'torture_rack', 'tomb'];
-
-  arch.furnRooms.forEach((rId) => {
-    if (rId === alchemyRoomId) {
-      placeCenterFurniture(rId, {
-        type: 'alchemy_bench',
-        label: 'Mesa de Alquimia 3×2 (Única en la misión)',
-        note: 'Los héroes pueden craftear pociones, antídotos y venenos aquí (tirada d20 de Arcano).',
-      });
-    } else {
-      const fType = pick(nonAlchemyFurniture.length > 0 ? nonAlchemyFurniture : ['table', 'bookcase', 'cupboard']);
-      if (WALL_TYPES.includes(fType)) {
-        placeWallFurniture(rId, { type: fType });
-      } else if (CENTER_TYPES.includes(fType)) {
-        placeCenterFurniture(rId, { type: fType });
-      } else if (fType === 'chest') {
-        placeCornerChest(rId, { type: 'chest', label: 'Cofre del Tesoro' });
-      } else {
-        placeCornerChest(rId, { type: fType });
-      }
-    }
-    if (rId === 'R1' || rId === 'R21' || rId === arch.secretDoor.room) {
-      placeCornerChest(rId, { type: 'chest', label: 'Cofre del Tesoro' });
-    }
-  });
-
-  // 5. Monstruos en Formaciones Tácticas Espaciadas (adaptados a 1–4 héroes)
-  const effectiveCombatRooms =
-    partySize === 1 ? arch.combatRooms.slice(0, 6) : arch.combatRooms;
-  const baseCount = partySize === 1 ? 1 : partySize === 2 ? 1 : 2;
-  effectiveCombatRooms.forEach((rId, idx) => {
-    const count =
-      partySize === 1
-        ? 1
-        : idx % 3 === 0
-        ? baseCount + 1
-        : baseCount;
-    for (let i = 0; i < count; i++) {
-      const mType = pick(biome.monsterPool);
-      const alertState = pick(ALERTNESS_LIST);
-      placeTacticalUnit(
-        rId,
-        {
-          type: mType,
-          alertness: alertState,
-          label: `${mType.toUpperCase()} [${alertState}]`,
-        },
-        i === count - 1
-      );
-    }
-  });
-
-  // 6. Gran Salón del Jefe (R11): Trono centrado en pared norte + Chimenea/Altar + Cofre en esquina + Jefe al fondo + Escoltas
-  if (canPlace(12, 7, 1, 1, roomById('R11'), true)) {
-    occupy(12, 7, 1, 1);
-    items.push({ type: 'throne', x: 12, y: 7, w: 1, h: 1, label: `Trono de ${bossName}` });
-  }
-  placeCornerChest('R11', { type: 'chest', label: 'Cofre de Reliquia del Jefe' });
-  const bossType = pick(biome.bossPool);
-  placeTacticalUnit(
-    'R11',
-    {
-      type: bossType,
-      isBoss: true,
-      alertness: 'Guardia',
-      label: `JEFE: ${bossName}`,
-    },
-    true
-  );
-  const bossEscorts = partySize === 1 ? 0 : partySize === 2 ? 1 : Math.max(2, partySize - 1);
-  for (let i = 0; i < bossEscorts; i++) {
-    placeTacticalUnit(
-      'R11',
-      {
-        type: pick(biome.monsterPool),
-        alertness: 'Guardia',
-        label: 'Escolta del Jefe',
-      },
-      false
-    );
-  }
-
-  // 7. NPC / Prisionero en una sala secundaria activa
-  const npcRoom = arch.furnRooms.includes('R10') ? 'R10' : arch.furnRooms[arch.furnRooms.length - 1];
-  placeTacticalUnit(
-    npcRoom,
-    {
-      type: 'npc',
-      label: plot.id === 'rescate' ? 'Prisionero a Rescatar (Objetivo)' : 'Explorador Herido (Misión Secundaria)',
-    },
-    true
-  );
-
-  // 8. Trampas tácticas ubicadas sobre la ruta real del arquetipo
-  arch.traps.forEach((t) => items.push(t));
-
-  // Notas de sala estructuradas (compatibles 100% con TacticalBoard SVG y pestaña Notas)
+  // 5. Notas coherentes A/B/C/E/F apuntando SOLO a salas activas reales del plano
+  const treasureRoom = [...roomsWithChest].find((r) => r !== startRoom && r !== bossRoom) || hazCandidates[0] || bossRoom;
   const notes = [
     {
       code: 'A',
-      room: arch.startRoom,
-      title: `Inicio (${arch.name}) — ${biome.name}`,
+      room: startRoom,
+      title: `Inicio (${bp.name}) — ${biome.name}`,
       text: `${biome.ambientFlavor} Regla del Bioma: ${biome.globalRule}`,
     },
     {
       code: 'B',
-      room: 'R11',
+      room: bossRoom,
       title: `Cámara del Jefe: ${bossName}`,
       text: `Clímax: ${plot.climaxRule} | Giro: ${twist}`,
     },
     {
       code: 'C',
-      room: arch.secretDoor.room,
-      title: alchemyRoomId === arch.secretDoor.room ? 'Cámara Secreta de Alquimia' : 'Almacén Secreto',
-      text:
-        alchemyRoomId === arch.secretDoor.room
-          ? 'Tras la puerta secreta hay una Mesa de Alquimia 3×2 protegida y un Cofre de ingredientes.'
-          : 'Tras la puerta secreta hay un Cofre con +2 Materiales de Crafteo del bioma.',
-    },
-    {
-      code: 'D',
-      room: npcRoom,
-      title: plot.id === 'rescate' ? 'Prisionero (Objetivo)' : 'Explorador Herido (Secundario)',
-      text: plot.id === 'rescate'
-        ? `Libera al prisionero y escóltalo de vuelta a ${arch.startRoom} para completar la misión.`
-        : 'Ayuda al explorador para ganar +1 Ficha de Reputación.',
+      room: treasureRoom,
+      title: 'Cámara de Botín y Pistas',
+      text: narrative?.storyBeats?.act2Discovery || 'Exploren el mobiliario para hallar pistas y materiales del bioma.',
     },
   ];
-  // Salas de Peligro: asignar SOLO en salas activas con combate del arquetipo actual (NUNCA en salas vacías)
-  const activeHazPool = [...arch.combatRooms].filter((rId) => rId !== arch.startRoom && rId !== 'R11');
-  const shuffledHazRooms = [...activeHazPool].sort(() => Math.random() - 0.5).slice(0, 2);
-  const shuffledHazList = [...HAZARD_ROOMS].sort(() => Math.random() - 0.5);
-  const realHazards = {};
-  shuffledHazRooms.forEach((rId, idx) => {
-    if (shuffledHazList[idx]) realHazards[rId] = shuffledHazList[idx];
-  });
-
   const hazardCodes = ['E', 'F'];
   Object.entries(realHazards).forEach(([rId, haz], idx) => {
     notes.push({
@@ -1233,7 +767,7 @@ function buildProceduralBoardMap({
     title,
     campaign: `Procedural · ${biome.name}`,
     recLevel: partyLevel,
-    startRoom: arch.startRoom,
+    startRoom,
     isProcedural: true,
     biomeId: biome.id,
     biomeRule: biome.globalRule,
