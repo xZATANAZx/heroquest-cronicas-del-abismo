@@ -58,6 +58,11 @@
 
 Todas las versiones oficiales y sus cambios detallados se publican en la pestaña [**Releases**](https://github.com/xZATANAZx/heroquest-cronicas-del-abismo/releases).
 
+### 🏷️ `v2.2.0` — Tablero Moderno 2021 e Iconos Oficiales de HeroScribe
+- 🗺️ **Tablero Moderno 2021 exacto (`26×19`, 22 salas reales):** incluye las 2 salas gemelas `2×3` y la sala en "L" de 15 casillas con paleta crema/piedra/borgoña.
+- 🪑 **Dimensiones reales de muebles en misiones oficiales y procedurales:** `3×2` (Mesa, Mesa de Alquimista, Mesa de Hechicero, Tumba, Potro de Tortura), `3×1` (Biblioteca, Alacena, Chimenea, Estante de Armas), `2×2` (Escaleras) y `1×1` (Trono, Cofre, Trampas).
+- 🎨 **30 iconos oficiales open-source de HeroScribe (GPL-2.0)** en el tablero, en la leyenda visual y en el apartado de **Preparación Previa (Caja Física)** para identificar al instante cada mueble y miniatura.
+
 ### 🏷️ `v2.1.0` — Buzón de Sugerencias y Reporte de Bugs
 - 💬 Nuevo botón **`Sugerencias`** en la barra superior para enviar reportes de bugs, ideas nuevas, qué mejorar/renovar, qué gustó o qué quitar directamente al creador (sin necesitar cuenta ni registro).
 - 👑 Panel privado exclusivo del creador para gestionar la hoja de ruta de mejoras pendientes.

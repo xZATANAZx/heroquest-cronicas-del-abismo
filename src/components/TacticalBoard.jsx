@@ -29,7 +29,17 @@ import {
   generateDynamicMissionEvent,
   getRoomAt,
   getRoomObj,
+  getRoomCells,
 } from '../data/officialBoardMaps';
+import {
+  FurnitureSVG,
+  StairsSVG,
+  DoorSVG,
+  BlockedWallSVG,
+  TrapSVG,
+  MonsterIconSVG,
+  getPieceIconSrc,
+} from './BoardPiecesSVG';
 import { MONSTERS, scaleMonster } from '../data/bestiary';
 import { QUESTS } from '../data/quests';
 import { FURNITURE_DECK, TREASURE_TRAP_DECK } from '../data/decks';
@@ -828,7 +838,7 @@ export default function TacticalBoard({
           ? 'Mobiliario'
           : 'Estructura';
       if (!groups[bucket][it.type]) {
-        groups[bucket][it.type] = { count: 0, info };
+        groups[bucket][it.type] = { type: it.type, count: 0, info };
       }
       groups[bucket][it.type].count += 1;
     });
@@ -1254,23 +1264,22 @@ export default function TacticalBoard({
               </text>
             ))}
 
-            {/* Fondo de Pasillos (Gris Piedra Pergamino — clicable para ver bloqueos y trampas de pasillo) */}
+            {/* Fondo de Pasillos (Tablero Moderno 2021 — Piedra beige cálida) */}
             <rect
               x={MARGIN_LEFT}
               y={MARGIN_TOP}
               width={BOARD_COLS * CELL}
               height={BOARD_ROWS * CELL}
-              fill={selectedRoomId === 'CORRIDOR' ? '#dfd0b0' : '#cfc2a7'}
+              fill={selectedRoomId === 'CORRIDOR' ? '#e7dac2' : '#dfd2bc'}
               onClick={() => setSelectedRoomId('CORRIDOR')}
               className="cursor-pointer"
             />
 
-            {/* Las 21 Habitaciones Oficiales (Pergamino Claro + Resalte de Sala Seleccionada) */}
+            {/* Las 22 Habitaciones Oficiales Moderno 2021 (incluye 2 gemelas 2×3 y Sala en "L") */}
             {HQ_ROOMS.map((r) => {
+              const cells = getRoomCells(r);
               const rx = MARGIN_LEFT + r.x1 * CELL;
               const ry = MARGIN_TOP + r.y1 * CELL;
-              const rw = (r.x2 - r.x1 + 1) * CELL;
-              const rh = (r.y2 - r.y1 + 1) * CELL;
               const isSelected = r.id === selectedRoomId;
               const isRevealed = revealedRooms.has(r.id);
 
@@ -1280,42 +1289,46 @@ export default function TacticalBoard({
                   onClick={() => setSelectedRoomId(r.id)}
                   className="cursor-pointer"
                 >
-                  <rect
-                    x={rx}
-                    y={ry}
-                    width={rw}
-                    height={rh}
-                    fill={r.id === 'R11' ? '#efe0c2' : '#f7eed9'}
-                  />
-                  {/* Sombra suave si la sala aún no fue abierta en la mesa */}
-                  {showFogOverlay && !isRevealed && (
-                    <rect
-                      x={rx}
-                      y={ry}
-                      width={rw}
-                      height={rh}
-                      fill="rgba(36, 26, 18, 0.24)"
-                    />
-                  )}
-                  {/* Resalte dorado de sala seleccionada */}
-                  {isSelected && (
-                    <rect
-                      x={rx + 1.5}
-                      y={ry + 1.5}
-                      width={rw - 3}
-                      height={rh - 3}
-                      fill="rgba(217, 155, 38, 0.22)"
-                      stroke="#b45309"
-                      strokeWidth="3"
-                    />
-                  )}
+                  {cells.map((c) => {
+                    const cx = MARGIN_LEFT + c.x * CELL;
+                    const cy = MARGIN_TOP + c.y * CELL;
+                    return (
+                      <g key={`${c.x}-${c.y}`}>
+                        <rect
+                          x={cx}
+                          y={cy}
+                          width={CELL}
+                          height={CELL}
+                          fill={r.id === 'R11' ? '#efe2c8' : '#f7f2e8'}
+                        />
+                        {showFogOverlay && !isRevealed && (
+                          <rect
+                            x={cx}
+                            y={cy}
+                            width={CELL}
+                            height={CELL}
+                            fill="rgba(48, 24, 18, 0.22)"
+                          />
+                        )}
+                        {isSelected && (
+                          <rect
+                            x={cx + 0.5}
+                            y={cy + 0.5}
+                            width={CELL - 1}
+                            height={CELL - 1}
+                            fill="rgba(217, 155, 38, 0.24)"
+                          />
+                        )}
+                      </g>
+                    );
+                  })}
                   {/* Etiqueta sutil del número de sala */}
                   <text
                     x={rx + 4}
                     y={ry + 11}
-                    fontSize="8.5"
-                    fontWeight="700"
-                    fill="rgba(74, 56, 38, 0.55)"
+                    fontSize="8"
+                    fontWeight="800"
+                    fill="rgba(59, 22, 22, 0.55)"
                   >
                     {r.id}
                   </text>
@@ -1323,7 +1336,7 @@ export default function TacticalBoard({
               );
             })}
 
-            {/* Cuadrícula fina de piedra (26×19) */}
+            {/* Cuadrícula fina estilo Libro de Misiones Moderno 2021 (26×19) */}
             {Array.from({ length: BOARD_COLS + 1 }, (_, x) => (
               <line
                 key={`vx-${x}`}
@@ -1331,7 +1344,7 @@ export default function TacticalBoard({
                 y1={MARGIN_TOP}
                 x2={MARGIN_LEFT + x * CELL}
                 y2={MARGIN_TOP + BOARD_ROWS * CELL}
-                stroke="rgba(68, 52, 36, 0.32)"
+                stroke="rgba(74, 25, 25, 0.28)"
                 strokeWidth="0.75"
               />
             ))}
@@ -1342,12 +1355,12 @@ export default function TacticalBoard({
                 y1={MARGIN_TOP + y * CELL}
                 x2={MARGIN_LEFT + BOARD_COLS * CELL}
                 y2={MARGIN_TOP + y * CELL}
-                stroke="rgba(68, 52, 36, 0.32)"
+                stroke="rgba(74, 25, 25, 0.28)"
                 strokeWidth="0.75"
               />
             ))}
 
-            {/* Paredes Gruesas Oficiales del Tablero */}
+            {/* Paredes Gruesas Oficiales del Tablero Moderno 2021 (Borgoña Oscuro) */}
             {wallSegments.map((s, idx) => (
               <line
                 key={idx}
@@ -1355,117 +1368,52 @@ export default function TacticalBoard({
                 y1={s.y1}
                 x2={s.x2}
                 y2={s.y2}
-                stroke="#1c140e"
-                strokeWidth="3"
+                stroke="#3b1616"
+                strokeWidth="3.2"
                 strokeLinecap="square"
               />
             ))}
 
-            {/* PLANOS DE MOBILIARIO, ESTRUCTURA, TRAMPAS Y MONSTRUOS (Oficiales + Invocados) */}
+            {/* PLANOS DE MOBILIARIO, ESTRUCTURA, TRAMPAS Y MONSTRUOS (Arte Vectorial HQ 2021) */}
             {allMapItems.map((item, idx) => {
               const info = PIECE_TYPES[item.type];
               if (!info) return null;
               const px = MARGIN_LEFT + item.x * CELL;
               const py = MARGIN_TOP + item.y * CELL;
-              const w = (item.w || 1) * CELL;
-              const h = (item.h || 1) * CELL;
+              const w = (item.w || info.defaultW || 1) * CELL;
+              const h = (item.h || info.defaultH || 1) * CELL;
               const roomId = getRoomAt(item.x, item.y);
 
-              // 1. Escaleras 2×2
+              // 1. Escaleras 2×2 (Espiral HQ 2021)
               if (item.type === 'stairs') {
                 return (
                   <g key={idx} onClick={() => setSelectedRoomId(roomId)} className="cursor-pointer">
-                    <rect x={px + 2} y={py + 2} width={w - 4} height={h - 4} fill="#3f6212" stroke="#1a2e05" strokeWidth="2" rx="3" />
-                    {[1, 2, 3, 4].map((step) => (
-                      <line key={step} x1={px + 4} y1={py + (h / 5) * step} x2={px + w - 4} y2={py + (h / 5) * step} stroke="#d9f99d" strokeWidth="1.5" />
-                    ))}
-                    <text x={px + w / 2} y={py + h / 2 + 4} textAnchor="middle" fontSize="10" fontWeight="900" fill="#ffffff">
-                      INICIO
-                    </text>
+                    <StairsSVG px={px} py={py} w={w} h={h} />
                   </g>
                 );
               }
 
-              // 2. Puerta / Puerta Secreta apoyada EXACTAMENTE sobre el muro (edge: N | S | E | W)
+              // 2. Puerta / Puerta Secreta oficial apoyada sobre el muro (edge: N | S | E | W)
               if (item.type === 'door' || item.type === 'secret_door') {
-                const isSecret = item.type === 'secret_door';
-                const edge = item.edge || 'N';
-                const isHorizontal = edge === 'N' || edge === 'S';
-                const dw = isHorizontal ? CELL - 8 : 10;
-                const dh = isHorizontal ? 10 : CELL - 8;
-                const dx =
-                  edge === 'W'
-                    ? px - dw / 2
-                    : edge === 'E'
-                    ? px + CELL - dw / 2
-                    : px + 4;
-                const dy =
-                  edge === 'N'
-                    ? py - dh / 2
-                    : edge === 'S'
-                    ? py + CELL - dh / 2
-                    : py + 4;
-
                 return (
                   <g key={idx} onClick={() => setSelectedRoomId(roomId)} className="cursor-pointer">
-                    <rect
-                      x={dx}
-                      y={dy}
-                      width={dw}
-                      height={dh}
-                      fill={isSecret ? '#7e22ce' : '#fde68a'}
-                      stroke={isSecret ? '#f3e8ff' : '#78350f'}
-                      strokeWidth="2.4"
-                      strokeDasharray={isSecret ? '3,2' : undefined}
-                      rx="2"
-                    />
-                    <text
-                      x={dx + dw / 2}
-                      y={dy + dh / 2 + 2.8}
-                      textAnchor="middle"
-                      fontSize="7.5"
-                      fontWeight="900"
-                      fill={isSecret ? '#ffffff' : '#451a03'}
-                    >
-                      {isSecret ? 'S' : 'P'}
-                    </text>
+                    <title>{item.note || info.label}</title>
+                    <DoorSVG type={item.type} px={px} py={py} cell={CELL} edge={item.edge || 'N'} />
                   </g>
                 );
               }
 
-              // 3. Roca / Muro Bloqueado (1×1 o 2×1 estilo oficial HeroQuest que acorta pasillos)
+              // 3. Pared Bloqueada (1×1 o 2×1 estilo oficial HeroQuest 2021)
               if (item.type === 'blocked' || item.type === 'blocked_double') {
                 return (
                   <g key={idx} onClick={() => setSelectedRoomId(roomId)} className="cursor-pointer">
-                    <rect
-                      x={px + 1.5}
-                      y={py + 1.5}
-                      width={w - 3}
-                      height={h - 3}
-                      fill="#292524"
-                      stroke="#0c0a09"
-                      strokeWidth="2.5"
-                      rx="2"
-                    />
-                    <line x1={px + 4} y1={py + 4} x2={px + w - 4} y2={py + h - 4} stroke="#78716c" strokeWidth="2" />
-                    <line x1={px + w - 4} y1={py + 4} x2={px + 4} y2={py + h - 4} stroke="#78716c" strokeWidth="2" />
-                    <rect x={px + w / 2 - 12} y={py + h / 2 - 5.5} width="24" height="11" fill="#1c1917" rx="1.5" />
-                    <text
-                      x={px + w / 2}
-                      y={py + h / 2 + 3}
-                      textAnchor="middle"
-                      fontSize="7"
-                      fontWeight="900"
-                      fill="#e7e5e4"
-                    >
-                      MURO
-                    </text>
+                    <BlockedWallSVG type={item.type} px={px} py={py} w={w} h={h} />
                   </g>
                 );
               }
 
-              // 4. Trampas (Clicables para ver exactamente qué hacen y marcarlas como desarmadas)
-              if (item.type === 'trap_pit' || item.type === 'trap_spear') {
+              // 4. Trampas (Foso, Lanza, Bloque Cayendo — clicables para desarmar)
+              if (item.type === 'trap_pit' || item.type === 'trap_spear' || item.type === 'trap_falling_rock') {
                 const tKey = getTrapKey(item);
                 const isSelTrap = selectedTrapKey === tKey;
                 const isDisarmed = disarmedTraps.has(tKey);
@@ -1479,70 +1427,23 @@ export default function TacticalBoard({
                       setSelectedTrapKey(tKey);
                     }}
                     className="cursor-pointer"
-                    opacity={isDisarmed ? 0.45 : 1}
                   >
-                    {isSelTrap && (
-                      <circle
-                        cx={px + CELL / 2}
-                        cy={py + CELL / 2}
-                        r="14.5"
-                        fill="none"
-                        stroke="#fde047"
-                        strokeWidth="2.8"
-                      />
-                    )}
-                    <polygon
-                      points={`${px + CELL / 2},${py + 4} ${px + CELL - 4},${py + CELL - 4} ${px + 4},${py + CELL - 4}`}
-                      fill={isDisarmed ? '#15803d' : info.fill}
-                      stroke={isSelTrap ? '#fde047' : '#1c140e'}
-                      strokeWidth="2"
-                    />
-                    <text x={px + CELL / 2} y={py + CELL - 8} textAnchor="middle" fontSize="8" fontWeight="900" fill="#ffffff">
-                      {isDisarmed ? '✓' : '!'}
-                    </text>
+                    <TrapSVG type={item.type} px={px} py={py} cell={CELL} isDisarmed={isDisarmed} isSelected={isSelTrap} />
                   </g>
                 );
               }
 
-              // 5. Mobiliario (Planos rectangulares exactos con etiqueta clara)
+              // 5. Mobiliario (Arte vectorial Top-Down HQ 2021 con dimensiones exactas)
               if (info.category === 'Mobiliario') {
                 return (
                   <g key={idx} onClick={() => setSelectedRoomId(roomId)} className="cursor-pointer">
-                    <rect
-                      x={px + 2.5}
-                      y={py + 2.5}
-                      width={w - 5}
-                      height={h - 5}
-                      fill={info.fill}
-                      stroke={info.stroke}
-                      strokeWidth="2"
-                      rx="3"
-                    />
-                    <rect
-                      x={px + 5}
-                      y={py + 5}
-                      width={w - 10}
-                      height={h - 10}
-                      fill="none"
-                      stroke="rgba(255,245,220,0.35)"
-                      strokeWidth="1"
-                      rx="1.5"
-                    />
-                    <text
-                      x={px + w / 2}
-                      y={py + h / 2 + 3.5}
-                      textAnchor="middle"
-                      fontSize={w >= 64 ? '9.5' : '7'}
-                      fontWeight="900"
-                      fill="#fef3c7"
-                    >
-                      {info.code}
-                    </text>
+                    <title>{item.note || info.label}</title>
+                    <FurnitureSVG type={item.type} px={px} py={py} w={w} h={h} label={info.code} />
                   </g>
                 );
               }
 
-              // 6. Monstruos, Jefes y NPCs (Clicables para ver estadísticas, restar PC y matar)
+              // 6. Monstruos, Jefes y NPCs (Iconos representativos HQ 2021 — clicables)
               const mKey = info.monsterId ? getMonsterKey(item) : null;
               const isSelectedMon = mKey && selectedMonsterKey === mKey;
               const isDeadMon = mKey && quickHP[mKey] !== undefined && quickHP[mKey] <= 0;
@@ -1559,56 +1460,17 @@ export default function TacticalBoard({
                     }
                   }}
                   className="cursor-pointer"
-                  opacity={isDeadMon ? 0.38 : 1}
                 >
-                  {isSelectedMon && (
-                    <circle
-                      cx={px + CELL / 2}
-                      cy={py + CELL / 2}
-                      r={info.isBoss ? 16 : 14.5}
-                      fill="none"
-                      stroke="#fde047"
-                      strokeWidth="3"
-                    />
-                  )}
-                  <circle
-                    cx={px + CELL / 2}
-                    cy={py + CELL / 2}
-                    r={info.isBoss ? 13 : 11.5}
-                    fill={isDeadMon ? '#44403c' : info.fill}
-                    stroke={isSelectedMon ? '#fde047' : info.stroke}
-                    strokeWidth={info.isBoss || isSelectedMon ? 2.8 : 2}
+                  <title>{item.note || info.label}</title>
+                  <MonsterIconSVG
+                    type={item.type}
+                    px={px}
+                    py={py}
+                    cell={CELL}
+                    info={info}
+                    isSelected={isSelectedMon}
+                    isDead={isDeadMon}
                   />
-                  <text
-                    x={px + CELL / 2}
-                    y={py + CELL / 2 + 3.5}
-                    textAnchor="middle"
-                    fontSize={info.isBoss ? '9.5' : '8.5'}
-                    fontWeight="900"
-                    fill="#ffffff"
-                  >
-                    {info.code}
-                  </text>
-                  {isDeadMon && (
-                    <>
-                      <line
-                        x1={px + 6}
-                        y1={py + 6}
-                        x2={px + CELL - 6}
-                        y2={py + CELL - 6}
-                        stroke="#ef4444"
-                        strokeWidth="3"
-                      />
-                      <line
-                        x1={px + CELL - 6}
-                        y1={py + 6}
-                        x2={px + 6}
-                        y2={py + CELL - 6}
-                        stroke="#ef4444"
-                        strokeWidth="3"
-                      />
-                    </>
-                  )}
                 </g>
               );
             })}
@@ -1630,16 +1492,37 @@ export default function TacticalBoard({
             })}
           </svg>
 
-          {/* Leyenda de Códigos del Mapa */}
-          <div className="mt-3 pt-2 border-t border-amber-900/30 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-semibold text-stone-800">
-            <span><strong>P:</strong> Puerta</span>
-            <span><strong className="text-purple-800">SEC:</strong> Puerta Secreta</span>
-            <span><strong className="text-red-700">▲ !:</strong> Trampa</span>
-            <span><strong className="text-green-800">GO/OR/AB:</strong> Goblin/Orco/Abominación</span>
-            <span><strong className="text-slate-700">ES/ZO/MO:</strong> Esqueleto/Zombi/Momia</span>
-            <span><strong className="text-red-800">GT:</strong> Guerrero Terror</span>
-            <span><strong className="text-purple-900">GA/HE:</strong> Gárgola/Hechicero Jefe</span>
-            <span><strong className="text-cyan-800">EP/AS/MI:</strong> Espectro/Asesino/Mímico</span>
+          {/* Leyenda Visual con Iconos Oficiales del Tablero Moderno 2021 */}
+          <div className="mt-3 pt-2 border-t border-amber-900/30 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-semibold text-stone-800">
+            {[
+              ['door', 'Puerta'],
+              ['secret_door', 'Secreta'],
+              ['trap_pit', 'Foso'],
+              ['trap_spear', 'Lanza'],
+              ['goblin', 'Goblin'],
+              ['orc', 'Orco'],
+              ['abomination', 'Abominación'],
+              ['skeleton', 'Esqueleto'],
+              ['zombie', 'Zombi'],
+              ['mummy', 'Momia'],
+              ['dread_warrior', 'Guerrero Terror'],
+              ['gargoyle', 'Gárgola'],
+              ['sorcerer', 'Hechicero'],
+            ].map(([typeKey, lbl]) => {
+              const src = getPieceIconSrc(typeKey);
+              return (
+                <span key={typeKey} className="inline-flex items-center gap-1">
+                  {src && (
+                    <img
+                      src={src}
+                      alt={lbl}
+                      className="w-4 h-4 object-contain inline-block"
+                    />
+                  )}
+                  <span>{lbl}</span>
+                </span>
+              );
+            })}
           </div>
         </div>
 
@@ -2850,19 +2733,34 @@ export default function TacticalBoard({
                 <div className="text-xs font-bold uppercase tracking-wider text-amber-400">
                   {groupName}
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {entries.map(({ count, info }) => (
-                    <span
-                      key={info.label}
-                      className="px-2.5 py-1 rounded-lg bg-stone-900 border border-stone-700 text-xs text-stone-200 flex items-center gap-1.5"
-                    >
+                <div className="flex flex-wrap gap-2">
+                  {entries.map(({ type, count, info }) => {
+                    const iconSrc = getPieceIconSrc(type);
+                    return (
                       <span
-                        className="w-2.5 h-2.5 rounded-full inline-block"
-                        style={{ backgroundColor: info.fill }}
-                      />
-                      <strong className="text-amber-300">{count}×</strong> {info.label}
-                    </span>
-                  ))}
+                        key={type || info.label}
+                        className="px-2.5 py-1.5 rounded-xl bg-stone-900 border border-stone-700 text-xs text-stone-200 flex items-center gap-2"
+                      >
+                        {iconSrc ? (
+                          <span className="w-7 h-7 rounded-lg bg-[#f7f2e8] border border-amber-900/40 flex items-center justify-center p-0.5 shrink-0">
+                            <img
+                              src={iconSrc}
+                              alt={info.label}
+                              className="max-w-full max-h-full object-contain"
+                            />
+                          </span>
+                        ) : (
+                          <span
+                            className="w-3 h-3 rounded-full inline-block shrink-0"
+                            style={{ backgroundColor: info.fill }}
+                          />
+                        )}
+                        <span>
+                          <strong className="text-amber-300">{count}×</strong> {info.label}
+                        </span>
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             );

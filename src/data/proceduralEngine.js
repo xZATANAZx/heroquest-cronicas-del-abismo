@@ -611,22 +611,25 @@ function buildProceduralBoardMap({
     label: alchemyRoomId === 'R21' ? 'Puerta Secreta a la Cámara de Alquimia' : 'Puerta Secreta al Almacén',
   });
 
-  // 3. Mobiliario temático del Bioma + Cofres (nunca duplica Banco de Alquimista)
+  // 3. Mobiliario temático del Bioma + Cofres (dimensiones exactas HeroQuest 2021)
   const nonAlchemyFurniture = biome.furniturePool.filter((f) => f !== 'alchemy_bench');
   const furnRooms = ['R15', 'R12', 'R5', 'R1', 'R7', 'R10', 'R18', 'R21'];
   furnRooms.forEach((rId) => {
     if (rId === alchemyRoomId) {
       placeInRoom(rId, {
         type: 'alchemy_bench',
-        w: 2,
-        h: 1,
-        label: 'Mesa de Alquimia (Única en la misión)',
-        note: 'Los héroes pueden craftear pociones, antídotos y venenos aquí.',
+        w: 3,
+        h: 2,
+        label: 'Mesa de Alquimia 3×2 (Única en la misión)',
+        note: 'Los héroes pueden craftear pociones, antídotos y venenos aquí (tirada d20 de Arcano).',
       });
     } else {
       const fType = pick(nonAlchemyFurniture.length > 0 ? nonAlchemyFurniture : ['table', 'chest', 'bookcase']);
-      const w = ['table', 'weapon_rack', 'bookcase', 'torture_rack', 'tomb'].includes(fType) ? 2 : 1;
-      placeInRoom(rId, { type: fType, w, h: 1 });
+      const is3x2 = ['table', 'sorcerer_table', 'torture_rack', 'tomb'].includes(fType);
+      const is3x1 = ['weapon_rack', 'bookcase', 'cupboard', 'fireplace'].includes(fType);
+      const w = is3x2 || is3x1 ? 3 : 1;
+      const h = is3x2 ? 2 : 1;
+      placeInRoom(rId, { type: fType, w, h });
     }
     if (rId === 'R1' || rId === 'R21' || rId === 'R11') {
       placeInRoom(rId, { type: 'chest', w: 1, h: 1, label: 'Cofre del Tesoro' });

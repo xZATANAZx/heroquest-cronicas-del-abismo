@@ -1,48 +1,75 @@
 // ============================================================================
 // HEROQUEST: CRÓNICAS DEL ABISMO (Sistema HQ-D20)
-// Geometría EXACTA 26×19 del Tablero Oficial de HeroQuest + Mapas Coherentes
-// Todas las puertas usan edge ('N'|'S'|'E'|'W') para apoyarse exactamente sobre muros
+// Geometría EXACTA 26×19 del Tablero Oficial MODERNO 2021 (22 Salas Reales)
+// Incluye las 2 salas gemelas 2×3 (R13 / R13b) y la Sala en "L" (R17) + Muesca (R19)
 // ============================================================================
 
 export const BOARD_COLS = 26;
 export const BOARD_ROWS = 19;
 
 export const HQ_ROOMS = [
-  // Cuadrante Superior Izquierdo
-  { id: 'R1', name: 'Sala Noroeste 1', x1: 1, y1: 1, x2: 4, y2: 3, tint: '#332920' },
-  { id: 'R2', name: 'Sala Noroeste 2', x1: 5, y1: 1, x2: 8, y2: 3, tint: '#2a2f26' },
-  { id: 'R3', name: 'Sala Norte-Centro Izq.', x1: 9, y1: 1, x2: 11, y2: 5, tint: '#2c2624' },
-  { id: 'R4', name: 'Sala Oeste-Norte', x1: 1, y1: 4, x2: 4, y2: 8, tint: '#2d2424' },
-  { id: 'R5', name: 'Sala Interior Izq.-Norte', x1: 5, y1: 4, x2: 8, y2: 8, tint: '#332b22' },
+  // Cuadrante Superior Izquierdo (5 salas)
+  { id: 'R1', name: 'Sala Noroeste 1', x1: 1, y1: 1, x2: 4, y2: 3, tint: '#f7f2e8' },
+  { id: 'R2', name: 'Sala Noroeste 2', x1: 5, y1: 1, x2: 8, y2: 3, tint: '#f7f2e8' },
+  { id: 'R3', name: 'Sala Norte-Centro Izq.', x1: 9, y1: 1, x2: 11, y2: 5, tint: '#f7f2e8' },
+  { id: 'R4', name: 'Sala Oeste-Norte', x1: 1, y1: 4, x2: 4, y2: 8, tint: '#f7f2e8' },
+  { id: 'R5', name: 'Sala Interior Izq.-Norte', x1: 5, y1: 4, x2: 8, y2: 8, tint: '#f7f2e8' },
 
-  // Cuadrante Superior Derecho
-  { id: 'R6', name: 'Sala Norte-Centro Der.', x1: 14, y1: 1, x2: 16, y2: 5, tint: '#2c2624' },
-  { id: 'R7', name: 'Sala Noreste 1', x1: 17, y1: 1, x2: 20, y2: 4, tint: '#272f29' },
-  { id: 'R8', name: 'Sala Noreste 2', x1: 21, y1: 1, x2: 24, y2: 4, tint: '#342a22' },
-  { id: 'R9', name: 'Sala Interior Der.-Norte', x1: 17, y1: 5, x2: 20, y2: 8, tint: '#2f2724' },
-  { id: 'R10', name: 'Sala Este-Norte', x1: 21, y1: 5, x2: 24, y2: 8, tint: '#262d2a' },
+  // Cuadrante Superior Derecho (5 salas)
+  { id: 'R6', name: 'Sala Norte-Centro Der.', x1: 14, y1: 1, x2: 16, y2: 5, tint: '#f7f2e8' },
+  { id: 'R7', name: 'Sala Noreste 1', x1: 17, y1: 1, x2: 20, y2: 4, tint: '#f7f2e8' },
+  { id: 'R8', name: 'Sala Noreste 2', x1: 21, y1: 1, x2: 24, y2: 4, tint: '#f7f2e8' },
+  { id: 'R9', name: 'Sala Interior Der.-Norte', x1: 17, y1: 5, x2: 20, y2: 8, tint: '#f7f2e8' },
+  { id: 'R10', name: 'Sala Este-Norte', x1: 21, y1: 5, x2: 24, y2: 8, tint: '#f7f2e8' },
 
-  // Gran Sala Central (6x5)
-  { id: 'R11', name: 'Gran Sala Central', x1: 10, y1: 7, x2: 15, y2: 11, tint: '#3b2424' },
+  // Gran Sala Central (6×5)
+  { id: 'R11', name: 'Gran Sala Central', x1: 10, y1: 7, x2: 15, y2: 11, tint: '#efe2c8' },
 
-  // Cuadrante Inferior Izquierdo
-  { id: 'R12', name: 'Sala Oeste-Sur', x1: 1, y1: 10, x2: 4, y2: 13, tint: '#2b2d24' },
-  { id: 'R13', name: 'Sala Interior Izq.-Sur', x1: 5, y1: 10, x2: 8, y2: 12, tint: '#322922' },
-  { id: 'R14', name: 'Sala Suroeste (Inicio)', x1: 1, y1: 14, x2: 4, y2: 17, tint: '#2e2a25' },
-  { id: 'R15', name: 'Sala Sur-Izq. Media', x1: 5, y1: 13, x2: 8, y2: 17, tint: '#282d2b' },
-  { id: 'R16', name: 'Sala Sur-Centro Izq.', x1: 9, y1: 13, x2: 11, y2: 17, tint: '#312624' },
+  // Cuadrante Inferior Izquierdo (6 salas — incluye las 2 gemelas 2×3: R13 y R13b)
+  { id: 'R12', name: 'Sala Oeste-Sur', x1: 1, y1: 10, x2: 4, y2: 13, tint: '#f7f2e8' },
+  { id: 'R13', name: 'Sala Gemela Oeste (2×3)', x1: 5, y1: 10, x2: 6, y2: 12, tint: '#f7f2e8' },
+  { id: 'R13b', name: 'Sala Gemela Este (2×3)', x1: 7, y1: 10, x2: 8, y2: 12, tint: '#f7f2e8' },
+  { id: 'R14', name: 'Sala Suroeste (Inicio)', x1: 1, y1: 14, x2: 4, y2: 17, tint: '#f7f2e8' },
+  { id: 'R15', name: 'Sala Sur-Izq. Media', x1: 5, y1: 13, x2: 8, y2: 17, tint: '#f7f2e8' },
+  { id: 'R16', name: 'Sala Sur-Centro Izq.', x1: 9, y1: 13, x2: 11, y2: 17, tint: '#f7f2e8' },
 
-  // Cuadrante Inferior Derecho
-  { id: 'R17', name: 'Sala Interior Der.-Sur', x1: 17, y1: 10, x2: 20, y2: 12, tint: '#322922' },
-  { id: 'R18', name: 'Sala Este-Sur', x1: 21, y1: 10, x2: 24, y2: 13, tint: '#2b2f26' },
-  { id: 'R19', name: 'Sala Sur-Centro Der.', x1: 14, y1: 13, x2: 16, y2: 17, tint: '#312624' },
-  { id: 'R20', name: 'Sala Sur-Der. Media', x1: 17, y1: 13, x2: 20, y2: 17, tint: '#282d2b' },
-  { id: 'R21', name: 'Sala Sureste', x1: 21, y1: 14, x2: 24, y2: 17, tint: '#332920' },
+  // Cuadrante Inferior Derecho (5 salas — incluye Sala en "L" R17 de 15 casillas + R19 4×5 + R20 3×4)
+  {
+    id: 'R17',
+    name: 'Sala en "L" Der.-Sur',
+    x1: 17,
+    y1: 10,
+    x2: 20,
+    y2: 13,
+    exclude: [{ x: 17, y: 13 }],
+    tint: '#f7f2e8',
+  },
+  { id: 'R18', name: 'Sala Este-Sur', x1: 21, y1: 10, x2: 24, y2: 13, tint: '#f7f2e8' },
+  { id: 'R19', name: 'Sala Sur-Centro Der. (4×5)', x1: 14, y1: 13, x2: 17, y2: 17, tint: '#f7f2e8' },
+  { id: 'R20', name: 'Sala Sur-Der. Media (3×4)', x1: 18, y1: 14, x2: 20, y2: 17, tint: '#f7f2e8' },
+  { id: 'R21', name: 'Sala Sureste', x1: 21, y1: 14, x2: 24, y2: 17, tint: '#f7f2e8' },
 ];
+
+export function isCellInRoom(r, x, y) {
+  if (!r || x < r.x1 || x > r.x2 || y < r.y1 || y > r.y2) return false;
+  if (r.exclude && r.exclude.some((ex) => ex.x === x && ex.y === y)) return false;
+  return true;
+}
+
+export function getRoomCells(r) {
+  const cells = [];
+  if (!r) return cells;
+  for (let y = r.y1; y <= r.y2; y++) {
+    for (let x = r.x1; x <= r.x2; x++) {
+      if (isCellInRoom(r, x, y)) cells.push({ x, y });
+    }
+  }
+  return cells;
+}
 
 export function getRoomAt(x, y) {
   for (const r of HQ_ROOMS) {
-    if (x >= r.x1 && x <= r.x2 && y >= r.y1 && y <= r.y2) {
+    if (isCellInRoom(r, x, y)) {
       return r.id;
     }
   }
@@ -54,26 +81,27 @@ export function getRoomObj(roomId) {
 }
 
 export const PIECE_TYPES = {
-  stairs: { label: 'Escaleras (Inicio)', code: 'ESC', fill: '#2e6f40', stroke: '#133a1e', category: 'Estructura' },
-  door: { label: 'Puerta', code: 'P', fill: '#a16207', stroke: '#1c1917', category: 'Estructura' },
-  secret_door: { label: 'Puerta Secreta', code: 'SEC', fill: '#7e22ce', stroke: '#f3e8ff', category: 'Secreto', secret: true },
-  blocked: { label: 'Muro / Roca Bloqueada (1×1)', code: 'MURO', fill: '#292524', stroke: '#0c0a09', category: 'Estructura' },
-  blocked_double: { label: 'Muro Doble Bloqueado (2×1)', code: 'MURO 2×1', fill: '#1c1917', stroke: '#0c0a09', category: 'Estructura' },
-  trap_pit: { label: 'Trampa de Foso', code: 'FOSO', fill: '#c2410c', stroke: '#ffedd5', category: 'Trampa', secret: true },
-  trap_spear: { label: 'Trampa de Lanza/Aguja', code: 'TRP', fill: '#b91c1c', stroke: '#fee2e2', category: 'Trampa', secret: true },
+  stairs: { label: 'Escaleras (Inicio 2×2)', code: 'ESC', defaultW: 2, defaultH: 2, fill: '#2e6f40', stroke: '#133a1e', category: 'Estructura' },
+  door: { label: 'Puerta', code: 'P', defaultW: 1, defaultH: 1, fill: '#a16207', stroke: '#1c1917', category: 'Estructura' },
+  secret_door: { label: 'Puerta Secreta', code: 'SEC', defaultW: 1, defaultH: 1, fill: '#7e22ce', stroke: '#f3e8ff', category: 'Secreto', secret: true },
+  blocked: { label: 'Pared Bloqueada (1×1)', code: 'MURO', defaultW: 1, defaultH: 1, fill: '#292524', stroke: '#0c0a09', category: 'Estructura' },
+  blocked_double: { label: 'Pared Bloqueada Doble (2×1)', code: 'MURO 2×1', defaultW: 2, defaultH: 1, fill: '#1c1917', stroke: '#0c0a09', category: 'Estructura' },
+  trap_pit: { label: 'Trampa de Foso', code: 'FOSO', defaultW: 1, defaultH: 1, fill: '#ea580c', stroke: '#ffedd5', category: 'Trampa', secret: true },
+  trap_spear: { label: 'Trampa de Lanzas', code: 'LANZA', defaultW: 1, defaultH: 1, fill: '#dc2626', stroke: '#fee2e2', category: 'Trampa', secret: true },
+  trap_falling_rock: { label: 'Bloque Cayendo', code: 'ROCA', defaultW: 1, defaultH: 1, fill: '#9a3412', stroke: '#fed7aa', category: 'Trampa', secret: true },
 
-  // Mobiliario oficial (vinculado al Mazo de Mobiliario)
-  table: { label: 'Mesa', code: 'MESA', fill: '#8b5a2b', stroke: '#3b220c', category: 'Mobiliario', furnitureKey: 'Mesa' },
-  throne: { label: 'Trono', code: 'TRONO', fill: '#b45309', stroke: '#451a03', category: 'Mobiliario', furnitureKey: 'Trono' },
-  chest: { label: 'Cofre del Tesoro', code: 'COFRE', fill: '#ca8a04', stroke: '#422006', category: 'Mobiliario', furnitureKey: 'Cofre' },
-  tomb: { label: 'Tumba', code: 'TUMBA', fill: '#6b7280', stroke: '#1f2937', category: 'Mobiliario', furnitureKey: 'Tumba' },
-  bookcase: { label: 'Biblioteca', code: 'BIBLIO', fill: '#78350f', stroke: '#291002', category: 'Mobiliario', furnitureKey: 'Biblioteca' },
-  cupboard: { label: 'Armario', code: 'ARMARIO', fill: '#6d4c41', stroke: '#261712', category: 'Mobiliario', furnitureKey: 'Armario' },
-  weapon_rack: { label: 'Armería', code: 'ARMERÍA', fill: '#57534e', stroke: '#1c1917', category: 'Mobiliario', furnitureKey: 'Armería' },
-  fireplace: { label: 'Chimenea', code: 'FUEGO', fill: '#9a3412', stroke: '#431407', category: 'Mobiliario', furnitureKey: 'Chimenea' },
-  sorcerer_table: { label: 'Altar del Mago', code: 'ALTAR', fill: '#581c87', stroke: '#2e1065', category: 'Mobiliario', furnitureKey: 'Altar del Mago' },
-  alchemy_bench: { label: 'Banco de Alquimista', code: 'ALQUIMIA', fill: '#0f766e', stroke: '#134e4a', category: 'Mobiliario', furnitureKey: 'Banco de Alquimista' },
-  torture_rack: { label: 'Potro de Tortura', code: 'POTRO', fill: '#7f1d1d', stroke: '#2a0707', category: 'Mobiliario', furnitureKey: 'Potro de Tortura' },
+  // Mobiliario oficial HeroQuest 2021 (dimensiones exactas en casillas)
+  table: { label: 'Mesa (3×2)', code: 'MESA', defaultW: 3, defaultH: 2, fill: '#8b5a2b', stroke: '#3b220c', category: 'Mobiliario', furnitureKey: 'Mesa' },
+  throne: { label: 'Trono (1×1)', code: 'TRONO', defaultW: 1, defaultH: 1, fill: '#b45309', stroke: '#451a03', category: 'Mobiliario', furnitureKey: 'Trono' },
+  chest: { label: 'Cofre del Tesoro (1×1)', code: 'COFRE', defaultW: 1, defaultH: 1, fill: '#ca8a04', stroke: '#422006', category: 'Mobiliario', furnitureKey: 'Cofre' },
+  tomb: { label: 'Tumba (3×2)', code: 'TUMBA', defaultW: 3, defaultH: 2, fill: '#6b7280', stroke: '#1f2937', category: 'Mobiliario', furnitureKey: 'Tumba' },
+  bookcase: { label: 'Biblioteca (3×1)', code: 'BIBLIO', defaultW: 3, defaultH: 1, fill: '#78350f', stroke: '#291002', category: 'Mobiliario', furnitureKey: 'Biblioteca' },
+  cupboard: { label: 'Alacena / Armario (3×1)', code: 'ALACENA', defaultW: 3, defaultH: 1, fill: '#6d4c41', stroke: '#261712', category: 'Mobiliario', furnitureKey: 'Armario' },
+  weapon_rack: { label: 'Estante de Armas (3×1)', code: 'ARMERO', defaultW: 3, defaultH: 1, fill: '#57534e', stroke: '#1c1917', category: 'Mobiliario', furnitureKey: 'Armería' },
+  fireplace: { label: 'Chimenea (3×1)', code: 'CHIMENEA', defaultW: 3, defaultH: 1, fill: '#9a3412', stroke: '#431407', category: 'Mobiliario', furnitureKey: 'Chimenea' },
+  sorcerer_table: { label: 'Mesa de Hechicero (3×2)', code: 'HECHICERO', defaultW: 3, defaultH: 2, fill: '#581c87', stroke: '#2e1065', category: 'Mobiliario', furnitureKey: 'Altar del Mago' },
+  alchemy_bench: { label: 'Mesa de Alquimista (3×2)', code: 'ALQUIMIA', defaultW: 3, defaultH: 2, fill: '#0f766e', stroke: '#134e4a', category: 'Mobiliario', furnitureKey: 'Banco de Alquimista' },
+  torture_rack: { label: 'Potro de Tortura (3×2)', code: 'POTRO', defaultW: 3, defaultH: 2, fill: '#7f1d1d', stroke: '#2a0707', category: 'Mobiliario', furnitureKey: 'Potro de Tortura' },
 
   // Monstruos
   goblin: { label: 'Goblin', code: 'GO', fill: '#4d7c0f', stroke: '#ecfccb', category: 'Monstruo', monsterId: 'goblin' },
@@ -227,11 +255,11 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 8, y: 6, type: 'door', edge: 'E', note: 'Sale al anillo central (col J)' },
 
       // R1 (x:1..4, y:1..3) y R2 (x:5..8, y:1..3) — Tumbas de Fellmarg (Notas C y D)
-      { x: 2, y: 1, type: 'tomb', w: 2, h: 2, note: 'Tumba de Fellmarg' },
+      { x: 2, y: 1, type: 'tomb', w: 3, h: 2, note: 'Tumba de Fellmarg (3×2)' },
       { x: 1, y: 1, type: 'chest', note: 'Nota D: 84 MO + Diario (+75 XP)' },
       { x: 4, y: 2, type: 'door', edge: 'E', note: 'Conecta R1 con R2' },
 
-      { x: 6, y: 1, type: 'tomb', w: 2, h: 2, note: 'Sarcófago Guardián' },
+      { x: 6, y: 1, type: 'tomb', w: 3, h: 2, note: 'Sarcófago Guardián (3×2)' },
       { x: 5, y: 3, type: 'mummy', note: 'Nota C: Momia de Fellmarg (4 DC)' },
       { x: 7, y: 3, type: 'skeleton' },
       { x: 8, y: 2, type: 'door', edge: 'E', note: 'Conecta R2 con R3' },
@@ -242,7 +270,7 @@ export const OFFICIAL_QUEST_MAPS = [
 
       // R11 (Gran Sala Central x:10..15, y:7..11) — VERAG
       { x: 12, y: 7, type: 'throne', note: 'Trono de Verag' },
-      { x: 14, y: 7, type: 'fireplace', w: 2, h: 1, note: 'Chimenea' },
+      { x: 13, y: 7, type: 'fireplace', w: 3, h: 1, note: 'Chimenea (3×1)' },
       { x: 12, y: 9, type: 'gargoyle', note: 'JEFE: Verag (Gárgola)' },
       { x: 11, y: 9, type: 'dread_warrior', note: 'Guerrero del Terror' },
       { x: 14, y: 9, type: 'abomination', note: 'Abominación escolta' },
@@ -254,12 +282,12 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 22, y: 3, type: 'orc' },
       { x: 22, y: 4, type: 'door', edge: 'S', note: 'Conecta R8 con R10' },
 
-      { x: 23, y: 6, type: 'sorcerer_table', w: 2, h: 2, note: 'Altar del Mago' },
+      { x: 22, y: 6, type: 'sorcerer_table', w: 3, h: 2, note: 'Mesa de Hechicero (3×2)' },
       { x: 21, y: 7, type: 'goblin' },
       { x: 22, y: 8, type: 'door', edge: 'S', note: 'Sale al pasillo medio este (fila 10)' },
 
       { x: 22, y: 10, type: 'door', edge: 'N', note: 'Entrada desde pasillo medio este' },
-      { x: 22, y: 11, type: 'table', w: 2, h: 2, note: 'Mesa Táctica (volcable)' },
+      { x: 22, y: 11, type: 'table', w: 3, h: 2, note: 'Mesa Táctica 3×2 (volcable)' },
       { x: 21, y: 11, type: 'skeleton' },
       { x: 22, y: 13, type: 'door', edge: 'S', note: 'Baja a la Cámara del Tesoro R21' },
 
@@ -339,12 +367,12 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 2, y: 11, type: 'goblin' },
       { x: 4, y: 11, type: 'door', edge: 'E', note: 'Conecta R12 con R13' },
 
-      { x: 5, y: 12, type: 'weapon_rack', w: 3, h: 1 },
+      { x: 5, y: 10, type: 'weapon_rack', w: 1, h: 3, note: 'Estante de Armas (1×3)' },
       { x: 6, y: 11, type: 'orc' },
       { x: 6, y: 10, type: 'door', edge: 'N', note: 'Sale al pasillo medio (fila 10)' },
 
       { x: 2, y: 8, type: 'door', edge: 'S', note: 'Entrada a R4 desde pasillo' },
-      { x: 2, y: 5, type: 'sorcerer_table', w: 2, h: 2 },
+      { x: 2, y: 5, type: 'sorcerer_table', w: 3, h: 2, note: 'Mesa de Hechicero (3×2)' },
       { x: 3, y: 7, type: 'abomination' },
       { x: 2, y: 7, type: 'goblin' },
       { x: 4, y: 6, type: 'door', edge: 'E', note: 'Conecta R4 con R5' },
@@ -372,7 +400,7 @@ export const OFFICIAL_QUEST_MAPS = [
       // R10 (Nota A: Cofre Trampa + salida al pasillo este para escapar rápido)
       { x: 24, y: 7, type: 'chest', note: 'Nota A: Cofre Trampa' },
       { x: 23, y: 7, type: 'trap_spear', note: 'Aguja Envenenada (DES CD 13)' },
-      { x: 23, y: 5, type: 'fireplace', w: 2, h: 1 },
+      { x: 22, y: 5, type: 'fireplace', w: 3, h: 1, note: 'Chimenea (3×1)' },
       { x: 21, y: 7, type: 'orc' },
       { x: 22, y: 8, type: 'door', edge: 'S', note: 'Atajo de escape al pasillo medio este' },
 
@@ -455,13 +483,14 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 3, y: 12, type: 'goblin' },
       { x: 4, y: 11, type: 'door', edge: 'E' },
 
-      { x: 5, y: 10, type: 'weapon_rack', w: 3, h: 1, note: 'Nota A: Bastón + Estandarte' },
+      { x: 5, y: 10, type: 'weapon_rack', w: 1, h: 3, note: 'Nota A: Bastón + Estandarte (1×3)' },
       { x: 6, y: 11, type: 'orc' },
+      { x: 6, y: 11, type: 'door', edge: 'E', note: 'Conecta R13 con R13b' },
       { x: 7, y: 11, type: 'goblin' },
       { x: 8, y: 11, type: 'door', edge: 'E', note: 'Sale al anillo de la Sala Central' },
 
       { x: 2, y: 8, type: 'door', edge: 'S' },
-      { x: 2, y: 5, type: 'torture_rack', w: 2, h: 2 },
+      { x: 2, y: 5, type: 'torture_rack', w: 3, h: 2, note: 'Potro de Tortura (3×2)' },
       { x: 3, y: 7, type: 'abomination' },
       { x: 2, y: 4, type: 'door', edge: 'N' },
 
@@ -474,7 +503,7 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 19, y: 3, type: 'goblin' },
 
       { x: 22, y: 10, type: 'door', edge: 'N', note: 'Desde pasillo este' },
-      { x: 21, y: 11, type: 'sorcerer_table', w: 2, h: 2 },
+      { x: 21, y: 11, type: 'sorcerer_table', w: 3, h: 2, note: 'Mesa de Hechicero (3×2)' },
       { x: 24, y: 12, type: 'chest', note: 'Nota C: Trampa + 100 MO' },
       { x: 23, y: 12, type: 'trap_spear', note: 'Trampa Lanza (DES CD 13)' },
       { x: 21, y: 13, type: 'skeleton' },
@@ -567,8 +596,8 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 10, y: 15, type: 'mummy' },
       { x: 10, y: 13, type: 'door', edge: 'N', note: 'Sale al anillo frente a la Sala Central' },
 
-      { x: 12, y: 7, type: 'tomb', w: 2, h: 2, note: 'Tumba del Señor Brujo' },
-      { x: 15, y: 7, type: 'sorcerer_table', w: 1, h: 2, note: 'FILACTERIA (3 PC o Arcano CD 14)' },
+      { x: 11, y: 7, type: 'tomb', w: 3, h: 2, note: 'Tumba del Señor Brujo (3×2)' },
+      { x: 14, y: 7, type: 'sorcerer_table', w: 2, h: 3, note: 'FILACTERIA (3 PC o Arcano CD 14)' },
       { x: 12, y: 9, type: 'sorcerer', note: 'JEFE FINAL: EL SEÑOR BRUJO (LICHE)' },
       { x: 10, y: 8, type: 'mummy' },
       { x: 14, y: 9, type: 'dread_warrior' },
@@ -632,11 +661,11 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 2, y: 11, type: 'assassin', note: 'Asesino del Culto' },
       { x: 2, y: 10, type: 'door', edge: 'N', note: 'Sale al pasillo medio oeste' },
       { x: 6, y: 8, type: 'door', edge: 'S', note: 'Entrada al Laboratorio R5' },
-      { x: 5, y: 5, type: 'alchemy_bench', w: 3, h: 1, note: 'Banco de Alquimista (Arcano CD 12)' },
+      { x: 5, y: 5, type: 'alchemy_bench', w: 3, h: 2, note: 'Mesa de Alquimista 3×2 (Arcano CD 12)' },
       { x: 7, y: 7, type: 'specter', note: 'Espectro Etéreo' },
       { x: 8, y: 6, type: 'door', edge: 'E' },
 
-      { x: 12, y: 7, type: 'sorcerer_table', w: 2, h: 2, note: 'Altar del Eclipse' },
+      { x: 12, y: 7, type: 'sorcerer_table', w: 3, h: 2, note: 'Altar del Eclipse (3×2)' },
       { x: 12, y: 9, type: 'specter', note: 'JEFE: ESPECTRO DEL TERROR' },
       { x: 11, y: 8, type: 'dread_warrior', note: 'Guardia Mago' },
       { x: 14, y: 9, type: 'assassin', note: 'Asesino Élite' },

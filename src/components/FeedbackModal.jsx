@@ -18,7 +18,7 @@ import {
 
 // Endpoint gratuito de envío directo al correo del creador (sin cuentas para los jugadores)
 const FEEDBACK_ENDPOINT = 'https://formsubmit.co/ajax/xZATANAZx@gmail.com';
-const APP_VERSION = 'v2.1.0';
+const APP_VERSION = 'v2.2.0';
 
 const CATEGORIES = [
   { id: 'bug', label: '🐛 Reportar Bug / Error', icon: Bug, color: 'border-rose-500/70 bg-rose-950/50 text-rose-200' },
