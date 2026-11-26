@@ -1016,6 +1016,27 @@ export default function TacticalBoard({
 
   const selectedRoomObj = getRoomObj(selectedRoomId);
   const roomNotes = (currentMap.notes || []).filter((n) => n.room === selectedRoomId);
+
+  // Salas que SÍ participan en esta misión (tienen puerta conectada, monstruo, mueble o nota)
+  // Las salas sin usar se atenúan estilo Libro de Misiones Oficial 2021 para claridad total
+  const activeMissionRooms = useMemo(() => {
+    const set = new Set();
+    if (currentMap.startRoom) set.add(currentMap.startRoom);
+    (allMapItems || []).forEach((it) => {
+      const rA = getRoomAt(it.x, it.y);
+      if (rA !== 'CORRIDOR') set.add(rA);
+      if (it.type === 'door' || it.type === 'secret_door') {
+        const ox = it.edge === 'W' ? it.x - 1 : it.edge === 'E' ? it.x + 1 : it.x;
+        const oy = it.edge === 'N' ? it.y - 1 : it.edge === 'S' ? it.y + 1 : it.y;
+        const rB = getRoomAt(ox, oy);
+        if (rB !== 'CORRIDOR') set.add(rB);
+      }
+    });
+    (currentMap.notes || []).forEach((n) => {
+      if (n.room && n.room !== 'CORRIDOR') set.add(n.room);
+    });
+    return set;
+  }, [allMapItems, currentMap]);
   const readAloud =
     ROOM_READ_ALOUD[selectedRoomId] ||
     'Al abrir la puerta, la luz de sus antorchas revela el interior de esta cámara silenciosa...';
@@ -1352,19 +1373,20 @@ export default function TacticalBoard({
               className="cursor-pointer"
             />
 
-            {/* Las 22 Habitaciones Oficiales Moderno 2021 (incluye 2 gemelas 2×3 y Sala en "L") */}
+            {/* Las 22 Habitaciones Oficiales Moderno 2021 (salas no usadas en esta misión atenuadas estilo Libro Oficial) */}
             {HQ_ROOMS.map((r) => {
               const cells = getRoomCells(r);
               const rx = MARGIN_LEFT + r.x1 * CELL;
               const ry = MARGIN_TOP + r.y1 * CELL;
               const isSelected = r.id === selectedRoomId;
               const isRevealed = revealedRooms.has(r.id);
+              const isUsedInQuest = activeMissionRooms.has(r.id);
 
               return (
                 <g
                   key={r.id}
-                  onClick={() => setSelectedRoomId(r.id)}
-                  className="cursor-pointer"
+                  onClick={() => isUsedInQuest && setSelectedRoomId(r.id)}
+                  className={isUsedInQuest ? 'cursor-pointer' : 'cursor-default'}
                 >
                   {cells.map((c) => {
                     const cx = MARGIN_LEFT + c.x * CELL;
@@ -1376,18 +1398,24 @@ export default function TacticalBoard({
                           y={cy}
                           width={CELL}
                           height={CELL}
-                          fill={r.id === 'R11' ? '#efe2c8' : '#f7f2e8'}
+                          fill={
+                            !isUsedInQuest
+                              ? '#b5aa99'
+                              : r.id === 'R11'
+                              ? '#efe2c8'
+                              : '#f7f2e8'
+                          }
                         />
-                        {showFogOverlay && !isRevealed && (
+                        {isUsedInQuest && showFogOverlay && !isRevealed && (
                           <rect
                             x={cx}
                             y={cy}
                             width={CELL}
                             height={CELL}
-                            fill="rgba(48, 24, 18, 0.22)"
+                            fill="rgba(48, 24, 18, 0.18)"
                           />
                         )}
-                        {isSelected && (
+                        {isUsedInQuest && isSelected && (
                           <rect
                             x={cx + 0.5}
                             y={cy + 0.5}
@@ -1399,16 +1427,18 @@ export default function TacticalBoard({
                       </g>
                     );
                   })}
-                  {/* Etiqueta sutil del número de sala */}
-                  <text
-                    x={rx + 4}
-                    y={ry + 11}
-                    fontSize="8"
-                    fontWeight="800"
-                    fill="rgba(59, 22, 22, 0.55)"
-                  >
-                    {r.id}
-                  </text>
+                  {/* Etiqueta sutil del número de sala (solo en salas activas de la misión) */}
+                  {isUsedInQuest && (
+                    <text
+                      x={rx + 4}
+                      y={ry + 11}
+                      fontSize="8"
+                      fontWeight="800"
+                      fill="rgba(59, 22, 22, 0.55)"
+                    >
+                      {r.id}
+                    </text>
+                  )}
                 </g>
               );
             })}

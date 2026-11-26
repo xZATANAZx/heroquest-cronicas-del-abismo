@@ -1209,10 +1209,19 @@ function buildProceduralBoardMap({
         : 'Ayuda al explorador para ganar +1 Ficha de Reputación.',
     },
   ];
-  const hazardCodes = ['E', 'F', 'G'];
-  Object.entries(hazardAssignments).forEach(([rId, haz], idx) => {
+  // Salas de Peligro: asignar SOLO en salas activas con combate del arquetipo actual (NUNCA en salas vacías)
+  const activeHazPool = [...arch.combatRooms].filter((rId) => rId !== arch.startRoom && rId !== 'R11');
+  const shuffledHazRooms = [...activeHazPool].sort(() => Math.random() - 0.5).slice(0, 2);
+  const shuffledHazList = [...HAZARD_ROOMS].sort(() => Math.random() - 0.5);
+  const realHazards = {};
+  shuffledHazRooms.forEach((rId, idx) => {
+    if (shuffledHazList[idx]) realHazards[rId] = shuffledHazList[idx];
+  });
+
+  const hazardCodes = ['E', 'F'];
+  Object.entries(realHazards).forEach(([rId, haz], idx) => {
     notes.push({
-      code: hazardCodes[idx] || 'H',
+      code: hazardCodes[idx] || 'G',
       room: rId,
       title: `Sala de Peligro: ${haz.icon} ${haz.name}`,
       text: haz.rule,
@@ -1228,7 +1237,7 @@ function buildProceduralBoardMap({
     isProcedural: true,
     biomeId: biome.id,
     biomeRule: biome.globalRule,
-    hazardRooms: hazardAssignments,
+    hazardRooms: realHazards,
     intro: narrative?.readAloudIntro || `${biome.ambientFlavor} Objetivo: ${plot.objective}`,
     readAloudIntro: narrative?.readAloudIntro || `${biome.ambientFlavor} Objetivo: ${plot.objective}`,
     storyBeats: narrative?.storyBeats || {},
@@ -1352,7 +1361,7 @@ export function generateProceduralQuest({
     arcInfo,
     partyLevel,
     partySize,
-    hazardRooms: hazardAssignments,
+    hazardRooms: mapData.hazardRooms || {},
     zargonCounters,
     rewards: {
       xp: baseXP,
