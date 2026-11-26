@@ -39,7 +39,12 @@ import {
   rollTonicSideEffect,
 } from '../data/craftingSystem';
 import { MERCENARIES } from '../data/decks';
-import { EQUIPMENT_CATALOG } from '../data/characterSystem';
+import {
+  EQUIPMENT_CATALOG,
+  SPELL_UPGRADE_TIERS,
+  getHeroUnlockedSpells,
+  getUpgradedSpellView,
+} from '../data/characterSystem';
 import { OFFICIAL_ALCHEMY_DECK } from '../data/officialCards';
 import { generateContractBoard } from '../data/proceduralEngine';
 
@@ -1276,6 +1281,127 @@ export default function CityHubPanel({
               </div>
             </div>
           )}
+
+          {/* Alquimista: Mejora de Hechizos (Tope = Nivel del Héroe, máx. Nv.5) */}
+          {activeDistrict === 'alquimista' && activeHero && (() => {
+            const heroSpells = getHeroUnlockedSpells(activeHero);
+            if (heroSpells.length === 0) return null;
+            const maxAllowed = Math.min(5, Number(activeHero.level || 1));
+            return (
+              <div className="grimoire-panel rounded-2xl p-5 space-y-3 border-cyan-700/50">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h3 className="font-display text-lg font-bold text-cyan-300 flex items-center gap-2">
+                      📖 Mejora de Hechizos de {activeHero.name} (Tope Actual: Nv.{maxAllowed})
+                    </h3>
+                    <p className="text-xs text-stone-400">
+                      Mejora tus hechizos con Oro y Materiales Arcanos. Nunca puedes subir un hechizo por encima de tu Nivel de Héroe (Nv.{activeHero.level || 1}).
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  {heroSpells.map((baseSp) => {
+                    const curLvl = Number(activeHero.spellLevels?.[baseSp.id] || 1);
+                    const spView = getUpgradedSpellView(baseSp, curLvl);
+                    const nextLvl = curLvl + 1;
+                    const tier = SPELL_UPGRADE_TIERS[nextLvl];
+                    const lockedByHeroLvl = nextLvl > maxAllowed;
+                    const goldCost = tier ? calcPrice(tier.gold, 'alquimista') : 0;
+                    const hasMats = tier
+                      ? Object.entries(tier.ingredients).every(
+                          ([mId, q]) => getHeroMatQty(activeHero, mId) >= q
+                        )
+                      : false;
+                    const canUpgrade = Boolean(tier) && !lockedByHeroLvl && hasMats && (activeHero.gold || 0) >= goldCost;
+
+                    return (
+                      <div
+                        key={baseSp.id}
+                        className="p-3.5 rounded-xl bg-stone-950/85 border border-cyan-900/50 flex flex-col justify-between gap-2.5 text-xs"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <strong className="text-cyan-200">{spView.name}</strong>
+                            <span className="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-600/60 text-cyan-200 font-black text-[10px]">
+                              Nv.{curLvl} {curLvl > 1 ? `· ${spView.upgradeTag}` : ''}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-amber-300 font-semibold">
+                            Escuela: {spView.school}
+                            {spView.effectiveDice > 0 ? ` · ${spView.effectiveDice} DC` : ''}
+                            {spView.effectiveHealPC > 0 ? ` · +${spView.effectiveHealPC} PC` : ''}
+                            {spView.effectiveHealPM > 0 ? ` · +${spView.effectiveHealPM} PM` : ''}
+                          </div>
+                          {spView.upgradeBonusText && (
+                            <div className="text-[10px] text-emerald-300">✓ {spView.upgradeBonusText}</div>
+                          )}
+                          {tier ? (
+                            <div className="pt-1 space-y-1">
+                              <div className="text-[10px] text-stone-300">
+                                <strong>Siguiente (Nv.{nextLvl} · {tier.tag}):</strong> {tier.bonusText}
+                              </div>
+                              <div className="flex flex-wrap gap-1">
+                                {Object.entries(tier.ingredients).map(([mId, q]) => {
+                                  const mat = getMaterialById(mId);
+                                  const have = getHeroMatQty(activeHero, mId);
+                                  return (
+                                    <span
+                                      key={mId}
+                                      className={`px-1.5 py-0.5 rounded border text-[10px] font-bold ${
+                                        have >= q
+                                          ? 'bg-emerald-950/50 border-emerald-700/60 text-emerald-200'
+                                          : 'bg-red-950/40 border-red-800/50 text-red-300'
+                                      }`}
+                                    >
+                                      {mat.icon} {mat.name} {have}/{q}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-[10px] text-amber-300 font-bold pt-1">
+                              ★ Maestría Máxima (Nv.5) alcanzada
+                            </div>
+                          )}
+                        </div>
+
+                        {tier && (
+                          <button
+                            disabled={!canUpgrade}
+                            onClick={() => {
+                              if (!canUpgrade) return;
+                              updateHeroById(activeHero.id, (h) => {
+                                const nextMats = { ...(h.materials || {}) };
+                                Object.entries(tier.ingredients).forEach(([mId, q]) => {
+                                  nextMats[mId] = Math.max(0, Number(nextMats[mId] || 0) - q);
+                                });
+                                return {
+                                  ...h,
+                                  gold: (h.gold || 0) - goldCost,
+                                  materials: nextMats,
+                                  spellLevels: {
+                                    ...(h.spellLevels || {}),
+                                    [baseSp.id]: nextLvl,
+                                  },
+                                };
+                              });
+                              showToast(`📖 ¡${baseSp.name} de ${activeHero.name} subió a Nivel ${nextLvl} (${tier.tag})!`);
+                            }}
+                            className="w-full py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 text-slate-950 font-black text-[11px] cursor-pointer"
+                          >
+                            {lockedByHeroLvl
+                              ? `🔒 Requiere Héroe Nivel ${nextLvl}`
+                              : `Subir a Nv.${nextLvl} (${goldCost} MO)`}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Alquimista: Botica Oficial de Alquimia (Cartas Oficiales HQ-D20 v2) */}
           {activeDistrict === 'alquimista' && activeHero && (

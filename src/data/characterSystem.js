@@ -957,129 +957,246 @@ export const EQUIPMENT_CATALOG = [
 ];
 
 export const SPELLS_CATALOG = [
-  // Fuego
+  // ==================== FUEGO (5) ====================
   {
-    id: 'bola_fuego', school: 'Fuego', name: 'Bola de Fuego', level: 1, costPM: 0,
+    id: 'bola_fuego', school: 'Fuego', name: 'Bola de Fuego', level: 1, unlockLevel: 1, costPM: 0,
     dice: 2, isMagic: true, isFire: true,
-    desc: 'Lanza 2 DC de daño de fuego a un objetivo en LdV (salvación DES CD 12 para mitad). Quema regeneración.',
+    desc: 'Hechizo oficial: lanza 2 DC de daño de fuego a un objetivo en LdV (salvación DES CD 12 para mitad). Quema regeneración.',
   },
   {
-    id: 'coraje', school: 'Fuego', name: 'Coraje', level: 1, costPM: 0,
+    id: 'coraje', school: 'Fuego', name: 'Coraje', level: 1, unlockLevel: 1, costPM: 0,
     dice: 0, isMagic: true, isFire: true,
     buff: { id: 'spell_coraje', label: '🔥 Coraje (+2 DC Ataque)', type: 'buff', duration: 3, attackMod: 2, note: '+2 DC en ataques cuerpo a cuerpo hasta que no queden monstruos visibles.' },
-    desc: 'Tú o un héroe visible gana +2 DC en ataques cuerpo a cuerpo hasta que no queden monstruos visibles.',
+    desc: 'Hechizo oficial: tú o un héroe visible gana +2 DC en ataques cuerpo a cuerpo hasta que no queden monstruos visibles.',
   },
   {
-    id: 'ira_fuego', school: 'Fuego', name: 'Fuego de la Ira', level: 2, costPM: 1,
+    id: 'ira_fuego', school: 'Fuego', name: 'Fuego de la Ira', level: 1, unlockLevel: 1, costPM: 0,
     dice: 2, isMagic: true, isFire: true,
-    desc: 'Hechizo oficial: inflige 2 puntos de daño de fuego a cualquier monstruo visible o en la mazmorra (salvación CON CD 13 reduce a 1). Quema regeneración.',
+    desc: 'Hechizo oficial: inflige 2 puntos de daño de fuego a cualquier monstruo en la mazmorra (salvación CON CD 13 reduce a 1). Quema regeneración.',
   },
   {
-    id: 'llamarada_ceniza', school: 'Fuego', name: 'Muro de Brasas', level: 2, costPM: 1,
+    id: 'llamarada_ceniza', school: 'Fuego', name: 'Muro de Brasas', level: 2, unlockLevel: 3, costPM: 1,
     dice: 2, isMagic: true, isFire: true,
-    desc: 'Creas una línea de llamas en 2 casillas adyacentes durante 2 rondas: cualquier enemigo que cruce sufre 2 DC de fuego.',
+    desc: 'Desbloqueado en Nv.3: creas una línea de llamas en 2 casillas adyacentes durante 2 rondas; cualquier enemigo que cruce sufre 2 DC de fuego.',
   },
-  // Agua
   {
-    id: 'agua_curativa', school: 'Agua', name: 'Agua Milagrosa', level: 1, costPM: 0,
+    id: 'nova_cenizas', school: 'Fuego', name: 'Nova de Cenizas', level: 3, unlockLevel: 6, costPM: 1,
+    dice: 3, isMagic: true, isFire: true,
+    desc: 'Desbloqueado en Nv.6: explosión controlada de 3 DC de fuego a todos los enemigos a 2 casillas de ti (no daña aliados; corta regeneración).',
+  },
+
+  // ==================== AGUA (5) ====================
+  {
+    id: 'agua_curativa', school: 'Agua', name: 'Agua Milagrosa', level: 1, unlockLevel: 1, costPM: 0,
     dice: 0, isMagic: true, healPC: 4,
     desc: 'Hechizo oficial: restaura hasta 4 PC a ti o a un héroe visible (o evita su muerte instantáneamente al llegar a 0 PC).',
   },
   {
-    id: 'sueno', school: 'Agua', name: 'Dormir', level: 1, costPM: 0,
+    id: 'sueno', school: 'Agua', name: 'Dormir', level: 1, unlockLevel: 1, costPM: 0,
     dice: 0, isMagic: true,
     desc: 'Hechizo oficial: un enemigo vivo salva SAB CD 13 (o 1 dado por PM) o queda dormido hasta recibir daño o despertar al inicio de su turno.',
   },
   {
-    id: 'velo_niebla', school: 'Agua', name: 'Niebla', level: 1, costPM: 0,
+    id: 'velo_niebla', school: 'Agua', name: 'Niebla', level: 1, unlockLevel: 1, costPM: 0,
     dice: 0, isMagic: true,
     buff: { id: 'spell_niebla', label: '🌫️ Niebla (Atraviesa enemigos)', type: 'buff', duration: 1, note: 'Puedes atravesar casillas ocupadas por monstruos sin provocar ataques este turno.' },
     desc: 'Hechizo oficial: el objetivo puede atravesar casillas ocupadas por monstruos sin provocar ataques este turno.',
   },
   {
-    id: 'escarcha_helada', school: 'Agua', name: 'Lanza de Escarcha', level: 2, costPM: 1,
+    id: 'escarcha_helada', school: 'Agua', name: 'Lanza de Escarcha', level: 2, unlockLevel: 3, costPM: 1,
     dice: 3, isMagic: true,
-    desc: 'Lanzas un proyectil helado de 3 DC mágicos a distancia; si hiere, reduce el movimiento del enemigo a la mitad en su próximo turno.',
+    desc: 'Desbloqueado en Nv.3: proyectil helado de 3 DC mágicos a distancia; si hiere, reduce el movimiento del enemigo a la mitad en su próximo turno.',
   },
-  // Tierra
   {
-    id: 'piel_piedra', school: 'Tierra', name: 'Piel de Roca', level: 1, costPM: 0,
+    id: 'marea_purificadora', school: 'Agua', name: 'Marea Purificadora', level: 3, unlockLevel: 6, costPM: 1,
+    dice: 0, isMagic: true, healPC: 3, cleansesDebuffs: true,
+    desc: 'Desbloqueado en Nv.6: cura +3 PC a hasta 2 aliados visibles y elimina Veneno, Sangrado y Quemadura.',
+  },
+
+  // ==================== TIERRA (5) ====================
+  {
+    id: 'piel_piedra', school: 'Tierra', name: 'Piel de Roca', level: 1, unlockLevel: 1, costPM: 0,
     dice: 0, isMagic: true,
     buff: { id: 'spell_piedra', label: '🪨 Piel de Roca (+1 DC Defensa)', type: 'buff', duration: 3, defendMod: 1, note: '+1 Dado de Defensa hasta recibir 1 herida o terminar el combate.' },
     desc: 'Hechizo oficial: tú o un héroe gana +1 Dado de Defensa hasta recibir 1 herida o terminar el combate.',
   },
   {
-    id: 'sanar_cuerpo', school: 'Tierra', name: 'Cura Corporal', level: 1, costPM: 0,
+    id: 'sanar_cuerpo', school: 'Tierra', name: 'Cura Corporal', level: 1, unlockLevel: 1, costPM: 0,
     dice: 0, isMagic: true, healPC: 4, cleansesDebuffs: true,
     desc: 'Hechizo oficial: restaura hasta 4 PC a un héroe visible y cura veneno o parálisis.',
   },
   {
-    id: 'atravesar_roca', school: 'Tierra', name: 'A Través de la Roca', level: 2, costPM: 1,
+    id: 'atravesar_roca', school: 'Tierra', name: 'A Través de la Roca', level: 1, unlockLevel: 1, costPM: 0,
     dice: 0, isMagic: true,
     buff: { id: 'spell_roca', label: '🧱 A Través de la Roca', type: 'buff', duration: 1, note: 'Puedes caminar a través de paredes en tu próximo movimiento.' },
     desc: 'Hechizo oficial: un héroe puede caminar a través de paredes durante su próximo movimiento.',
   },
   {
-    id: 'temblor_piedra', school: 'Tierra', name: 'Sismo Menor', level: 2, costPM: 1,
+    id: 'temblor_piedra', school: 'Tierra', name: 'Sismo Menor', level: 2, unlockLevel: 3, costPM: 1,
     dice: 2, isMagic: true,
-    desc: 'Sacudes el suelo bajo un enemigo (2 DC mágicos): si falla FUE CD 13 queda Derribado y tus aliados tienen Ventaja contra él.',
+    desc: 'Desbloqueado en Nv.3: sacudes el suelo bajo un enemigo (2 DC mágicos); si falla FUE CD 13 queda Derribado y tus aliados tienen Ventaja contra él.',
   },
-  // Aire
   {
-    id: 'genio', school: 'Aire', name: 'Genio', level: 2, costPM: 1,
+    id: 'muro_obsidiana', school: 'Tierra', name: 'Muro de Obsidiana', level: 3, unlockLevel: 6, costPM: 1,
+    dice: 0, isMagic: true,
+    buff: { id: 'spell_obsidiana', label: '🛡️ Muro de Obsidiana (+2 DC Def)', type: 'buff', duration: 2, defendMod: 2, note: '+2 DC de Defensa por 2 turnos o bloquea 2 casillas.' },
+    desc: 'Desbloqueado en Nv.6: levantas un muro de roca que bloquea 2 casillas durante 2 rondas O envuelves a un aliado en +2 DC de Defensa por 2 turnos.',
+  },
+
+  // ==================== AIRE (5) ====================
+  {
+    id: 'genio', school: 'Aire', name: 'Genio', level: 1, unlockLevel: 1, costPM: 0,
     dice: 5, isMagic: true,
     desc: 'Hechizo oficial: abre cualquier puerta en el tablero O ataca a un enemigo visible con 5 DC mágicos.',
   },
   {
-    id: 'viento_veloz', school: 'Aire', name: 'Ráfaga (Viento Veloz)', level: 1, costPM: 0,
+    id: 'viento_veloz', school: 'Aire', name: 'Ráfaga (Viento Veloz)', level: 1, unlockLevel: 1, costPM: 0,
     dice: 0, isMagic: true,
     buff: { id: 'spell_viento', label: '💨 Ráfaga (+4 Mov / 4d6)', type: 'buff', duration: 1, speedMod: 4, note: 'Duplicas tus dados de movimiento (4d6) en tu próximo turno.' },
     desc: 'Hechizo oficial: un héroe duplica sus dados de movimiento (4d6) en su próximo turno.',
   },
   {
-    id: 'tempestad', school: 'Aire', name: 'Tempestad', level: 1, costPM: 0,
+    id: 'tempestad', school: 'Aire', name: 'Tempestad', level: 1, unlockLevel: 1, costPM: 0,
     dice: 0, isMagic: true,
     desc: 'Hechizo oficial: un monstruo visible queda envuelto en un torbellino y pierde su próximo turno completo.',
   },
   {
-    id: 'relampago_arco', school: 'Aire', name: 'Arco Eléctrico', level: 2, costPM: 1,
+    id: 'relampago_arco', school: 'Aire', name: 'Arco Eléctrico', level: 2, unlockLevel: 3, costPM: 1,
     dice: 2, isMagic: true,
-    desc: 'Disparas un rayo de 2 DC mágicos a un enemigo y salta con 1 DC automático a otro enemigo adyacente.',
+    desc: 'Desbloqueado en Nv.3: disparas un rayo de 2 DC mágicos a un enemigo y salta con 1 DC automático a otro enemigo adyacente.',
   },
-  // Espíritu / Bardo (Reina de los Espíritus)
   {
-    id: 'canto_calma', school: 'Espíritu', name: 'Canto de Calma Mental', level: 1, costPM: 0,
+    id: 'ojo_huracan', school: 'Aire', name: 'Ojo del Huracán', level: 3, unlockLevel: 6, costPM: 1,
+    dice: 2, isMagic: true,
+    desc: 'Desbloqueado en Nv.6: onda de viento que empuja 2 casillas a todos los enemigos adyacentes e inflige 2 DC mágicos.',
+  },
+
+  // ==================== ESPÍRITU (5 — Bardo / Exorcista) ====================
+  {
+    id: 'canto_calma', school: 'Espíritu', name: 'Canto de Calma Mental', level: 1, unlockLevel: 1, costPM: 0,
     dice: 0, isMagic: true, healPM: 2, cleansesDebuffs: true,
     desc: 'Restaura 2 PM a ti o a un aliado y elimina Shock o Miedo.',
   },
   {
-    id: 'eco_espectral', school: 'Espíritu', name: 'Eco Espectral', level: 1, costPM: 0,
+    id: 'eco_espectral', school: 'Espíritu', name: 'Eco Espectral', level: 1, unlockLevel: 1, costPM: 0,
     dice: 2, isMagic: true,
     desc: 'Ataque sónico de 2 DC que ignora armadura y golpea normalmente a Espectros Etéreos.',
   },
   {
-    id: 'himno_heroico', school: 'Espíritu', name: 'Himno Heroico', level: 2, costPM: 1,
+    id: 'himno_heroico', school: 'Espíritu', name: 'Himno Heroico', level: 1, unlockLevel: 1, costPM: 0,
     dice: 0, isMagic: true,
     buff: { id: 'spell_himno', label: '🎵 Himno Heroico (Ventaja)', type: 'buff', duration: 1, note: 'Todos los aliados en la habitación tienen Ventaja en su siguiente tirada.' },
     desc: 'Todos los aliados en la habitación ganan Ventaja en su siguiente tirada de ataque o salvación.',
   },
-  // Sombras / Brujo
   {
-    id: 'maldicion_terror', school: 'Sombras', name: 'Maldición del Velo', level: 1, costPM: 0,
+    id: 'vinculo_alba', school: 'Espíritu', name: 'Vínculo del Alba', level: 2, unlockLevel: 3, costPM: 1,
+    dice: 0, isMagic: true, healPC: 2, healPM: 1,
+    desc: 'Desbloqueado en Nv.3: restaura +2 PC y +1 PM a un aliado visible en Línea de Visión.',
+  },
+  {
+    id: 'exorcismo_radiante', school: 'Espíritu', name: 'Exorcismo Radiante', level: 3, unlockLevel: 6, costPM: 1,
+    dice: 4, isMagic: true,
+    desc: 'Desbloqueado en Nv.6: descarga espiritual de 4 DC contra No Muertos/Espectros (2 DC contra vivos), ignorando resistencia etérea.',
+  },
+
+  // ==================== SOMBRAS (5 — Brujo) ====================
+  {
+    id: 'maldicion_terror', school: 'Sombras', name: 'Maldición del Velo', level: 1, unlockLevel: 1, costPM: 0,
     dice: 0, isMagic: true,
     desc: 'Un enemigo defiende con -1 DC y sufre Desventaja en ataques durante 2 turnos.',
   },
   {
-    id: 'paso_sombrio', school: 'Sombras', name: 'Paso Sombrío', level: 1, costPM: 0,
+    id: 'paso_sombrio', school: 'Sombras', name: 'Paso Sombrío', level: 1, unlockLevel: 1, costPM: 0,
     dice: 0, isMagic: true,
     desc: 'Te teletransportas hasta 6 casillas a cualquier espacio vacío visible.',
   },
   {
-    id: 'drenar_esencia', school: 'Sombras', name: 'Drenar Esencia', level: 2, costPM: 1,
+    id: 'drenar_esencia', school: 'Sombras', name: 'Drenar Esencia', level: 1, unlockLevel: 1, costPM: 0,
     dice: 3, isMagic: true, healPC: 1,
     desc: 'Ataca con 3 DC mágicos a un objetivo en LdV; recuperas 1 PC por cada herida causada.',
   },
+  {
+    id: 'lanza_umbria', school: 'Sombras', name: 'Lanza Umbría', level: 2, unlockLevel: 3, costPM: 1,
+    dice: 3, isMagic: true,
+    desc: 'Desbloqueado en Nv.3: rayo sombrío de 3 DC mágicos que ignora 1 Escudo Negro del enemigo.',
+  },
+  {
+    id: 'eclipse_abisal', school: 'Sombras', name: 'Eclipse Abisal', level: 3, unlockLevel: 6, costPM: 1,
+    dice: 0, isMagic: true,
+    desc: 'Desbloqueado en Nv.6: oscurece la sala 1 ronda; todos los enemigos atacan con Desventaja y reciben +1 daño mágico.',
+  },
 ];
+
+// ============================================================================
+// SISTEMA DE MEJORA DE HECHIZOS (Nivel 1 → Nivel 5, limitado al Nivel del Héroe)
+// ============================================================================
+export const SPELL_UPGRADE_TIERS = {
+  2: {
+    gold: 120,
+    ingredients: { polvo_runico: 1 },
+    tag: 'Perfeccionado',
+    bonusText: '+1 DC en daño · +1 PC/PM en curación · +1 CD en control',
+  },
+  3: {
+    gold: 220,
+    ingredients: { polvo_runico: 2, pergamino_virgen: 1 },
+    tag: 'Potenciado',
+    bonusText: '+1 DC/curación y repite 1 Dado de Combate fallido (o +1 ronda en buffs)',
+  },
+  4: {
+    gold: 350,
+    ingredients: { polvo_runico: 2, esencia_espectral: 1 },
+    tag: 'Arcano Superior',
+    bonusText: '+2 DC en daño · +2 PC/PM en curación · Ignora 1 Escudo Negro enemigo',
+  },
+  5: {
+    gold: 500,
+    ingredients: { polvo_runico: 3, gema_abismal: 1 },
+    tag: 'Maestría Legendaria',
+    bonusText: '+2 DC/curación · Ignora 1 Escudo · 4–6 en 1d6 conserva el hechizo sin agotarse (1/misión)',
+  },
+};
+
+export function getHeroUnlockedSpells(hero) {
+  if (!hero) return [];
+  const lvl = Number(hero.level || 1);
+  const bySchools = (schools) =>
+    SPELLS_CATALOG.filter((sp) => schools.includes(sp.school) && (sp.unlockLevel || 1) <= lvl);
+
+  if (hero.classId === 'mago') {
+    const schools = lvl >= 5 ? ['Fuego', 'Agua', 'Tierra', 'Aire'] : ['Fuego', 'Agua', 'Tierra'];
+    return bySchools(schools);
+  }
+  if (hero.classId === 'explorador') return bySchools(['Aire']);
+  if (hero.classId === 'mago_batalla') return bySchools(['Fuego']);
+  if (hero.classId === 'bardo' || hero.classId === 'exorcista') return bySchools(['Espíritu']);
+  if (hero.classId === 'brujo') return bySchools(['Sombras']);
+  if (hero.classId === 'druida') {
+    const base = ['agua_curativa', 'piel_piedra', 'sanar_cuerpo'];
+    const extras = [
+      ...(lvl >= 3 ? ['temblor_piedra'] : []),
+      ...(lvl >= 6 ? ['marea_purificadora'] : []),
+    ];
+    return SPELLS_CATALOG.filter((sp) => [...base, ...extras].includes(sp.id));
+  }
+  return [];
+}
+
+export function getUpgradedSpellView(spell, spellLevel = 1) {
+  const lvl = Math.max(1, Math.min(5, Number(spellLevel || 1)));
+  const bonusDice = lvl >= 4 ? 2 : lvl >= 2 ? 1 : 0;
+  const bonusHeal = lvl >= 4 ? 2 : lvl >= 2 ? 1 : 0;
+  const tierInfo = SPELL_UPGRADE_TIERS[lvl] || null;
+  return {
+    ...spell,
+    spellLevel: lvl,
+    effectiveDice: spell.dice > 0 ? spell.dice + bonusDice : 0,
+    effectiveHealPC: spell.healPC > 0 ? spell.healPC + bonusHeal : 0,
+    effectiveHealPM: spell.healPM > 0 ? spell.healPM + (lvl >= 4 ? 2 : lvl >= 2 ? 1 : 0) : 0,
+    upgradeTag: tierInfo?.tag || 'Base',
+    upgradeBonusText: tierInfo?.bonusText || '',
+  };
+}
 
 // Poderes de clase activables limpios (sin texto de relleno), con costes reales y estados (Buff / Debuff)
 export const CLASS_ACTIVE_POWERS = {

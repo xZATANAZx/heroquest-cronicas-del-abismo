@@ -24,6 +24,9 @@ import {
   RACES,
   LEVEL_TABLE,
   SPELLS_CATALOG,
+  SPELL_UPGRADE_TIERS,
+  getHeroUnlockedSpells,
+  getUpgradedSpellView,
   CLASS_ACTIVE_POWERS,
   RACIAL_ACTIONS,
   UNLOCKABLE_CLASS_ABILITIES,
@@ -873,42 +876,11 @@ export default function PlayerMobileView({ initialPlayerParam }) {
     );
   };
 
-  // Hechizos exactos según la clase y nivel del héroe (sin hechizos de más)
-  const getHeroSpells = () => {
-    const lvl = hero.level || 1;
-    const BASE_FIRE = ['bola_fuego', 'coraje', 'ira_fuego'];
-    const BASE_WATER = ['agua_curativa', 'sueno', 'velo_niebla'];
-    const BASE_EARTH = ['piel_piedra', 'sanar_cuerpo', 'atravesar_roca'];
-    const BASE_AIR = ['genio', 'viento_veloz', 'tempestad'];
-    const ADV_ELEMENTAL = ['llamarada_ceniza', 'escarcha_helada', 'temblor_piedra', 'relampago_arco'];
-
-    if (hero.classId === 'mago') {
-      const allowed = [
-        ...BASE_FIRE,
-        ...BASE_WATER,
-        ...BASE_EARTH,
-        ...(lvl >= 5 ? BASE_AIR : []),
-        ...(lvl >= 4 ? ADV_ELEMENTAL.slice(0, lvl >= 7 ? 4 : 2) : []),
-      ];
-      return SPELLS_CATALOG.filter((sp) => allowed.includes(sp.id));
-    }
-    if (hero.classId === 'explorador') {
-      return SPELLS_CATALOG.filter((sp) => BASE_AIR.includes(sp.id));
-    }
-    if (hero.classId === 'mago_batalla') {
-      return SPELLS_CATALOG.filter((sp) => BASE_FIRE.includes(sp.id));
-    }
-    if (hero.classId === 'bardo' || hero.classId === 'exorcista') {
-      return SPELLS_CATALOG.filter((sp) => sp.school === 'Espíritu');
-    }
-    if (hero.classId === 'brujo') {
-      return SPELLS_CATALOG.filter((sp) => sp.school === 'Sombras');
-    }
-    if (hero.classId === 'druida') {
-      return SPELLS_CATALOG.filter((sp) => ['agua_curativa', 'piel_piedra', 'sanar_cuerpo'].includes(sp.id));
-    }
-    return [];
-  };
+  // Hechizos exactos según la clase y nivel del héroe, con su nivel de mejora aplicado
+  const getHeroSpells = () =>
+    getHeroUnlockedSpells(hero).map((sp) =>
+      getUpgradedSpellView(sp, hero.spellLevels?.[sp.id] || 1)
+    );
 
   const castSpell = async (sp) => {
     if (usedSpells.includes(sp.id)) return;
@@ -928,8 +900,12 @@ export default function PlayerMobileView({ initialPlayerParam }) {
       ? activeEffects.filter((e) => e.id !== 'cls_eter')
       : [...activeEffects];
 
-    if (sp.healPC) nextPC = Math.min(hero.maxPC, nextPC + sp.healPC);
-    if (sp.healPM) nextPM = Math.min(hero.maxPM, nextPM + sp.healPM);
+    const effectiveHealPC = sp.effectiveHealPC ?? sp.healPC ?? 0;
+    const effectiveHealPM = sp.effectiveHealPM ?? sp.healPM ?? 0;
+    const finalSpellDice = sp.effectiveDice ?? spellDice;
+
+    if (effectiveHealPC) nextPC = Math.min(hero.maxPC, nextPC + effectiveHealPC);
+    if (effectiveHealPM) nextPM = Math.min(hero.maxPM, nextPM + effectiveHealPM);
     if (sp.cleansesDebuffs) nextEffects = nextEffects.filter((e) => e.type !== 'debuff');
     if (sp.buff) {
       nextEffects = [...nextEffects.filter((e) => e.id !== sp.buff.id), sp.buff];
@@ -944,15 +920,15 @@ export default function PlayerMobileView({ initialPlayerParam }) {
     });
 
     await notifyDMAction({
-      abilityName: `Hechizo [${sp.school}]: ${sp.name}`,
-      attackDice: spellDice,
+      abilityName: `Hechizo [${sp.school} · Nv.${sp.spellLevel || 1}]: ${sp.name}`,
+      attackDice: finalSpellDice,
       damageType: sp.isFire ? 'Fuego' : 'Mágico',
       isMagic: true,
       isFire: Boolean(sp.isFire),
       isRanged: true,
-      description: sp.desc,
+      description: `${sp.desc}${sp.upgradeBonusText ? ` | Mejora Nv.${sp.spellLevel}: ${sp.upgradeBonusText}` : ''}`,
     });
-    showToast(`✨ Lanzaste ${sp.name}${sp.costPM ? ` (-${sp.costPM} PM)` : ''} — Marcado como usado.`);
+    showToast(`✨ Lanzaste ${sp.name} (Nv.${sp.spellLevel || 1})${sp.costPM ? ` (-${sp.costPM} PM)` : ''} — Marcado como usado.`);
   };
 
   const rechargeSpellWithEther = async (spellId) => {
@@ -2275,15 +2251,37 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <div className={`font-bold ${isUsed ? 'line-through text-stone-500' : 'text-purple-200'}`}>
-                              [{sp.school}] {sp.name}
+                            <div className={`font-bold flex flex-wrap items-center gap-1.5 ${isUsed ? 'line-through text-stone-500' : 'text-purple-200'}`}>
+                              <span>[{sp.school}] {sp.name}</span>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded font-black ${
+                                (sp.spellLevel || 1) > 1
+                                  ? 'bg-amber-500/25 text-amber-200 border border-amber-400/60'
+                                  : 'bg-stone-800 text-stone-300 border border-stone-700'
+                              }`}>
+                                Nv.{sp.spellLevel || 1}
+                              </span>
+                              {sp.effectiveDice > 0 && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-950 text-rose-200 border border-rose-700/60">
+                                  {sp.effectiveDice} DC
+                                </span>
+                              )}
+                              {sp.effectiveHealPC > 0 && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-200 border border-emerald-700/60">
+                                  +{sp.effectiveHealPC} PC
+                                </span>
+                              )}
                               {sp.costPM > 0 && (
-                                <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">
                                   -{sp.costPM} PM
                                 </span>
                               )}
                             </div>
                             <p className="text-stone-300 mt-0.5 leading-snug">{sp.desc}</p>
+                            {sp.upgradeBonusText && (
+                              <p className="text-[10px] text-amber-300 mt-0.5 font-semibold">
+                                ★ Mejora Nv.{sp.spellLevel} ({sp.upgradeTag}): {sp.upgradeBonusText}
+                              </p>
+                            )}
                           </div>
                           <button
                             disabled={isUsed || noPM}
@@ -2719,6 +2717,101 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                   })}
                 </div>
               </div>
+
+              {/* Torre del Alquimista: Mejorar Mis Hechizos (Tope = Mi Nivel de Héroe) */}
+              {getHeroUnlockedSpells(hero).length > 0 && (() => {
+                const maxAllowed = Math.min(5, Number(hero.level || 1));
+                return (
+                  <div className="grimoire-panel rounded-2xl p-4 space-y-2.5 border-cyan-600/50">
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-wider text-cyan-300">
+                        📖 Mejorar Mis Hechizos (Tope Actual: Nv.{maxAllowed})
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Sube el nivel de tus hechizos con Oro y Materiales Arcanos. Solo puedes subirlos hasta tu Nivel de Héroe (Nv.{hero.level || 1}).
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      {getHeroUnlockedSpells(hero).map((baseSp) => {
+                        const curLvl = Number(hero.spellLevels?.[baseSp.id] || 1);
+                        const nextLvl = curLvl + 1;
+                        const tier = SPELL_UPGRADE_TIERS[nextLvl];
+                        const lockedByHeroLvl = nextLvl > maxAllowed;
+                        const goldCost = tier ? calcMyPrice(tier.gold, 'alquimista') : 0;
+                        const hasMats = tier
+                          ? Object.entries(tier.ingredients).every(
+                              ([mId, q]) => Number(hero.materials?.[mId] || 0) >= q
+                            )
+                          : false;
+                        const canUp = Boolean(tier) && !lockedByHeroLvl && hasMats && (hero.gold || 0) >= goldCost;
+
+                        return (
+                          <div key={baseSp.id} className="p-3 rounded-xl bg-slate-900/85 border border-cyan-900/50 space-y-1.5 text-xs">
+                            <div className="flex items-center justify-between gap-2">
+                              <strong className="text-cyan-200">[{baseSp.school}] {baseSp.name}</strong>
+                              <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-200 font-black text-[10px]">
+                                Nv.{curLvl}
+                              </span>
+                            </div>
+                            {tier ? (
+                              <>
+                                <div className="text-[11px] text-slate-300">
+                                  <strong>Nv.{nextLvl} ({tier.tag}):</strong> {tier.bonusText}
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {Object.entries(tier.ingredients).map(([mId, q]) => {
+                                    const mat = getMaterialById(mId);
+                                    const have = Number(hero.materials?.[mId] || 0);
+                                    return (
+                                      <span
+                                        key={mId}
+                                        className={`px-1.5 py-0.5 rounded border text-[10px] font-bold ${
+                                          have >= q
+                                            ? 'bg-emerald-950/60 border-emerald-700 text-emerald-200'
+                                            : 'bg-red-950/50 border-red-800 text-red-300'
+                                        }`}
+                                      >
+                                        {mat.icon} {mat.name} {have}/{q}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                                <button
+                                  disabled={!canUp}
+                                  onClick={async () => {
+                                    if (!canUp) return;
+                                    const nextMats = { ...(hero.materials || {}) };
+                                    Object.entries(tier.ingredients).forEach(([mId, q]) => {
+                                      nextMats[mId] = Math.max(0, Number(nextMats[mId] || 0) - q);
+                                    });
+                                    await pushHeroUpdate({
+                                      ...hero,
+                                      gold: (hero.gold || 0) - goldCost,
+                                      materials: nextMats,
+                                      spellLevels: {
+                                        ...(hero.spellLevels || {}),
+                                        [baseSp.id]: nextLvl,
+                                      },
+                                    });
+                                    showToast(`📖 ¡${baseSp.name} subió a Nivel ${nextLvl} (${tier.tag})!`);
+                                  }}
+                                  className="w-full py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 text-slate-950 font-black text-[11px] cursor-pointer"
+                                >
+                                  {lockedByHeroLvl
+                                    ? `🔒 Requiere Nivel ${nextLvl}`
+                                    : `Subir a Nv.${nextLvl} (${goldCost} MO)`}
+                                </button>
+                              </>
+                            ) : (
+                              <div className="text-[11px] text-amber-300 font-bold">★ Maestría Máxima (Nv.5)</div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Mercado: Vender Botín Sobrante para Conseguir Oro */}
               <div className="grimoire-panel rounded-2xl p-4 space-y-2 border-amber-700/50">
