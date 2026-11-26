@@ -27,6 +27,8 @@ import {
   MISSION_CONTEXT_EVENTS,
   GENERIC_DUNGEON_EVENTS,
   generateDynamicMissionEvent,
+  resolveMissionEventPool,
+  generateEpicSceneTwist,
   getRoomAt,
   getRoomObj,
   getRoomCells,
@@ -512,31 +514,43 @@ export default function TacticalBoard({
   };
 
   const triggerContextualRoomEvent = (mode = 'auto') => {
-    const missionPool =
-      MISSION_CONTEXT_EVENTS[currentMap.id] || MISSION_CONTEXT_EVENTS.m1_la_prueba;
+    const missionPool = resolveMissionEventPool(currentMap);
     const isCorridor = mode === 'corridor' || (mode === 'auto' && selectedRoomId === 'CORRIDOR');
     const bucket = isCorridor ? 'corridor' : 'room';
 
-    // Combinar eventos exclusivos de la misión + gran pool de mazmorra + 65% generador procedural infinito
-    const useDynamic = Math.random() < 0.65;
+    // Prioriza los eventos exclusivos de ESTA misión (70%) y mezcla con eventos dinámicos/genéricos sin repetir
+    const missionList = missionPool ? (isCorridor ? missionPool.corridor : missionPool.room) || [] : [];
+    const roll = Math.random();
     let chosen;
-    if (useDynamic) {
+    if (missionList.length > 0 && roll < 0.6) {
+      chosen = pickWithoutRepeat(bucket, missionList, (ev) => `${currentMap.id}:${ev.title}`);
+    } else if (roll < 0.85) {
       chosen = generateDynamicMissionEvent(currentMap, isCorridor, partyLevel);
     } else {
-      const combined = [
-        ...(isCorridor ? missionPool.corridor : missionPool.room),
-        ...(isCorridor ? GENERIC_DUNGEON_EVENTS.corridor : GENERIC_DUNGEON_EVENTS.room),
-      ];
-      chosen = pickWithoutRepeat(bucket, combined, (ev) => ev.title);
+      const genericList = isCorridor ? GENERIC_DUNGEON_EVENTS.corridor : GENERIC_DUNGEON_EVENTS.room;
+      chosen = pickWithoutRepeat(bucket, genericList, (ev) => ev.title);
     }
     if (!chosen) return;
     setRoomDiscovery({
-      source: isCorridor ? `Pasillo · ${currentMap.title.split(':')[0]}` : `Evento de Sala (${selectedRoomId})`,
+      source: isCorridor ? `Pasillo · ${currentMap.title.split(':')[0]}` : `Evento · ${selectedRoomId}`,
       title: chosen.title,
       badge: chosen.badge || 'Evento de Misión',
       text: chosen.text,
       rewardLoot: chosen.rewardLoot || null,
       rewardGold: chosen.rewardGold || 0,
+    });
+  };
+
+  const triggerEpicSceneTwist = () => {
+    const twist = generateEpicSceneTwist(currentMap, selectedRoomId, roomMonstersScaled, partyLevel);
+    if (!twist) return;
+    setRoomDiscovery({
+      source: `Giro Épico · ${selectedRoomId}`,
+      title: twist.title,
+      badge: twist.badge || 'Momento Épico',
+      text: twist.text,
+      rewardLoot: twist.rewardLoot || null,
+      rewardGold: twist.rewardGold || 0,
     });
   };
 
@@ -2361,7 +2375,7 @@ export default function TacticalBoard({
                 )}
 
                 {/* 5. Barra Rápida de Sala (siempre a mano sin cambiar de pestaña) */}
-                <div className="pt-2 border-t border-slate-800 grid grid-cols-3 gap-1.5">
+                <div className="pt-2 border-t border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                   <button
                     onClick={searchRoomTreasure}
                     className="py-2 px-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-extrabold cursor-pointer"
@@ -2387,6 +2401,13 @@ export default function TacticalBoard({
                     className="py-2 px-2 rounded-xl bg-purple-700 hover:bg-purple-600 text-white text-[11px] font-extrabold cursor-pointer"
                   >
                     ✨ Evento
+                  </button>
+                  <button
+                    onClick={triggerEpicSceneTwist}
+                    className="py-2 px-2 rounded-xl bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 text-white text-[11px] font-extrabold cursor-pointer shadow"
+                    title="Dispara un Giro de Escena o Momento Épico de riesgo/recompensa coherente con esta sala"
+                  >
+                    🔥 Giro Épico
                   </button>
                 </div>
               </div>
@@ -2418,6 +2439,12 @@ export default function TacticalBoard({
                     className="py-2.5 px-3 rounded-xl bg-stone-800 hover:bg-stone-700 border border-stone-600 text-amber-200 text-xs font-black cursor-pointer"
                   >
                     🕯️ Evento Pasillo
+                  </button>
+                  <button
+                    onClick={triggerEpicSceneTwist}
+                    className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 text-white text-xs font-black cursor-pointer shadow"
+                  >
+                    🔥 Giro Épico
                   </button>
                   <button
                     onClick={() => setQuickSendOpen((v) => !v)}
