@@ -35,6 +35,7 @@ import TravelModal from './components/TravelModal';
 import FeedbackModal from './components/FeedbackModal';
 import { getMaterialById } from './data/craftingSystem';
 import { generateProceduralQuest } from './data/proceduralEngine';
+import { CITY_MODES } from './data/citySystem';
 
 const STORAGE_KEY = 'hq_cronicas_abismo_v1';
 
@@ -405,8 +406,13 @@ export default function App() {
       showToast('Crea al menos un héroe para otorgar recompensas.');
       return;
     }
-    const goldPerHero = Math.round((quest.rewards?.gold || 100) / heroes.length);
-    const xpGain = quest.rewards?.xp || 200;
+    const modeCfg = CITY_MODES[cityMode] || CITY_MODES.relaxed;
+    const goldMult = modeCfg.goldMultiplier || 1;
+    const xpMult = modeCfg.xpMultiplier || 1;
+    // Economía reequilibrada: oro total repartido entre héroes con bono de Supervivencia si aplica
+    const baseTotalGold = Math.round((quest.rewards?.gold || 100) * goldMult);
+    const goldPerHero = Math.max(15, Math.round(baseTotalGold / heroes.length));
+    const xpGain = Math.round((quest.rewards?.xp || 160) * xpMult);
     const fameGain = quest.rewards?.fame || 1;
     const repGain = quest.rewards?.reputation || 1;
     updateHeroesSynced((prev) =>
@@ -424,7 +430,7 @@ export default function App() {
     setFame((f) => f + fameGain);
     setReputation((r) => r + repGain);
     showToast(
-      `🏆 Misión completada: +${xpGain} XP, +${goldPerHero} MO, +${fameGain} ⭐ Fama y +${repGain} 🏅 Rep. a cada héroe.`
+      `🏆 Misión completada${cityMode === 'survival' ? ' (🔥 Supervivencia)' : ''}: +${xpGain} XP, +${goldPerHero} MO, +${fameGain} ⭐ Fama y +${repGain} 🏅 Rep. a cada héroe.`
     );
   };
 
@@ -1034,8 +1040,9 @@ export default function App() {
               <TacticalBoard
                 partyLevel={partyLevel}
                 setPartyLevel={setPartyLevel}
-                partySize={partySize}
-                setPartySize={setPartySize}
+                partySize={4}
+                cityMode={cityMode}
+                setCityMode={setCityMode}
                 onAwardXP={handleAwardXP}
                 onAwardQuestRewards={handleAwardQuestRewards}
                 onStartTravelToCity={() => setTravelModalOpen(true)}

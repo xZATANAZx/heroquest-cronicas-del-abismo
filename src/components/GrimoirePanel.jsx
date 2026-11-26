@@ -37,9 +37,12 @@ const GLOSSARY = [
   { term: 'Etéreo (La Luna del Terror)', cat: 'Monstruos', def: 'Atraviesan muros y puertas. Armas normales SOLO los hieren con Escudos Negros; magia, plata, runas y artefactos Nv.4+ los hieren normal.' },
   { term: 'Modo Espíritu (Reina de los Espíritus)', cat: 'Monstruos', def: 'Atacan directamente tus Puntos de Mente (PM) en lugar de PC.' },
   { term: 'Reloj del Caos (0–10)', cat: 'Sistema DM', def: 'Medidor de tensión de la mazmorra. Sube +1 por ruido, pifias (1 natural) o demoras. Al llegar a 10 dispara un Evento de Mazmorra y vuelve a 0.' },
-  { term: 'Contadores Digitales de Zargon', cat: 'Sistema DM', def: 'Reserva digital del DM (Trampa, Emboscada, Patrulla, Destino, Escape) para dar tensión sin usar fichas físicas.' },
+  { term: 'Giro Épico (Misiones Oficiales)', cat: 'Sistema DM', def: 'Botón opcional del DM en el Tablero que añade puzzles en puertas, cofres mímicos, trampas de bioma o NPCs con mini-misión SIN alterar las posiciones oficiales del libro.' },
   { term: 'Salas de Peligro (Hazard Rooms)', cat: 'Mazmorra', def: 'Salas vivas con efectos ambientales (Gas Tóxico, Inundación, Hongos, Techo Inestable, Runas, Telarañas) que además esconden materiales de crafteo.' },
-  { term: 'Mazo de Pistas (Hint Deck)', cat: 'Mazmorra', def: 'Pistas sensoriales en cruces de pasillos que dan decisiones tácticas reales con recompensa (sorpresa/atajo) o riesgo.' },
+  { term: 'Mazo de Pistas (Hint Deck)', cat: 'Mazmorra', def: 'Pistas sensoriales adaptadas al bioma real y diferenciadas entre Salas y Pasillos, con decisiones tácticas de riesgo/recompensa.' },
+  { term: 'Cartas Oficiales Adaptadas', cat: 'Mazos', def: 'Tesoros, Trampas, 20 Pociones de Alquimia, 21 Artefactos, 15 Hechizos del Terror (en el mazo del Malvado Brujo) y 12 Hechizos Elementales integrados al balance HQ-D20 v2.' },
+  { term: 'Desarmar Trampas y Materiales', cat: 'Crafteo', def: 'Al desarmar una trampa mecánica (Lanza o Roca), el DM puede enviar directamente el Material de Crafteo obtenido (Veneno o Acero) al héroe que la desarmó.' },
+  { term: 'Modo Relajado vs Supervivencia', cat: 'Campaña', def: 'Relajado: balance estándar y posada 10 MO. Supervivencia: posada 25 MO, riesgo de robos sin Banco, y EN MISIONES monstruos con +1 PC, Jefes Élite y Trampas +2 CD a cambio de +25% XP y +20% Oro.' },
   { term: 'Estados de Alerta', cat: 'Monstruos', def: 'Cada sala indica si los monstruos están Distraídos (Ventaja al sorprender), Alerta, Patrulla, Guardia (+1 Def quietos), Venganza (+1 Atq/-1 Def) o Miedo (negociables).' },
   { term: 'Plantillas de Monstruos', cat: 'Monstruos', def: 'Modificadores de 1 clic en el Bestiario (Esquelético, Zombificado, Ártico, Piedra, Vampírico, Demoníaco, Gigante) que transforman cualquier miniatura en un enemigo nuevo.' },
   { term: 'Némesis Recurrente', cat: 'Campaña', def: 'Un Jefe que escapó usando un Contador de Escape: reaparece en futuras misiones con mayor Rango y recompensa.' },
@@ -51,7 +54,6 @@ const GLOSSARY = [
   { term: 'Profesión del Héroe', cat: 'Ciudad', def: 'Cada héroe elige 1 profesión (Herrero, Alquimista, Sacerdote, Explorador, Minero, Escriba, Mercader, Cazador) que da -20% en su edificio de Ciudad + un poder único dentro de la mazmorra.' },
   { term: 'Rasgo de Personalidad (Quirk)', cat: 'Héroe', def: 'Una peculiaridad equilibrada elegida al crear el personaje: otorga 1 ventaja táctica única y 1 manía divertida de rol.' },
   { term: 'Banquetes de Taberna', cat: 'Ciudad', def: 'Usa Raciones de Mazmorra en la Posada para empezar la siguiente misión con +2 PC temporales, +2 Mov o +1 DC en el primer combate.' },
-  { term: 'Modo Relajado vs Supervivencia', cat: 'Ciudad', def: 'Relajado: 10 MO de posada, sin robos, curación barata. Supervivencia: 25 MO, riesgo de robos si no usas el Banco y Resurrección exigente.' },
 ];
 
 export default function GrimoirePanel() {
@@ -277,7 +279,8 @@ export default function GrimoirePanel() {
               <li><strong>Fama y Reputación:</strong> La Fama desbloquea distritos y <strong>Seguidores Únicos</strong> (Capitán, Matatrolls, Bailarina, Aprendiz). Las <strong>Fichas de Reputación</strong> se canjean por Resurrección gratis, Decretos de Oro o Planos Secretos.</li>
               <li><strong>Profesión (1 por Héroe):</strong> Da <strong>-20% de descuento</strong> en su distrito de Ciudad + un <strong>bono único en la mazmorra</strong>.</li>
               <li><strong>Familiares de Utilidad:</strong> Cuervo Vigía, Sabueso de Caza, Hurón Ladronzuelo y Búho Rúnico.</li>
-              <li><strong>Relajado vs Supervivencia:</strong> Cambia con 1 clic entre posada barata sin robos (10 MO) o realismo táctico con Banco obligatorio y Resurrección exigente (25 MO).</li>
+              <li><strong>Relajado vs Supervivencia (Ciudad + Misiones):</strong> En <strong>Relajado</strong> tienes posada 10 MO y balance estándar; en <strong>Supervivencia</strong> la ciudad exige Banco (25 MO posada) y en las <strong>Misiones Oficiales y Procedurales</strong> los monstruos ganan +1 PC, los Jefes suben a Élite y las trampas +2 CD, pero ganas <strong>+25% XP y +20% Oro</strong>.</li>
+              <li><strong>Botica Oficial y Herrería Separadas:</strong> La Herrería maneja Forja, Armería, Nivelación de Artefactos y Reciclaje; la Torre del Alquimista maneja Pociones, Venenos, Runas, Mezclas Experimentales y las <strong>20 Pociones Oficiales de Alquimia</strong>.</li>
             </ul>
           </div>
         </div>

@@ -144,39 +144,7 @@ export default function QuestsPanel({
             <Map className="w-4 h-4 text-sky-400" /> Campañas Oficiales (Base + Reina + Luna)
           </button>
         </div>
-
-        {/* Selector Global de Número de Aventureros (1 Solo a 4 Máximo; el DM no cuenta) */}
-        {setPartySize && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700 text-xs">
-            <span className="font-bold text-slate-300 mr-1">👥 Héroes:</span>
-            {[1, 2, 3, 4].map((n) => (
-              <button
-                key={n}
-                onClick={() => setPartySize(n)}
-                className={`px-2.5 py-1 rounded-lg font-extrabold cursor-pointer transition ${
-                  partySize === n
-                    ? n === 1
-                      ? 'bg-emerald-500 text-slate-950 shadow'
-                      : 'bg-amber-500 text-slate-950 shadow'
-                    : 'bg-slate-800 text-slate-300 hover:text-white'
-                }`}
-              >
-                {n === 1 ? '1 Solo' : n}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
-
-      {/* Aviso de Reglas Activas en Modo 1 Jugador Solitario */}
-      {partySize === 1 && (
-        <div className="p-3.5 rounded-2xl bg-emerald-950/35 border border-emerald-500/50 text-xs text-emerald-100 flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <strong className="text-emerald-300">🛡️ Modo Solitario (1 Jugador) Activo:</strong>{' '}
-            El tablero reduce automáticamente a <strong>1 monstruo por sala</strong>, el Jefe lucha <strong>sin escoltas</strong>, los monstruos bajan su vida/ataque en 40%, las puertas cerradas bajan <strong>-2 CD</strong> y tu héroe <strong>recupera +1 PC al limpiar cada sala con combate</strong>.
-          </div>
-        </div>
-      )}
 
       {/* ==================================================================== */}
       {/* MODO 1: EL ARQUITECTO DEL ABISMO (ONE-SHOTS + ARCOS + NÉMESIS)      */}

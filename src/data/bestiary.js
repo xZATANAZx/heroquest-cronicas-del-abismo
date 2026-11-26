@@ -404,47 +404,53 @@ export const MONSTERS = [
 ];
 
 // ============================================================================
-// MOTOR DE AUTO-ESCALADO INTELIGENTE (Niveles 1 a 10)
-// Balancea las misiones automáticamente para que nunca se vuelvan demasiado fáciles
+// MOTOR DE AUTO-ESCALADO INTELIGENTE (Niveles 1 a 10 · Adaptado a HQ-D20 v2)
+// Los héroes HQ-D20 tienen más poderes y equipo: los monstruos escalan de verdad
+// para mantener tensión táctica en Misiones Oficiales (y aún más en Supervivencia).
 // ============================================================================
-export function scaleMonster(monster, partyLevel = 1, partySize = 4, isElite = false, isSpiritMode = false) {
+export function scaleMonster(
+  monster,
+  partyLevel = 1,
+  partySize = 4,
+  isElite = false,
+  isSpiritMode = false,
+  isSurvivalMode = false
+) {
   const lvl = Math.max(1, Math.min(10, Number(partyLevel) || 1));
-  const size = Math.max(1, Math.min(4, Number(partySize) || 4));
-  const sizeDiff = Math.max(-2, Math.min(0, size - 4));
+  const isBossTier = monster.tier === 'Legendario' || monster.tier === 'Difícil';
+  const effectiveElite = Boolean(isElite || (isSurvivalMode && isBossTier) || lvl >= 6);
 
-  // Escalado progresivo por tramos de nivel
-  const pcBonusFromLevel = Math.floor((lvl - 1) * 0.65) + (monster.tier === 'Legendario' ? Math.floor((lvl - 1) * 0.5) : 0);
-  const atBonusFromLevel = lvl >= 8 ? 2 : lvl >= 4 ? 1 : 0;
-  const defBonusFromLevel = lvl >= 9 ? 2 : lvl >= 5 ? 1 : 0;
+  // Escalado progresivo real adaptado al poder de héroes HQ-D20 v2
+  const pcBonusFromLevel =
+    Math.floor(lvl * 0.65) + (isBossTier ? Math.floor((lvl - 1) * 0.55) : 0);
+  const atBonusFromLevel = lvl >= 8 ? 2 : lvl >= 3 ? 1 : 0;
+  const defBonusFromLevel = lvl >= 8 ? 2 : lvl >= 4 ? 1 : 0;
 
-  // Ajuste por tamaño de grupo (más héroes = enemigos más resistentes)
-  const pcBonusFromSize = sizeDiff > 0 ? sizeDiff : (sizeDiff < 0 && monster.pc > 1 ? -1 : 0);
+  // Bono de Modo Supervivencia (+1 PC a todos los monstruos, +1 CD)
+  const survivalPC = isSurvivalMode ? 1 : 0;
+  const survivalDC = isSurvivalMode ? 1 : 0;
 
   // Ajuste por Élite
-  const elitePC = isElite ? Math.max(2, Math.ceil(monster.pc * 0.5)) : 0;
-  const eliteAt = isElite ? 1 : 0;
-  const eliteDef = isElite ? 1 : 0;
+  const elitePC = effectiveElite ? Math.max(1, Math.ceil(monster.pc * 0.4)) : 0;
+  const eliteAt = effectiveElite ? 1 : 0;
+  const eliteDef = effectiveElite ? 1 : 0;
 
-  let scaledPC = Math.max(1, monster.pc + pcBonusFromLevel + pcBonusFromSize + elitePC);
-  let scaledAt = Math.min(9, monster.at + atBonusFromLevel + eliteAt);
-  let scaledDef = Math.min(8, monster.def + defBonusFromLevel + eliteDef);
-  let saveDC = 11 + Math.floor(lvl / 2) + (isElite ? 1 : 0);
+  const scaledPC = Math.max(1, monster.pc + pcBonusFromLevel + survivalPC + elitePC);
+  const scaledAt = Math.min(9, monster.at + atBonusFromLevel + eliteAt);
+  const scaledDef = Math.min(8, monster.def + defBonusFromLevel + eliteDef);
+  const saveDC = 11 + Math.floor(lvl / 2) + (effectiveElite ? 1 : 0) + survivalDC;
 
-  // Rebalanceo especial para 1 Jugador (Modo Solitario) o 2 Jugadores
-  if (size === 1) {
-    scaledPC = Math.max(1, Math.round(scaledPC * 0.6));
-    if (scaledAt >= 3) scaledAt -= 1;
-    if (scaledDef >= 4) scaledDef -= 1;
-    saveDC = Math.max(10, saveDC - 1);
-  } else if (size === 2) {
-    scaledPC = Math.max(1, Math.round(scaledPC * 0.8));
-  }
-
-  const scaledXP = Math.round(monster.xp * (1 + (lvl - 1) * 0.22) * (isElite ? 1.5 : 1));
+  // XP rebalanceada para evitar subida explosiva de nivel (+25% en Modo Supervivencia)
+  const scaledXP = Math.round(
+    monster.xp * 0.72 * (1 + (lvl - 1) * 0.14) * (effectiveElite ? 1.3 : 1) * (isSurvivalMode ? 1.25 : 1)
+  );
 
   const activeAbilities = [...monster.abilities];
-  if (isElite || lvl >= 5) {
+  if (effectiveElite) {
     activeAbilities.push(`⭐ ${monster.eliteAbility}`);
+  }
+  if (isSurvivalMode) {
+    activeAbilities.push('💀 MODO SUPERVIVENCIA: +1 PC y salvaciones CD +1.');
   }
   if (isSpiritMode && monster.id !== 'espiritu_guerrero') {
     activeAbilities.unshift('👻 MODO ESPÍRITU (Reina de los Espíritus): Sus ataques dañan Puntos de Mente (PM) en lugar de PC.');
@@ -457,10 +463,19 @@ export function scaleMonster(monster, partyLevel = 1, partySize = 4, isElite = f
     scaledDef,
     saveDC,
     scaledXP,
-    isElite: isElite || lvl >= 5,
+    isElite: effectiveElite,
     isSpiritMode,
+    isSurvivalMode,
     activeAbilities,
-    difficultyTag: lvl <= 2 ? 'Normal' : lvl <= 5 ? 'Veterano' : lvl <= 8 ? 'Heroico' : 'Pesadilla',
+    difficultyTag: isSurvivalMode
+      ? 'Supervivencia'
+      : lvl <= 2
+      ? 'Normal'
+      : lvl <= 5
+      ? 'Veterano'
+      : lvl <= 8
+      ? 'Heroico'
+      : 'Pesadilla',
   };
 }
 

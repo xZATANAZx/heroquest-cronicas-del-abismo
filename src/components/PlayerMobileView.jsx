@@ -2473,15 +2473,17 @@ export default function PlayerMobileView({ initialPlayerParam }) {
               </ul>
             </div>
 
-            {/* Novedades HQ-D20 v2 (Crafteo y Ciudad) */}
+            {/* Novedades HQ-D20 v2 (Crafteo, Ciudad, Supervivencia y Cartas Oficiales) */}
             <div className="grimoire-panel rounded-2xl p-4 space-y-2 border-purple-700/50">
               <h3 className="font-display text-base font-bold text-purple-300">
-                ✨ Novedades HQ-D20 v2 (Crafteo y Ciudad)
+                ✨ Reglas Clave HQ-D20 v2 (Misiones + Ciudad)
               </h3>
-              <ul className="list-disc list-inside space-y-1 text-stone-200">
-                <li><strong>⚒️ Crafteo Digital (0 cartas):</strong> Recoge materiales de monstruos, muebles y trampas; fabrícalos en <em>Equipo → Crafteo</em> o en la Ciudad (pociones, tónicos, venenos, bombas, runas y Artefactos Nv.1–5).</li>
-                <li><strong>🏛️ Ciudad Viva:</strong> Entre misiones visiten El Bastión para descansar, comer Banquetes (con Raciones), elegir contratos del Tablón, usar el Banco o contratar Seguidores y Familiares.</li>
-                <li><strong>🛠️ Profesión y Rasgo:</strong> Tu Profesión te da -20% en su edificio de Ciudad y un poder especial dentro de la mazmorra.</li>
+              <ul className="list-disc list-inside space-y-1.5 text-stone-200">
+                <li><strong>🛠️ Trampas y Materiales:</strong> Si desarmas una trampa mecánica (Lanza o Roca), el DM te envía directo el <strong>Material de Crafteo</strong> (Veneno o Acero) a tu mochila.</li>
+                <li><strong>⚒️ Crafteo Digital y Botica Oficial:</strong> Combina materiales en <em>Equipo → Crafteo</em> o compra cualquiera de las <strong>20 Pociones Oficiales</strong> en la Torre del Alquimista. La <strong>Herrería</strong> forja y mejora Artefactos (Nv.1–5).</li>
+                <li><strong>🔥 Modo Relajado vs Supervivencia:</strong> En <strong>Supervivencia</strong>, los monstruos ganan +1 PC, los Jefes son Élite y las trampas +2 CD, pero recibes <strong>+25% XP y +20% Oro</strong> (y usa el Banco en Ciudad para evitar robos).</li>
+                <li><strong>🏛️ Ciudad Viva:</strong> Entre misiones visiten El Bastión para descansar, comer Banquetes, elegir contratos del Tablón y usar tu <strong>Profesión (-20%)</strong>.</li>
+                <li><strong>🎴 Cartas Oficiales:</strong> Tesoros, Trampas, Artefactos, Hechizos Elementales y Habilidades del Caballero están 100% integrados al sistema HQ-D20 v2.</li>
               </ul>
             </div>
           </div>

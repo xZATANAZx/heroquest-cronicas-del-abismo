@@ -40,6 +40,7 @@ import {
 } from '../data/craftingSystem';
 import { MERCENARIES } from '../data/decks';
 import { EQUIPMENT_CATALOG } from '../data/characterSystem';
+import { OFFICIAL_ALCHEMY_DECK } from '../data/officialCards';
 import { generateContractBoard } from '../data/proceduralEngine';
 
 export default function CityHubPanel({
@@ -1272,6 +1273,57 @@ export default function CityHubPanel({
                       })}
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Alquimista: Botica Oficial de Alquimia (Cartas Oficiales HQ-D20 v2) */}
+          {activeDistrict === 'alquimista' && activeHero && (
+            <div className="grimoire-panel rounded-2xl p-5 space-y-3 border-emerald-700/40">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 className="font-display text-lg font-bold text-emerald-300 flex items-center gap-2">
+                    <FlaskConical className="w-5 h-5" /> Botica Oficial de Alquimia ({OFFICIAL_ALCHEMY_DECK.length} Pociones)
+                  </h3>
+                  <p className="text-xs text-stone-400">
+                    Pociones oficiales de HeroQuest adaptadas a HQ-D20 v2. Se envían directo a la mochila de {activeHero.name}.
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-80 overflow-y-auto pr-1">
+                {OFFICIAL_ALCHEMY_DECK.map((pot) => {
+                  const price = calcPrice(pot.price || 150, 'alquimista');
+                  return (
+                    <div
+                      key={pot.id}
+                      className="p-3 rounded-xl bg-stone-950/80 border border-stone-800 flex flex-col justify-between gap-2 text-xs"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-bold text-emerald-200">{pot.name}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-800 text-amber-300 font-bold whitespace-nowrap">
+                            {pot.dice || '1 uso'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-stone-300 leading-snug">{pot.text}</p>
+                      </div>
+                      <button
+                        onClick={() =>
+                          handleBuyGear({
+                            name: pot.name,
+                            type: 'Poción',
+                            dice: pot.dice || '1 uso',
+                            traits: pot.text,
+                            price: pot.price || 150,
+                          })
+                        }
+                        className="w-full py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-[11px] cursor-pointer"
+                      >
+                        Comprar ({price} MO)
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

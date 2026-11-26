@@ -611,12 +611,12 @@ export const GENERIC_DUNGEON_EVENTS = {
   ],
 };
 
-// Generador combinatorio coherente con la misión actual (100% limpio de términos viejos)
+// Generador combinatorio coherente con la misión actual (economía balanceada HQ-D20 v2)
 export function generateDynamicMissionEvent(currentMap, isCorridor, partyLevel = 1) {
   const missionShort = (currentMap?.title || 'la Mazmorra').split(':')[1]?.split('(')[0]?.trim() || 'la Mazmorra';
   const wandering = currentMap?.wanderingMonster || 'Orco';
   const cd = Math.min(16, 11 + Math.floor((partyLevel - 1) / 3));
-  const goldAmt = 20 + partyLevel * 12 + Math.floor(Math.random() * 25);
+  const goldAmt = 15 + partyLevel * 8 + Math.floor(Math.random() * 15);
 
   const roomTemplates = [
     {
@@ -719,6 +719,28 @@ export function generateEpicSceneTwist(currentMap, selectedRoomId, roomMonsters 
 
   const explorationTwists = [
     {
+      title: '🔮 Puerta Sellada por Runas (Puzzle Opcional)',
+      badge: 'Giro de Escena · Puzzle',
+      text: `La siguiente puerta en ${selectedRoomId} brilla con 3 runas de Zargon (Fuego, Piedra, Viento). Sin alterar el mapa oficial, deben resolverla antes de abrir: Arcano o Investigación CD ${cd} (o tocar las runas en orden correcto). Éxito = +1 PM a quien la resolvió y los enemigos tras la puerta pierden su sorpresa; Fallo = descarga arcana (1 PC) y +1 Reloj del Caos.`,
+    },
+    {
+      title: '📦 Cofre Sospechoso (¿Mímico o Reliquia?)',
+      badge: 'Giro de Escena · Sorpresa',
+      text: `En una esquina de ${selectedRoomId} hay un cofre extra sin candado que respira levemente. Percepción CD ${cd} para notar los dientes ocultos: si lo abren sin revisar, ¡es un Mímico de Cofre (ataca primero)! Si lo neutralizan o el cofre es real, obtienen +35 MO y 1 Material de Crafteo.`,
+      rewardGold: 35,
+    },
+    {
+      title: '🧭 NPC Atrapado — Mini-Misión Secundaria',
+      badge: 'Giro de Escena · Narrativa',
+      text: `Un explorador herido del Imperio se esconde en ${selectedRoomId} y pide escolta o 1 curación (Medicina CD ${cd} o 1 PC de curación). Si lo ayudan, les revela dónde hay 1 trampa en los pasillos cercanos y otorga +1 Ficha de Reputación al completar la misión.`,
+    },
+    {
+      title: '⚙️ Trampa Escondida de Bioma',
+      badge: 'Giro de Escena · Peligro',
+      text: `Una losa descolorida en ${selectedRoomId} oculta un mecanismo improvisado de ${missionShort}. Percepción o Desarmar Trampas CD ${cd}: si la desarman recuperan Chatarra de Acero y ganan +20 MO; si falla, el primero sufre 2 DC de daño y +1 Reloj del Caos.`,
+      rewardGold: 20,
+    },
+    {
       title: '⏳ Ventana de Emboscada Perfecta',
       badge: 'Giro de Escena · Sigilo',
       text: `Antes de abrir la siguiente puerta desde ${selectedRoomId}, escuchan a los enemigos discutiendo. Si superan Sigilo grupal CD ${cd}, irrumpen con Sorpresa total: todos los héroes actúan ANTES que Zargon en la primera ronda.`,
@@ -731,8 +753,13 @@ export function generateEpicSceneTwist(currentMap, selectedRoomId, roomMonsters 
     {
       title: '🗝️ Apuesta del Explorador (Doble o Nada)',
       badge: 'Giro de Escena · Riesgo',
-      text: 'Un compartimento sellado brilla con runas de advertencia. Pueden ignorarlo o arriesgarse (Desarmar Trampas o Investigación CD 13): éxito = +75 MO o 1 Poción Mayor; fallo = trampa de dardo (-1 PC) y +1 Reloj del Caos.',
-      rewardGold: 75,
+      text: 'Un compartimento sellado brilla con runas de advertencia. Pueden ignorarlo o arriesgarse (Desarmar Trampas o Investigación CD 13): éxito = +45 MO o 1 Poción de Curación; fallo = trampa de dardo (-1 PC) y +1 Reloj del Caos.',
+      rewardGold: 45,
+    },
+    {
+      title: '🕯️ Santuario Oculto de Mentor',
+      badge: 'Giro de Escena · Bendición',
+      text: `Tras un tapiz rasgado en ${selectedRoomId} hallan un pequeño altar de Mentor. Quien rece o descifre la inscripción (Religión/SAB CD ${cd}) otorga +1 DC en el próximo ataque a todo el grupo o restaura +1 PM al héroe más agotado.`,
     },
   ];
 

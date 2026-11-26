@@ -237,51 +237,76 @@ export const HAZARD_ROOMS = [
 // ============================================================================
 // 4. MAZO DE PISTAS (Hint Deck — Decisiones reales en bifurcaciones)
 // ============================================================================
-const HINT_TEMPLATES = [
+const ROOM_HINT_TEMPLATES = [
   {
-    title: 'Huellas Frescas de Botas Pesadas',
-    clue: 'Marcas de barro reciente conducen hacia el ala norte, mientras el pasillo sur huele a ozono quemado.',
-    reward: 'Si siguen las huellas (Supervivencia CD 11), sorprenden a la siguiente sala (enemigos empiezan Distraídos).',
-    consequence: 'Si ignoran las huellas sin cautela, una patrulla los flanquea (+1 Contador de Patrulla).',
+    title: 'Huellas Recientes junto a la Puerta',
+    clue: 'Marcas frescas de botas y garras cruzan el polvo de esta cámara hacia el siguiente acceso.',
+    reward: 'Supervivencia CD 11: sorprenden a la siguiente sala (ganan +2 a Iniciativa y Ventaja en el primer ataque).',
+    consequence: 'Si avanzan haciendo ruido, los guardias pasan a estado ALERTA.',
   },
   {
-    title: 'Susurros tras la Piedra',
-    clue: 'Escuchan voces discutiendo sobre un cofre falso y una llave escondida en la biblioteca.',
-    reward: 'El grupo sabe de antemano si el próximo cofre tiene trampa o es un Mímico (Ventaja al desarmar).',
-    consequence: 'Detenerse a escuchar demasiado sube +1 al Reloj del Caos.',
+    title: 'Susurros tras el Muro',
+    clue: 'Escuchan voces discutiendo sobre un cofre con trampa y una llave escondida en un mueble cercano.',
+    reward: 'El grupo obtiene Ventaja al desarmar la próxima trampa o detectar si un cofre es un Mímico.',
+    consequence: 'Detenerse demasiado tiempo sube +1 el Reloj del Caos.',
   },
   {
     title: 'Marca Secreta del Gremio',
-    clue: 'Un símbolo tallado a ras del suelo advierte: "Muro falso a tres pasos del fuego".',
-    reward: 'Revela automáticamente la ubicación de 1 Puerta Secreta o atajo sin gastar acción de búsqueda.',
+    clue: 'Un símbolo tallado a ras del suelo advierte sobre un mecanismo oculto en esta sala.',
+    reward: 'El DM confirma gratis si hay alguna Puerta Secreta o trampa en este sector sin gastar acción.',
     consequence: 'Ninguna — recompensa pura por observar el entorno.',
   },
   {
-    title: 'Rastro de Sangre y Frascos Rotos',
-    clue: 'Un explorador herido se arrastró hacia la cámara lateral dejando un reguero de Hierba Lunar.',
-    reward: 'El héroe que investigue recibe 1 Hierba Lunar + 1 Ración de Mazmorra gratis y sabe dónde está el NPC.',
-    consequence: 'Quien recoja los frascos sin guantes supera DES CD 11 o se corta (1 PC).',
+    title: 'Rastro de Hierbas y Frascos Rotos',
+    clue: 'Un explorador anterior dejó caer un frasco roto junto a la pared de esta habitación.',
+    reward: 'Investigación CD 11: recuperan +1 Hierba Lunar o +1 Polvo Rúnico gratis.',
+    consequence: 'Sin guantes (DES CD 11) el vidrio corta por 1 PC.',
   },
   {
-    title: 'Corriente de Aire Helado',
-    clue: 'El humo de sus antorchas se inclina bruscamente hacia la puerta este, señal de una sala de peligro adelante.',
-    reward: 'Todos ganan Ventaja en su primera Tirada de Salvación al entrar a la próxima Sala de Peligro.',
-    consequence: 'Si avanzan con antorchas abiertas sin precaución en sala de gas, detonan un fogonazo leve.',
-  },
-  {
-    title: 'Mapa Arrugado de un Goblin',
-    clue: 'Un garabato muestra dónde duermen los guardias y dónde escondieron la pólvora.',
-    reward: 'El grupo gana +1 Pólvora Negra en el próximo mueble y el DM revela 1 trampa del pasillo.',
-    consequence: 'El mapa tiene una X falsa: si fallan Investigación CD 12, la X lleva a una Emboscada.',
+    title: 'Aroma a Pólvora y Aceite',
+    clue: 'El olor a aceite de armas delata un escondite improvisado detrás de los muebles.',
+    reward: 'Percepción CD 12: +1 Pólvora Negra o +1 Acero Templado al examinar el próximo mueble.',
+    consequence: 'Usar fuego descuidadamente aquí provoca una chispa (DES CD 12 o 1 PC).',
   },
 ];
 
-export function generateHintCard(biomeId = 'catacumbas') {
-  const base = pick(HINT_TEMPLATES);
+const CORRIDOR_HINT_TEMPLATES = [
+  {
+    title: 'Corriente de Aire en el Pasillo',
+    clue: 'La llama de la antorcha se inclina bruscamente hacia un tramo concreto de la pared del corredor.',
+    reward: 'Percepción CD 11: el DM confirma si existe una Puerta Secreta o atajo en este pasillo.',
+    consequence: 'Si la antorcha se apaga, el grupo avanza con Desventaja en Percepción 1 turno.',
+  },
+  {
+    title: 'Losa Floja en el Corredor',
+    clue: 'Una baldosa suena hueca al pisar cerca del cruce del pasillo.',
+    reward: 'Desarmar Trampas o DES CD 12: neutralizan una trampa del pasillo y rescatan +1 Acero Templado.',
+    consequence: 'Si fallan por 5+, suena un clic metálico (+1 Reloj del Caos).',
+  },
+  {
+    title: 'Eco de Patrulla a la Vuelta',
+    clue: 'Pasos rítmicos resuenan más adelante en el corredor.',
+    reward: 'Sigilo grupal CD 12: dejan pasar la patrulla o la emboscan con Ventaja en el primer turno.',
+    consequence: 'Si fallan el Sigilo, el Monstruo Errante los sorprende desde el cruce.',
+  },
+  {
+    title: 'Mapa Garabateado en la Pared',
+    clue: 'Un prisionero fugado rayó con carbón una flecha indicando peligro adelante.',
+    reward: 'Todos ganan Ventaja en su próxima Tirada de Salvación contra trampas o efectos de bioma.',
+    consequence: 'El garabato atrae la mirada: si no vigilan la retaguardia, +1 al Reloj del Caos.',
+  },
+];
+
+let lastHintTitle = '';
+export function generateHintCard(biomeId = 'catacumbas', isCorridor = false) {
+  const pool = isCorridor ? CORRIDOR_HINT_TEMPLATES : ROOM_HINT_TEMPLATES;
+  const freshPool = pool.filter((h) => h.title !== lastHintTitle);
+  const base = pick(freshPool.length ? freshPool : pool);
+  lastHintTitle = base.title;
   const biome = PROCEDURAL_BIOMES.find((b) => b.id === biomeId) || PROCEDURAL_BIOMES[0];
   return {
     id: `hint-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
-    biomeName: biome.name,
+    biomeName: `${biome.name} (${isCorridor ? 'Pasillo' : 'Sala'})`,
     biomeIcon: biome.icon,
     ...base,
   };
@@ -1030,23 +1055,34 @@ const EW_EFFECTS = [
   'un muro de sombras bloquea la puerta detrás del grupo durante 2 turnos (FUE CD 14 para abrirlo).',
 ];
 
+const EW_DREAD_VARIANTS = [
+  { title: 'Bola en Llamas (Terror)', type: 'Hechizo', rarity: 'Inusual', text: 'Envuelve a un héroe visible en llamas: sufre 2 PC (tira 2 Dados Rojos o DES CD {CD}: cada 5–6 reduce 1 daño).' },
+  { title: 'Nube de Terror (Terror)', type: 'Hechizo', rarity: 'Rara', text: 'Paraliza a los héroes de la sala actual (no mueven ni atacan). Cada víctima se libera con SAB CD {CD} o sacando 6 con tantos d6 como PM.' },
+  { title: 'Luces del Terror (Luna)', type: 'Maldición', rarity: 'Inusual', text: 'Haces fantasmales rodean a un héroe: todos los monstruos tiran +1 DC Ataque contra él hasta superar SAB CD {CD} o sacar 5–6 en 1d6.' },
+  { title: 'Canalizar el Terror (Luna)', type: 'Hechizo', rarity: 'Común', text: 'Un monstruo canaliza energía oscura: tira 1d6 (+1 por cada aliado adyacente): 4–5 = 1 PC, 6+ = 2 PC a un héroe en LdV.' },
+  { title: 'Rayo Mortífero (Terror)', type: 'Hechizo', rarity: 'Rara', text: 'Un rayo atraviesa en línea recta hasta chocar con pared/puerta: 2 PC a todos en el camino (DES CD {CD} reduce a 1 PC).' },
+  { title: 'Dominación Oscura (Terror)', type: 'Maldición', rarity: 'Rara', text: 'Un héroe debe superar SAB CD {CD} o Zargon lo mueve 3 casillas y le hace atacar a un aliado adyacente.' },
+  { title: 'Refuerzo de la Horda', type: 'Emboscada', rarity: 'Común', text: 'Al inicio del turno de Zargon, aparece 1 {WANDERING} en la puerta o esquina más cercana fuera de línea de visión.' },
+  { title: 'Frenesí de Zargon', type: 'Táctica', rarity: 'Común', text: 'Todos los monstruos visibles ganan +1 DC Ataque este turno pero defienden con -1 DC.' },
+  { title: 'Trampa Reactivada', type: 'Trampa', rarity: 'Común', text: 'Cuando un héroe avance por un pasillo o abra una puerta, se activa un dardo oculto (DES CD {CD} o 1 PC + Envenenado).' },
+  { title: 'Muro de Sombras', type: 'Hechizo', rarity: 'Inusual', text: 'Una puerta abierta se sella mágicamente por 2 turnos (FUE CD {CD} o Arcano CD {CD} para abrirla antes).' },
+  { title: 'Velo Espectral', type: 'Maldición', rarity: 'Inusual', text: 'El enemigo más cercano entra en forma espectral por 1 ronda: su próximo ataque daña PM en lugar de PC.' },
+  { title: 'Invocar Espectros (Luna)', type: 'Emboscada', rarity: 'Rara', text: 'De las sombras emerge 1 Espectro Etéreo (2 si el grupo es Nivel 6+) adyacente al héroe con menos PM.' },
+];
+
+let lastEwTitle = '';
 export function generateProceduralEvilWizard(level = 1, missionContext = null) {
-  const cd = 11 + Math.floor(level / 2);
-  const biome = missionContext?.biomeId
-    ? PROCEDURAL_BIOMES.find((b) => b.id === missionContext.biomeId)
-    : null;
-  const ctxPrefix = biome
-    ? `[${biome.icon} ${biome.name}] `
-    : '';
-  const bossMention = missionContext?.bossName
-    ? ` (eco de ${missionContext.bossName})`
-    : '';
+  const cd = Math.min(16, 11 + Math.floor(level / 2));
+  const wandering = missionContext?.wanderingMonster || 'Orco';
+  const fresh = EW_DREAD_VARIANTS.filter((c) => c.title !== lastEwTitle);
+  const picked = pick(fresh.length ? fresh : EW_DREAD_VARIANTS);
+  lastEwTitle = picked.title;
   return {
     id: `proc-ew-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-    title: `${pick(EW_SUBJECTS)} (Nv.${level})`,
-    type: pick(['Emboscada', 'Hechizo', 'Trampa', 'Maldición']),
-    rarity: pick(['Común', 'Inusual', 'Rara']),
-    text: `${ctxPrefix}${pick(EW_TRIGGERS)}, ${pick(EW_EFFECTS).replace('CD 13', `CD ${cd}`)}${bossMention}`,
+    title: picked.title,
+    type: picked.type,
+    rarity: picked.rarity,
+    text: picked.text.replace(/\{CD\}/g, String(cd)).replace(/\{WANDERING\}/g, wandering),
   };
 }
 
@@ -1076,8 +1112,8 @@ const EV_OUTCOMES = [
 ];
 
 export function generateProceduralEvent(level = 1, missionContext = null) {
-  const cd = 11 + Math.floor(level / 2);
-  const gold = randInt(3, 8) * 10 + level * 15;
+  const cd = Math.min(16, 11 + Math.floor(level / 2));
+  const gold = randInt(2, 4) * 10 + level * 6;
   const n = level >= 5 ? 3 : 2;
   const biome = missionContext?.biomeId
     ? PROCEDURAL_BIOMES.find((b) => b.id === missionContext.biomeId)
@@ -1105,8 +1141,8 @@ const FURN_FINDS = [
 ];
 
 export function generateProceduralFurniture(furnitureType = 'Genérico', level = 1) {
-  const cd = 11 + Math.floor(level / 2);
-  const gold = randInt(2, 6) * 15 + level * 10;
+  const cd = Math.min(16, 11 + Math.floor(level / 2));
+  const gold = randInt(1, 3) * 10 + level * 5;
   const found = pick(FURN_FINDS);
   return {
     id: `proc-f-${Date.now()}`,

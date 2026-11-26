@@ -4,21 +4,22 @@
 // ============================================================================
 
 export const EVIL_WIZARD_DECK = [
-  { id: 'ew1', title: 'Emboscada en las Sombras', type: 'Instantánea', rarity: 'Común', text: 'Coloca 2 Goblins (o 1 Orco) en estado ALERTA fuera de la línea de visión de los héroes. Pueden mover y atacar inmediatamente.' },
-  { id: 'ew2', title: 'Trampa Reactivada', type: 'Guardar', rarity: 'Común', text: 'Cuando un héroe abra una puerta o avance por un pasillo, activa una trampa de dardos oculta: salvación DES CD 13 o sufre 2 DC de daño.' },
-  { id: 'ew3', title: 'Grito de Guerra del Caos', type: 'Guardar', rarity: 'Común', text: 'Juega al inicio de tu turno: todos los monstruos visibles pasan a estado VENGANZA (+1 DC Ataque, -1 DC Defensa) durante esta ronda.' },
-  { id: 'ew4', title: 'Niebla de Zargon', type: 'Guardar', rarity: 'Inusual', text: 'La sala actual se convierte en Bruma Psíquica durante 2 rondas: Línea de Visión máxima 3 casillas y ataques a distancia tienen Desventaja.' },
-  { id: 'ew5', title: 'Óxido Maldito', type: 'Guardar', rarity: 'Inusual', text: 'Elige un héroe visible: su arma o escudo se oxida (-1 DC) hasta que gaste una acción para repararlo (o 1 Acero Templado) o termine la misión (salvación CON CD 13 lo evita).' },
-  { id: 'ew6', title: 'Frenesí Sangriento', type: 'Guardar', rarity: 'Común', text: 'Un monstruo que acaba de recibir daño realiza un ataque gratuito inmediato contra un héroe adyacente.' },
-  { id: 'ew7', title: 'Susurros del Abismo', type: 'Instantánea', rarity: 'Inusual', text: 'Todos los héroes deben superar una salvación de SAB CD 13 o perder 1 Punto de Mente (PM). El Reloj del Caos sube +1.' },
-  { id: 'ew8', title: 'Puerta Atrancada', type: 'Guardar', rarity: 'Común', text: 'Una puerta abierta se cierra de golpe y queda ATRANCADA mágicamente. Requiere FUE CD 14, Arcano CD 13 o Bomba de Pólvora para abrirla.' },
-  { id: 'ew9', title: 'Refuerzos de No Muertos', type: 'Instantánea', rarity: 'Inusual', text: 'De las sombras o tumbas cercanas se alzan 2 Esqueletos y 1 Zombi en la sala o pasillo más próximo.' },
-  { id: 'ew10', title: 'Maldición de Torpeza', type: 'Guardar', rarity: 'Común', text: 'Juega tras una tirada exitosa de un héroe: debe repetir su tirada de d20 o Dados de Combate y quedarse con el nuevo resultado.' },
-  { id: 'ew11', title: 'Piel de Hierro Oscuro', type: 'Guardar', rarity: 'Común', text: 'Un monstruo de tu elección entra en estado GUARDIA (+2 Dados de Defensa durante el resto de la ronda).' },
-  { id: 'ew12', title: 'El Aliento del Terror', type: 'Guardar', rarity: 'Rara', text: 'El héroe con menos PM queda afectado por Miedo (ataca con la mitad de dados) hasta superar una salvación SAB CD 13 al final de su turno.' },
-  { id: 'ew13', title: 'Campeón Emergente', type: 'Guardar', rarity: 'Rara', text: 'Asciende a un monstruo normal recién revelado a su versión ÉLITE (gana +2 PC, +1 At, +1 Def y una Plantilla del Bestiario).' },
-  { id: 'ew14', title: 'Suelo Quebradizo', type: 'Guardar', rarity: 'Común', text: 'Designa 2 casillas de pasillo: se abren como Fosos Ocultos (salvación DES CD 13 o caer sufriendo 1 PC y perdiendo el turno).' },
-  { id: 'ew15', title: 'Ladrón de Hechizos', type: 'Guardar', rarity: 'Rara', text: 'Elige un lanzador de hechizos visible: debe superar salvación INT/CAR CD 14 o pierde 1 uso de un hechizo al azar.' },
+  // Mezcla táctica HQ-D20 v2 + Hechizos del Terror Oficiales (Base + La Luna del Terror)
+  { id: 'ew1', title: 'Emboscada en las Sombras', type: 'Instantánea', rarity: 'Común', text: 'Coloca 2 Goblins (o 1 Orco) fuera de la línea de visión de los héroes. Mueven y atacan inmediatamente.' },
+  { id: 'ew2', title: 'Bola en Llamas (Hechizo del Terror)', type: 'Guardar', rarity: 'Inusual', text: 'Envuelve a un héroe visible en llamas: sufre 2 PC (tira 2 Dados Rojos o DES CD 13: cada 5–6 reduce 1 daño).' },
+  { id: 'ew3', title: 'Grito de Guerra del Caos', type: 'Guardar', rarity: 'Común', text: 'Al inicio del turno de Zargon: todos los monstruos visibles ganan +1 DC Ataque pero defienden con -1 DC esta ronda.' },
+  { id: 'ew4', title: 'Nube de Terror (Hechizo del Terror)', type: 'Guardar', rarity: 'Rara', text: 'Paraliza a todos los héroes de la sala actual (no mueven ni atacan). Se liberan con SAB CD 13 o sacando 6 con tantos d6 como PM.' },
+  { id: 'ew5', title: 'Oxidación (Hechizo del Terror)', type: 'Guardar', rarity: 'Inusual', text: 'Un arma o escudo no-artefacto sufre -1 DC hasta que gasten 1 acción en limpiarlo o lo reparen en Herrería (CON CD 13 evita).' },
+  { id: 'ew6', title: 'Frenesí Sangriento', type: 'Guardar', rarity: 'Común', text: 'Un monstruo que acaba de recibir daño realiza un contraataque gratuito inmediato contra un héroe adyacente.' },
+  { id: 'ew7', title: 'Luces del Terror (Luna del Terror)', type: 'Guardar', rarity: 'Inusual', text: 'Rodea a un héroe en haces fantasmales: todos los monstruos tiran +1 DC Ataque contra él hasta sacar 5–6 en 1d6 al iniciar su turno.' },
+  { id: 'ew8', title: 'Canalizar el Terror (Luna del Terror)', type: 'Instantánea', rarity: 'Común', text: 'Tira 1d6 (+1 por cada monstruo adyacente al lanzador): 4–5 = 1 PC; 6+ = 2 PC a un héroe en Línea de Visión.' },
+  { id: 'ew9', title: 'Invocar Muertos Vivientes', type: 'Instantánea', rarity: 'Inusual', text: 'De las sombras o tumbas cercanas se alzan 2 Esqueletos y 1 Zombi en la sala o pasillo más próximo.' },
+  { id: 'ew10', title: 'Dominación (Hechizo del Terror)', type: 'Guardar', rarity: 'Rara', text: 'Elige un héroe visible: debe superar SAB CD 13 o Zargon lo mueve 3 casillas y le obliga a atacar a un compañero.' },
+  { id: 'ew11', title: 'Piel de Hierro Oscuro', type: 'Guardar', rarity: 'Común', text: 'Un monstruo de tu elección gana +2 Dados de Defensa durante el resto de la ronda.' },
+  { id: 'ew12', title: 'Miedo (Hechizo del Terror)', type: 'Guardar', rarity: 'Inusual', text: 'El héroe con menos PM entra en pánico y solo ataca con 1 DC hasta superar SAB CD 13 o sacar 6 con tantos d6 como PM.' },
+  { id: 'ew13', title: 'Campeón Emergente', type: 'Guardar', rarity: 'Rara', text: 'Asciende a un monstruo recién revelado a su versión ÉLITE (+2 PC, +1 Atq, +1 Def y Habilidad Élite).' },
+  { id: 'ew14', title: 'Rayo Mortífero (Hechizo del Terror)', type: 'Guardar', rarity: 'Rara', text: 'Línea recta horizontal, vertical o diagonal hasta pared/puerta: 2 PC a todos en el camino (DES CD 13 reduce a 1 PC).' },
+  { id: 'ew15', title: 'Invocar Espectros (Luna del Terror)', type: 'Instantánea', rarity: 'Rara', text: 'Tira 1 Dado Rojo: 1–3 = 1 Espectro Etéreo; 4–6 = 2 Espectros Etéreos junto al héroe más alejado.' },
   { id: 'ew16', title: 'Presagio de la Luna Roja', type: 'Instantánea', rarity: 'Rara', text: 'Durante las próximas 2 rondas, los monstruos defienden con Escudos Blancos en lugar de Escudos Negros.' },
 ];
 
@@ -128,14 +129,16 @@ export const TREASURE_TRAP_DECK = [
 ];
 
 export const TRAVEL_DECK = [
-  { id: 'tr1', title: 'Emboscada de Bandidos en el Camino', biome: 'Bosque / Camino', test: 'Percepción CD 13', success: 'Detectan la emboscada a tiempo y los bandidos huyen dejando 40 MO.', fail: 'Cada héroe pierde 1 PC o paga 30 MO de peaje para evitar un combate rápido.' },
-  { id: 'tr2', title: 'Caravana de Mercaderes Enanos', biome: 'Montaña / Camino', test: 'Persuasión CD 12', success: 'Descuento del 20% en Armería/Pociones y 1 información útil sobre la próxima misión.', fail: 'Pueden comprar a precios normales y descansar seguros (+1 PC).' },
-  { id: 'tr3', title: 'Tormenta de la Luna del Terror', biome: 'Cualquiera', test: 'Supervivencia CD 13', success: 'Encuentran refugio seco y recuperan todos sus PC y PM.', fail: 'Empiezan la próxima misión con 1 PM menos por el agotamiento (salvo fogata mágica).' },
-  { id: 'tr4', title: 'Santuario Abandonado de Mentor', biome: 'Ruinas', test: 'Arcano o Medicina CD 12', success: 'El grupo recibe Bendición: cada héroe empieza la próxima misión con +1 PC temporal y Ventaja en su primera tirada.', fail: 'El santuario está en silencio, pero es un lugar seguro para acampar.' },
-  { id: 'tr5', title: 'Puente Derrumbado', biome: 'Río / Barranco', test: 'Atletismo CD 13', success: 'Cruzan ágilmente y hallan un cofre arrastrado por el río (60 MO).', fail: 'Pierden tiempo buscando rodeo; el Reloj del Caos de la próxima misión empieza en 2.' },
-  { id: 'tr6', title: 'Lobo Herido en Cepo', biome: 'Bosque', test: 'Medicina o Supervivencia CD 12', success: 'El lobo acompaña al grupo en la primera sala de la próxima misión (At 2, PC 2).', fail: 'El animal huye asustado sin causar daño.' },
-  { id: 'tr7', title: 'Niebla de los Espíritus', biome: 'Pantano / Bosque', test: 'Salvación SAB CD 13', success: 'Resisten las visiones y ganan 50 XP cada uno por su temple.', fail: 'Quien falle empieza la próxima misión con -1 PM.' },
-  { id: 'tr8', title: 'Posada del Jabalí Dorado', biome: 'Aldea', test: 'Ninguna (Rol)', success: 'Por 15 MO por héroe, cenan, recuperan PC/PM completos y escuchan un rumor clave de la siguiente misión.', fail: 'Acampar fuera es gratis pero solo recupera mitad de PC.' },
+  { id: 'tr1', title: 'Emboscada de Bandidos en el Camino', biome: 'Bosque / Camino', test: 'Percepción CD 13', success: 'Detectan la emboscada a tiempo, ahuyentan a los bandidos y recuperan 25 MO + 1 Acero Templado.', fail: 'Cada héroe pierde 1 PC o paga 15 MO de peaje para evitar el combate.' },
+  { id: 'tr2', title: 'Caravana de Mercaderes Enanos', biome: 'Montaña / Camino', test: 'Persuasión CD 12', success: 'Descuento del 15% en tu primera compra de Ciudad y +1 Pólvora Negra de regalo.', fail: 'Viajan escoltados a salvo hasta las murallas (+1 PC recuperado).' },
+  { id: 'tr3', title: 'Tormenta de la Luna del Terror', biome: 'Cualquiera', test: 'Supervivencia CD 13', success: 'Encuentran refugio seco, recuperan PC/PM y hallan 1 Hierba Lunar en la cueva.', fail: 'Llegan agotados a la Ciudad (la posada cuesta +5 MO extra por secar el equipo).' },
+  { id: 'tr4', title: 'Santuario Abandonado de Mentor', biome: 'Ruinas', test: 'Arcano o Medicina CD 12', success: 'Bendición del santuario: el grupo gana +1 Polvo Rúnico y Ventaja en su primera tirada de la próxima misión.', fail: 'Descansan seguros una noche sin incidentes (+1 PC).' },
+  { id: 'tr5', title: 'Puente Derrumbado', biome: 'Río / Barranco', test: 'Atletismo CD 13', success: 'Cruzan ágilmente y rescatan un cofre atascado en las rocas (30 MO).', fail: 'Pierden horas dando rodeo; el Reloj del Caos de la próxima misión empieza en 2.' },
+  { id: 'tr6', title: 'Lobo Herido en Cepo', biome: 'Bosque', test: 'Medicina o Supervivencia CD 12', success: 'Lo curan: el lobo los guía por un atajo seguro (+30 XP a todos y +1 Ración de Mazmorra).', fail: 'El lobo logra soltarse y huye al bosque sin causar daño.' },
+  { id: 'tr7', title: 'Niebla de los Espíritus', biome: 'Pantano / Bosque', test: 'Salvación SAB CD 13', success: 'Resisten las visiones de Silvana y recogen 1 Esencia Espectral condensada.', fail: 'Quien falle llega turbado (-1 PM al empezar la próxima misión si no descansa en Posada).' },
+  { id: 'tr8', title: 'Posada del Jabalí Dorado', biome: 'Aldea del Camino', test: 'Ninguna (Rol)', success: 'Por 10 MO por héroe cenan caliente, recuperan PC/PM completos y oyen un rumor sobre trampas de la siguiente misión.', fail: 'Acampar fuera es gratis pero solo recupera 1 PC.' },
+  { id: 'tr9', title: 'Carreta de Alquimista Volcada', biome: 'Camino Real', test: 'Investigación o FUE CD 12', success: 'Ayudan a levantar la carreta: el alquimista regala 1 Poción de Curación Menor y 1 Hierba Lunar.', fail: 'Un frasco se rompe derramando humo ácido (DES CD 12 o 1 PC).' },
+  { id: 'tr10', title: 'Puesto de Peaje Imperial', biome: 'Puertas de la Ciudad', test: 'Persuasión CD 12 (o Fama ≥ 3)', success: 'Los guardias los reconocen como héroes: pasan gratis y les entregan +15 MO de recompensa por informes.', fail: 'Pagan 10 MO de peaje entre el grupo para entrar sin retrasos.' },
 ];
 
 export const CITY_EVENTS = [

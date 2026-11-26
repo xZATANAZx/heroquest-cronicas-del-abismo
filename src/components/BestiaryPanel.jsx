@@ -43,7 +43,7 @@ export default function BestiaryPanel({
           <div>
             <h3 className="text-2xl font-bold text-amber-300">Bestiario Dinámico Escalable</h3>
             <p className="text-sm text-stone-400">
-              Ajusta el Nivel del Grupo y el Tamaño para recalcular automáticamente PC, Ataque, Defensa, CD y XP.
+              Ajusta el Nivel del Grupo para recalcular automáticamente PC, Ataque, Defensa, CD y XP balanceados para HQ-D20 v2.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -57,21 +57,6 @@ export default function BestiaryPanel({
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((l) => (
                   <option key={l} value={l} className="bg-stone-900 text-amber-200">
                     Nivel {l}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="flex items-center gap-2 bg-stone-900 border border-stone-700 rounded-xl px-3 py-2 text-sm">
-              <span className="text-stone-400">Héroes:</span>
-              <select
-                value={partySize}
-                onChange={(e) => setPartySize(Number(e.target.value))}
-                className="bg-transparent text-stone-100 font-bold focus:outline-none cursor-pointer"
-              >
-                {[1, 2, 3, 4].map((s) => (
-                  <option key={s} value={s} className="bg-stone-900">
-                    {s}
                   </option>
                 ))}
               </select>

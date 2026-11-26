@@ -63,25 +63,28 @@ const SVG_H = MARGIN_TOP + BOARD_ROWS * CELL + 8;
 
 const coordLabel = (x, y) => `${COL_LETTERS[x]}${y + 1}`;
 
-// Reglas claras de las trampas del tablero (al hacer clic en una trampa ▲ !)
+// Reglas claras de las trampas del tablero (con material al desarmar SOLO si aplica)
 const TRAP_RULES = {
   trap_pit: {
     name: 'Trampa de Foso Oculto',
-    detect: 'Percepción CD 12 (al buscar trampas sin enemigos visibles).',
-    disarm: 'Desarmar Trampas o Saltar (DES CD 12).',
+    detect: 'Percepción CD 12 (CD 14 en Supervivencia) al buscar trampas sin enemigos visibles.',
+    disarm: 'Desarmar Trampas o Saltar (DES CD 12 / 14 en Supervivencia).',
     effect: 'Si un héroe pisa esta casilla sin verla, cae al foso: sufre 1 PC de daño, termina su turno y ataca/defiende con -1 DC hasta salir.',
+    disarmMaterial: null,
   },
   trap_spear: {
     name: 'Trampa de Lanza / Aguja',
-    detect: 'Percepción CD 12 (al buscar trampas o revisar el cofre).',
-    disarm: 'Desarmar Trampas CD 13 (Enano/Pícaro tienen Ventaja).',
+    detect: 'Percepción CD 12 (CD 14 en Supervivencia) al buscar trampas o revisar el cofre.',
+    disarm: 'Desarmar Trampas CD 13 / 15 en Supervivencia (Enano/Pícaro tienen Ventaja).',
     effect: 'Si se activa, dispara una lanza o aguja: Salvación DES CD 13 o recibe 1 PC (si es aguja envenenada, queda Envenenado -1 DC Ataque).',
+    disarmMaterial: { id: 'glandula_veneno', label: '☠️ Glándula de Veneno' },
   },
   trap_falling_rock: {
     name: 'Trampa de Bloque Cayendo',
-    detect: 'Percepción CD 13 (grietas en el techo al buscar trampas).',
-    disarm: 'Desarmar Trampas CD 13 (Enano/Ingeniero tienen Ventaja).',
+    detect: 'Percepción CD 13 (CD 15 en Supervivencia) buscando grietas en el techo.',
+    disarm: 'Desarmar Trampas CD 13 / 15 en Supervivencia (Enano/Ingeniero tienen Ventaja).',
     effect: 'Cae un bloque de piedra: Salvación DES CD 13 o sufre 2 PC (1 PC si supera) y la casilla queda bloqueada como Muro.',
+    disarmMaterial: { id: 'chatarra_acero', label: '⚙️ Acero Templado' },
   },
 };
 
@@ -362,8 +365,11 @@ export default function TacticalBoard({
   zargonCounters = null,
   setZargonCounters = null,
   onRegisterNemesis = null,
+  cityMode = 'relaxed',
+  setCityMode = null,
   showToast = null,
 }) {
+  const isSurvivalMode = cityMode === 'survival';
   const allAvailableMaps = useMemo(() => {
     const procMaps = (proceduralQuests || [])
       .filter((q) => q?.mapData)
@@ -956,11 +962,11 @@ export default function TacticalBoard({
         if (!base) return null;
         return {
           item: it,
-          scaled: scaleMonster(base, partyLevel, partySize, !!it.info.isBoss, false),
+          scaled: scaleMonster(base, partyLevel, 4, !!it.info.isBoss, false, isSurvivalMode),
         };
       })
       .filter(Boolean);
-  }, [roomItems, partyLevel, partySize]);
+  }, [roomItems, partyLevel, isSurvivalMode]);
 
   const totalRoomXP = useMemo(() => {
     return roomMonstersScaled.reduce((acc, { scaled }) => acc + (scaled.scaledXP || 0), 0);
@@ -976,7 +982,7 @@ export default function TacticalBoard({
     const info = PIECE_TYPES[foundItem.type];
     const base = MONSTERS.find((m) => m.id === info.monsterId);
     if (!base) return null;
-    const scaled = scaleMonster(base, partyLevel, partySize, !!info.isBoss, false);
+    const scaled = scaleMonster(base, partyLevel, 4, !!info.isBoss, false, isSurvivalMode);
     const currentPC =
       quickHP[selectedMonsterKey] !== undefined ? quickHP[selectedMonsterKey] : scaled.scaledPC;
     return {
@@ -985,7 +991,7 @@ export default function TacticalBoard({
       scaled,
       currentPC,
     };
-  }, [selectedMonsterKey, allMapItems, partyLevel, partySize, quickHP]);
+  }, [selectedMonsterKey, allMapItems, partyLevel, isSurvivalMode, quickHP]);
 
   // Trampa actualmente seleccionada al hacer clic en ▲ ! en el tablero
   const selectedTrapObj = useMemo(() => {
@@ -1115,18 +1121,23 @@ export default function TacticalBoard({
                 </select>
               </label>
             )}
-            {setPartySize && (
-              <select
-                value={partySize}
-                onChange={(e) => setPartySize(Number(e.target.value))}
-                className="px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-extrabold text-emerald-300 cursor-pointer"
-                title="Ajusta en vivo el número de jugadores y rebalancea el tablero y monstruos"
+            {setCityMode && (
+              <button
+                type="button"
+                onClick={() => setCityMode(isSurvivalMode ? 'relaxed' : 'survival')}
+                className={`px-2.5 py-1.5 rounded-xl text-xs font-extrabold border cursor-pointer transition ${
+                  isSurvivalMode
+                    ? 'bg-red-950/70 border-red-500 text-red-200 shadow'
+                    : 'bg-sky-950/60 border-sky-600/60 text-sky-200 hover:border-sky-400'
+                }`}
+                title={
+                  isSurvivalMode
+                    ? 'Modo Supervivencia: Monstruos +1 PC, Jefes Élite, Trampas +2 CD, +25% XP y +20% Oro'
+                    : 'Modo Relajado: Balance estándar HQ-D20 v2 (clic para activar Supervivencia)'
+                }
               >
-                <option value={1}>🛡️ 1 Héroe (Solo)</option>
-                <option value={2}>👥 2 Héroes</option>
-                <option value={3}>👥 3 Héroes</option>
-                <option value={4}>👥 4 Héroes</option>
-              </select>
+                {isSurvivalMode ? '🔥 Supervivencia (+25% XP)' : '🛡️ Relajado'}
+              </button>
             )}
           </div>
 
@@ -1748,9 +1759,15 @@ export default function TacticalBoard({
                 </div>
               </div>
 
-              {selectedMonsterObj.scaled.abilities && (
-                <div className="text-[11px] text-amber-100 bg-black/40 p-2.5 rounded-xl border border-amber-900/50 leading-snug">
-                  <strong>⚡ Especial:</strong> {selectedMonsterObj.scaled.abilities}
+              {selectedMonsterObj.scaled.activeAbilities?.length > 0 && (
+                <div className="text-[11px] text-amber-100 bg-black/40 p-2.5 rounded-xl border border-amber-900/50 leading-snug space-y-1">
+                  <div className="flex items-center justify-between text-[10px] text-amber-300 font-black uppercase">
+                    <span>⚡ Habilidades ({selectedMonsterObj.scaled.difficultyTag})</span>
+                    <span>CD {selectedMonsterObj.scaled.saveDC} · +{selectedMonsterObj.scaled.scaledXP} XP</span>
+                  </div>
+                  {selectedMonsterObj.scaled.activeAbilities.map((ab, abIdx) => (
+                    <div key={abIdx} className="leading-snug">• {ab}</div>
+                  ))}
                 </div>
               )}
 
@@ -1781,10 +1798,16 @@ export default function TacticalBoard({
                 </button>
                 {selectedMonsterObj.currentPC > 0 ? (
                   <button
-                    onClick={() => setMonsterHPDirect(selectedMonsterObj.key, 0)}
+                    onClick={() => {
+                      setMonsterHPDirect(selectedMonsterObj.key, 0);
+                      if (onAwardXP && selectedMonsterObj.scaled.scaledXP) {
+                        onAwardXP(selectedMonsterObj.scaled.scaledXP);
+                      }
+                    }}
                     className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs cursor-pointer shadow"
+                    title="Abate al monstruo y reparte su XP al grupo"
                   >
-                    💀 Matar
+                    💀 Abatir (+{selectedMonsterObj.scaled.scaledXP} XP)
                   </button>
                 ) : (
                   <button
@@ -1854,6 +1877,32 @@ export default function TacticalBoard({
               >
                 {selectedTrapObj.disarmed ? '↩️ Reactivar Trampa' : '✓ Marcar como Desarmada / Activada'}
               </button>
+
+              {/* Botón de Material al Desarmar (SOLO si esta trampa otorga materiales) */}
+              {selectedTrapObj.disarmed && selectedTrapObj.rules.disarmMaterial && onSendMaterialToHero && heroes.length > 0 && (
+                <div className="pt-2 border-t border-emerald-700/50 flex flex-wrap items-center gap-1.5">
+                  <select
+                    value={effectiveHeroId}
+                    onChange={(e) => setTargetHeroId(e.target.value)}
+                    className="flex-1 px-2 py-1.5 rounded-lg bg-slate-950 border border-emerald-700/70 text-[11px] text-slate-100"
+                  >
+                    {heroes.map((h) => (
+                      <option key={h.id} value={h.id}>
+                        {h.name} ({h.className})
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => {
+                      onSendMaterialToHero(effectiveHeroId, selectedTrapObj.rules.disarmMaterial.id, 1);
+                      setSelectedTrapKey(null);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[11px] cursor-pointer"
+                  >
+                    📦 Dar {selectedTrapObj.rules.disarmMaterial.label}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -2114,9 +2163,17 @@ export default function TacticalBoard({
                   </div>
                 )}
 
-                {/* Resultado en Vivo (Examinar mueble, Tesoro, Pista o Evento — VISIBLE AQUÍ MISMO) */}
+                {/* Resultado en Vivo (Examinar mueble, Tesoro, Pista o Evento — CON STATS DE MONSTRUO INVOCADO) */}
                 {roomDiscovery && (() => {
                   const spawn = detectSpawnable(roomDiscovery, currentMap);
+                  const discTxtLow = `${roomDiscovery.title || ''} ${roomDiscovery.text || ''}`.toLowerCase();
+                  const spawnedMonsterId =
+                    (spawn.monsterType && PIECE_TYPES[spawn.monsterType]?.monsterId) ||
+                    (discTxtLow.includes('araña') ? 'arana_gigante' : null);
+                  const spawnedBase = spawnedMonsterId ? MONSTERS.find((m) => m.id === spawnedMonsterId) : null;
+                  const spawnedScaled = spawnedBase
+                    ? scaleMonster(spawnedBase, partyLevel, 4, false, false, isSurvivalMode)
+                    : null;
                   return (
                     <div className="p-3.5 rounded-xl bg-emerald-950/40 border-2 border-emerald-500/70 space-y-2 text-xs">
                       <div className="flex items-center justify-between gap-2">
@@ -2132,6 +2189,20 @@ export default function TacticalBoard({
                       </div>
                       <div className="font-display font-bold text-sm text-amber-200">{roomDiscovery.title}</div>
                       <p className="text-slate-200 leading-snug">{roomDiscovery.text}</p>
+                      {spawnedScaled && (
+                        <div className="p-2.5 rounded-xl bg-rose-950/55 border border-rose-500/60 space-y-1 text-[11px]">
+                          <div className="flex items-center justify-between font-black text-rose-200">
+                            <span>👹 {spawnedScaled.name} (Nv.{partyLevel})</span>
+                            <span className="text-emerald-300">+{spawnedScaled.scaledXP} XP</span>
+                          </div>
+                          <div className="font-mono text-amber-200 font-bold">
+                            MOV {spawnedScaled.mov} · AT {spawnedScaled.scaledAt} DC · DEF {spawnedScaled.scaledDef} DC · PC {spawnedScaled.scaledPC} · PM {spawnedScaled.pm} · CD {spawnedScaled.saveDC}
+                          </div>
+                          {spawnedScaled.activeAbilities?.[0] && (
+                            <div className="text-rose-100 leading-snug">⚡ {spawnedScaled.activeAbilities[0]}</div>
+                          )}
+                        </div>
+                      )}
                       {(spawn.monsterType || spawn.trapType) && (
                         <div className="pt-2 border-t border-emerald-800/60 flex flex-wrap gap-1.5">
                           {spawn.monsterType && (
@@ -2384,7 +2455,7 @@ export default function TacticalBoard({
                   </button>
                   <button
                     onClick={() => {
-                      const h = generateHintCard(currentMap.biomeId || 'catacumbas');
+                      const h = generateHintCard(currentMap.biomeId || 'catacumbas', selectedRoomId === 'CORRIDOR');
                       setRoomDiscovery({
                         source: `Pista · ${h.biomeName}`,
                         title: `${h.biomeIcon} ${h.title}`,
@@ -2753,145 +2824,6 @@ export default function TacticalBoard({
           </div>
         </div>
       </div>
-
-      {/* HOJAS COMPLETAS DE LOS ENEMIGOS DE ESTA SALA (Todo en una sola pantalla) */}
-      {roomMonstersScaled.length > 0 && (
-        <div className="grimoire-panel rounded-2xl p-5 space-y-4 border-red-800/50">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-800 pb-3">
-            <div>
-              <h4 className="font-display text-lg font-bold text-red-300 flex items-center gap-2">
-                <Swords className="w-5 h-5 text-red-400" /> Hojas de Enemigos en {selectedRoomObj ? selectedRoomObj.name : selectedRoomId} (Auto-Escalados a Nivel {partyLevel})
-              </h4>
-              <p className="text-xs text-stone-400">
-                Todas sus estadísticas, habilidades, efectos y control rápido de PC aquí mismo sin salir del tablero.
-              </p>
-            </div>
-            {onAwardXP && totalRoomXP > 0 && (
-              <button
-                onClick={() => onAwardXP(totalRoomXP)}
-                className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs cursor-pointer shadow"
-              >
-                ✨ Sala Limpia: Repartir {totalRoomXP} XP al Grupo
-              </button>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {roomMonstersScaled.map(({ item, scaled }, idx) => {
-              const hpKey = `${selectedMapId}-${selectedRoomId}-${idx}`;
-              const currentHP = quickHP[hpKey] !== undefined ? quickHP[hpKey] : scaled.scaledPC;
-              const isDead = currentHP <= 0;
-              return (
-                <div
-                  key={hpKey}
-                  className={`rounded-2xl p-4 border flex flex-col justify-between gap-3 transition ${
-                    isDead
-                      ? 'bg-stone-950/60 border-stone-800 opacity-50'
-                      : 'bg-stone-900/90 border-red-900/50'
-                  }`}
-                >
-                  <div className="space-y-3">
-                    {scaled.image && (
-                      <div className="-mx-4 -mt-4 h-32 overflow-hidden rounded-t-2xl relative border-b border-red-900/40">
-                        <img src={scaled.image} alt={scaled.name} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-stone-900 via-transparent to-transparent" />
-                      </div>
-                    )}
-
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-red-950 text-amber-300">
-                          Casilla {item.coord} · {scaled.family}
-                        </span>
-                        <h5 className={`font-display font-bold text-base mt-1 ${isDead ? 'line-through text-stone-500' : 'text-stone-100'}`}>
-                          {scaled.name}
-                        </h5>
-                        {item.note && <div className="text-[11px] text-amber-400 font-semibold">{item.note}</div>}
-                        <div className="text-[10px] text-stone-400">Miniatura: {scaled.miniature}</div>
-                      </div>
-                      <span className="text-xs font-bold px-2 py-1 rounded-lg bg-emerald-950/60 border border-emerald-700/50 text-emerald-300 shrink-0">
-                        {scaled.scaledXP} XP
-                      </span>
-                    </div>
-
-                    {/* Estadísticas Completas */}
-                    <div className="grid grid-cols-6 gap-1 text-center">
-                      <div className="p-1.5 rounded bg-stone-950 border border-stone-800">
-                        <div className="text-[9px] text-stone-400">MOV</div>
-                        <div className="font-bold text-xs text-sky-300">{scaled.mov}</div>
-                      </div>
-                      <div className="p-1.5 rounded bg-red-950/50 border border-red-900/60">
-                        <div className="text-[9px] text-stone-400 flex items-center justify-center">
-                          <Skull className="w-2.5 h-2.5 text-red-400 mr-0.5" />AT
-                        </div>
-                        <div className="font-bold text-xs text-red-300">{scaled.scaledAt}</div>
-                      </div>
-                      <div className="p-1.5 rounded bg-amber-950/50 border border-amber-900/60">
-                        <div className="text-[9px] text-stone-400 flex items-center justify-center">
-                          <Shield className="w-2.5 h-2.5 text-amber-400 mr-0.5" />DF
-                        </div>
-                        <div className="font-bold text-xs text-amber-200">{scaled.scaledDef}</div>
-                      </div>
-                      <div className="p-1.5 rounded bg-emerald-950/50 border border-emerald-900/60">
-                        <div className="text-[9px] text-stone-400">PC</div>
-                        <div className="font-bold text-xs text-emerald-300">{scaled.scaledPC}</div>
-                      </div>
-                      <div className="p-1.5 rounded bg-cyan-950/50 border border-cyan-900/60">
-                        <div className="text-[9px] text-stone-400">PM</div>
-                        <div className="font-bold text-xs text-cyan-300">{scaled.pm}</div>
-                      </div>
-                      <div className="p-1.5 rounded bg-purple-950/50 border border-purple-900/60">
-                        <div className="text-[9px] text-stone-400">CD</div>
-                        <div className="font-bold text-xs text-purple-300">{scaled.saveDC}</div>
-                      </div>
-                    </div>
-
-                    {/* Habilidades y Efectos Completos */}
-                    <ul className="space-y-1.5 text-xs text-stone-300">
-                      {scaled.activeAbilities.map((ab, i) => (
-                        <li key={i} className="leading-snug flex gap-1.5">
-                          <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                          <span>{ab}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Control rápido de PC en la misma hoja */}
-                  <div className="pt-2 border-t border-stone-800 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 bg-stone-950 border border-stone-700 rounded-lg px-2.5 py-1 text-xs">
-                      <span className="text-stone-400 font-semibold">Vida:</span>
-                      <button
-                        onClick={() => adjustQuickHP(hpKey, scaled.scaledPC, -1)}
-                        className="px-1.5 text-red-400 hover:text-red-300 font-black cursor-pointer"
-                      >
-                        -
-                      </button>
-                      <span className="font-bold text-stone-100 min-w-[36px] text-center">
-                        {currentHP}/{scaled.scaledPC}
-                      </span>
-                      <button
-                        onClick={() => adjustQuickHP(hpKey, scaled.scaledPC, 1)}
-                        className="px-1.5 text-emerald-400 hover:text-emerald-300 font-black cursor-pointer"
-                      >
-                        +
-                      </button>
-                    </div>
-                    {onAwardXP && (
-                      <button
-                        onClick={() => onAwardXP(scaled.scaledXP)}
-                        className="px-2.5 py-1 rounded-lg bg-emerald-900/70 hover:bg-emerald-700 text-emerald-100 text-[11px] font-bold cursor-pointer"
-                      >
-                        +{scaled.scaledXP} XP
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Checklist Agrupado de Piezas Físicas a Sacar de la Caja */}
       <div className="grimoire-panel rounded-2xl p-5 space-y-4">
