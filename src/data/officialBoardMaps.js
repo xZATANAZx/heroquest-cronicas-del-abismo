@@ -295,10 +295,10 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 24, y: 16, type: 'chest', note: 'Nota E: 120 MO + Tesoro' },
       { x: 22, y: 16, type: 'skeleton' },
 
-      // Muros de pasillo coherentes (cierran el borde exterior para guiar el recorrido sin bloquear ninguna puerta)
-      { x: 0, y: 14, type: 'blocked', note: 'Cierra pasillo exterior oeste-sur' },
-      { x: 12, y: 0, type: 'blocked_double', w: 2, h: 1, note: 'Cierra corredor norte exterior' },
-      { x: 25, y: 14, type: 'blocked', note: 'Cierra pasillo exterior este-sur' },
+      // Muros de pasillo coherentes (blocked_double cierra corredor central 2×1; blocked cierra corredores de 1 casilla)
+      { x: 0, y: 14, type: 'blocked', note: 'Derrumbe en pasillo exterior oeste-sur' },
+      { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Derrumbe sella corredor central norte (2×1)' },
+      { x: 25, y: 14, type: 'blocked', note: 'Derrumbe en pasillo exterior este-sur' },
     ],
   },
   {
@@ -404,10 +404,10 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 21, y: 7, type: 'orc' },
       { x: 22, y: 8, type: 'door', edge: 'S', note: 'Atajo de escape al pasillo medio este' },
 
-      // Bloqueos coherentes de pasillo
-      { x: 12, y: 0, type: 'blocked_double', w: 2, h: 1, note: 'Cierra salida norte' },
-      { x: 0, y: 9, type: 'blocked', note: 'Cierra extremo oeste' },
-      { x: 1, y: 18, type: 'blocked', note: 'Cierra atajo sur-oeste' },
+      // Bloqueos coherentes de pasillo (canalizan el rescate y el escape)
+      { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Derrumbe sella corredor central norte (2×1)' },
+      { x: 0, y: 9, type: 'blocked', note: 'Derrumbe cierra corredor exterior oeste' },
+      { x: 12, y: 17, type: 'blocked_double', w: 2, h: 1, note: 'Escombros cierran corredor central sur (2×1)' },
     ],
   },
   {
@@ -497,7 +497,8 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 1, y: 1, type: 'bookcase', w: 3, h: 1 },
       { x: 3, y: 2, type: 'dread_warrior' },
 
-      { x: 17, y: 3, type: 'door', edge: 'W', note: 'Desde pasillo norte' },
+      { x: 14, y: 3, type: 'door', edge: 'W', note: 'Entrada desde corredor central norte a R6' },
+      { x: 17, y: 3, type: 'door', edge: 'W', note: 'Conecta R6 con R7' },
       { x: 17, y: 1, type: 'cupboard', w: 3, h: 1, note: 'Nota B: 24 MO + Poción' },
       { x: 18, y: 3, type: 'orc' },
       { x: 19, y: 3, type: 'goblin' },
@@ -518,7 +519,7 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 12, y: 11, type: 'door', edge: 'S', note: 'Entrada Sur Sala del Trono' },
 
       { x: 0, y: 4, type: 'blocked', note: 'Bloquea borde oeste-norte' },
-      { x: 12, y: 18, type: 'blocked_double', w: 2, h: 1, note: 'Cierra salida sur' },
+      { x: 12, y: 17, type: 'blocked_double', w: 2, h: 1, note: 'Cierra corredor central sur (2×1)' },
     ],
   },
   {
@@ -546,6 +547,7 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 6, y: 15, type: 'orc' },
       { x: 7, y: 14, type: 'goblin' },
       { x: 6, y: 13, type: 'door', edge: 'N', note: 'Conecta hacia R13' },
+      { x: 6, y: 11, type: 'door', edge: 'E', note: 'Conecta R13 con R13b' },
       { x: 8, y: 11, type: 'door', edge: 'E', note: 'Sale al anillo central' },
 
       { x: 12, y: 8, type: 'dread_warrior', note: 'JEFE: Gulthor' },
@@ -566,7 +568,7 @@ export const OFFICIAL_QUEST_MAPS = [
 
       { x: 12, y: 13, type: 'trap_pit', note: 'Foso Oculto (DES CD 13)' },
       { x: 0, y: 9, type: 'blocked', note: 'Bloquea borde oeste' },
-      { x: 12, y: 0, type: 'blocked_double', w: 2, h: 1, note: 'Cierra pasillo norte' },
+      { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Cierra corredor central norte (2×1)' },
     ],
   },
   {
@@ -603,7 +605,7 @@ export const OFFICIAL_QUEST_MAPS = [
       { x: 13, y: 10, type: 'dread_warrior' },
       { x: 11, y: 10, type: 'skeleton' },
       { x: 12, y: 11, type: 'door', edge: 'S', note: 'Gran Puerta de Barak Tor' },
-      { x: 12, y: 0, type: 'blocked_double', w: 2, h: 1, note: 'Pasillo derrumbado' },
+      { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Corredor central norte derrumbado (2×1)' },
     ],
   },
   {

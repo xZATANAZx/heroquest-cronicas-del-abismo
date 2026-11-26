@@ -709,36 +709,42 @@ function buildProceduralBoardMap({
   };
 
   // ============================================================================
-  // 1. ARQUETIPOS ARQUITECTÓNICOS COHERENTES (3 Diseños Maestros de Mazmorra)
+  // 1. 5 ARQUETIPOS ARQUITECTÓNICOS COHERENTES (Distintas salas de inicio y muros reales)
+  // Regla estricta:
+  //  - blocked_double (2×1) SOLO en el corredor vertical central de 2 casillas (x=12..13, y=1..5 o y=13..17)
+  //  - blocked (1×1) SOLO en pasillos de 1 casilla, canalizando rutas reales verificadas por BFS
   // ============================================================================
   const ARCHETYPES = [
     {
       name: 'La Espiral del Bastión',
+      startRoom: 'R14',
+      stairsPos: { x: 2, y: 15 },
       doors: [
-        { room: 'R14', x: 2, y: 14, edge: 'N' }, // R14 -> R12
-        { room: 'R14', x: 4, y: 16, edge: 'E' }, // R14 -> R15 (Bifurcación inicial)
-        { room: 'R12', x: 2, y: 10, edge: 'N' }, // R12 -> Pasillo medio oeste
-        { room: 'R15', x: 6, y: 13, edge: 'N' }, // R15 -> R13
-        { room: 'R13', x: 6, y: 10, edge: 'N' }, // R13 -> Pasillo medio oeste
-        { room: 'R4', x: 2, y: 8, edge: 'S' },   // Pasillo -> R4
-        { room: 'R4', x: 4, y: 6, edge: 'E' },   // R4 -> R5
-        { room: 'R4', x: 2, y: 4, edge: 'N' },   // R4 -> R1
-        { room: 'R1', x: 4, y: 2, edge: 'E' },   // R1 -> R2
-        { room: 'R2', x: 8, y: 2, edge: 'E' },   // R2 -> R3
-        { room: 'R3', x: 10, y: 5, edge: 'S' },  // R3 -> Anillo Norte Central
-        { room: 'R5', x: 8, y: 6, edge: 'E' },   // R5 -> Pasillo Oeste Central
-        { room: 'R11', x: 12, y: 11, edge: 'S' }, // Gran Puerta Sur del Jefe
-        { room: 'R11', x: 15, y: 9, edge: 'E' },  // Salida Este del Jefe
-        { room: 'R7', x: 18, y: 4, edge: 'S' },   // R7 <-> R9
-        { room: 'R9', x: 17, y: 7, edge: 'W' },   // Anillo Este -> R9
-        { room: 'R10', x: 22, y: 8, edge: 'S' },  // Pasillo Medio Este -> R10
-        { room: 'R18', x: 22, y: 10, edge: 'N' }, // Pasillo Medio Este -> R18
+        { room: 'R14', x: 2, y: 14, edge: 'N' },
+        { room: 'R14', x: 4, y: 16, edge: 'E' },
+        { room: 'R12', x: 2, y: 10, edge: 'N' },
+        { room: 'R15', x: 6, y: 13, edge: 'N' },
+        { room: 'R13', x: 6, y: 10, edge: 'N' },
+        { room: 'R4', x: 2, y: 8, edge: 'S' },
+        { room: 'R4', x: 4, y: 6, edge: 'E' },
+        { room: 'R4', x: 2, y: 4, edge: 'N' },
+        { room: 'R1', x: 4, y: 2, edge: 'E' },
+        { room: 'R2', x: 8, y: 2, edge: 'E' },
+        { room: 'R3', x: 10, y: 5, edge: 'S' },
+        { room: 'R5', x: 8, y: 6, edge: 'E' },
+        { room: 'R11', x: 12, y: 11, edge: 'S' },
+        { room: 'R11', x: 15, y: 9, edge: 'E' },
+        { room: 'R7', x: 18, y: 4, edge: 'S' },
+        { room: 'R9', x: 17, y: 7, edge: 'W' },
+        { room: 'R10', x: 22, y: 8, edge: 'S' },
+        { room: 'R18', x: 22, y: 10, edge: 'N' },
       ],
-      secretDoor: { x: 22, y: 13, edge: 'S', room: 'R21' }, // R18 -> R21 (Almacén Secreto)
+      secretDoor: { x: 22, y: 13, edge: 'S', room: 'R21' },
       blockedWalls: [
-        { x: 0, y: 14, type: 'blocked', note: 'Derrumbe: canaliza la ruta por el interior oeste' },
-        { x: 12, y: 0, type: 'blocked_double', w: 2, h: 1, note: 'Muro derrumbado en corredor norte' },
-        { x: 25, y: 14, type: 'blocked', note: 'Derrumbe en pasillo exterior sureste' },
+        { x: 0, y: 9, type: 'blocked', note: 'Derrumbe sella pasillo exterior oeste' },
+        { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Muro derrumbado en corredor central norte (2×1)' },
+        { x: 12, y: 17, type: 'blocked_double', w: 2, h: 1, note: 'Escombros cierran corredor central sur (2×1)' },
+        { x: 25, y: 9, type: 'blocked', note: 'Derrumbe en pasillo exterior este' },
       ],
       furnRooms: ['R15', 'R12', 'R5', 'R1', 'R2', 'R7', 'R10', 'R18', 'R21'],
       combatRooms: ['R15', 'R12', 'R4', 'R5', 'R1', 'R2', 'R9', 'R10', 'R18'],
@@ -751,27 +757,31 @@ function buildProceduralBoardMap({
     },
     {
       name: 'Las Catacumbas del Sur',
+      startRoom: 'R14',
+      stairsPos: { x: 2, y: 15 },
       doors: [
-        { room: 'R14', x: 4, y: 16, edge: 'E' }, // R14 -> R15
-        { room: 'R15', x: 8, y: 15, edge: 'E' }, // R15 -> R16
-        { room: 'R16', x: 11, y: 15, edge: 'E' }, // R16 -> Corredor Central Sur
-        { room: 'R19', x: 14, y: 15, edge: 'W' }, // Corredor Sur -> R19
-        { room: 'R19', x: 17, y: 15, edge: 'E' }, // R19 -> R20
-        { room: 'R20', x: 20, y: 15, edge: 'E' }, // R20 -> R21
-        { room: 'R21', x: 22, y: 14, edge: 'N' }, // R21 -> R18
-        { room: 'R18', x: 22, y: 10, edge: 'N' }, // R18 -> Pasillo Medio Este
-        { room: 'R10', x: 22, y: 8, edge: 'S' },  // Pasillo -> R10
-        { room: 'R10', x: 22, y: 5, edge: 'N' },  // R10 -> R8
-        { room: 'R8', x: 21, y: 2, edge: 'W' },   // R8 -> R7
-        { room: 'R7', x: 17, y: 3, edge: 'W' },   // R7 -> R6
-        { room: 'R6', x: 14, y: 3, edge: 'W' },   // R6 -> Corredor Central Norte
-        { room: 'R11', x: 12, y: 7, edge: 'N' },  // Gran Puerta Norte del Jefe
-        { room: 'R11', x: 12, y: 11, edge: 'S' }, // Puerta Sur de escape
+        { room: 'R14', x: 4, y: 16, edge: 'E' },
+        { room: 'R15', x: 8, y: 15, edge: 'E' },
+        { room: 'R16', x: 11, y: 15, edge: 'E' },
+        { room: 'R19', x: 14, y: 15, edge: 'W' },
+        { room: 'R19', x: 17, y: 15, edge: 'E' },
+        { room: 'R20', x: 20, y: 15, edge: 'E' },
+        { room: 'R21', x: 22, y: 14, edge: 'N' },
+        { room: 'R18', x: 22, y: 10, edge: 'N' },
+        { room: 'R10', x: 22, y: 8, edge: 'S' },
+        { room: 'R10', x: 22, y: 5, edge: 'N' },
+        { room: 'R8', x: 21, y: 2, edge: 'W' },
+        { room: 'R7', x: 17, y: 3, edge: 'W' },
+        { room: 'R6', x: 14, y: 3, edge: 'W' },
+        { room: 'R11', x: 12, y: 7, edge: 'N' },
+        { room: 'R11', x: 12, y: 11, edge: 'S' },
       ],
-      secretDoor: { x: 1, y: 14, edge: 'N', room: 'R12' }, // Atajo secreto R14 -> R12
+      secretDoor: { x: 2, y: 14, edge: 'N', room: 'R12' },
       blockedWalls: [
         { x: 0, y: 9, type: 'blocked', note: 'Derrumbe sella el ala oeste' },
-        { x: 12, y: 18, type: 'blocked_double', w: 2, h: 1, note: 'Escombros cierran el pasillo sur exterior' },
+        { x: 12, y: 13, type: 'blocked_double', w: 2, h: 1, note: 'Muro derrumbado bloquea el atajo directo sur al Jefe (2×1)' },
+        { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Corredor norte sellado (2×1)' },
+        { x: 25, y: 14, type: 'blocked', note: 'Pasillo exterior sureste cerrado' },
       ],
       furnRooms: ['R15', 'R16', 'R19', 'R21', 'R18', 'R10', 'R8', 'R7'],
       combatRooms: ['R15', 'R16', 'R19', 'R21', 'R18', 'R10', 'R8', 'R7', 'R6'],
@@ -783,27 +793,104 @@ function buildProceduralBoardMap({
       ],
     },
     {
-      name: 'Asedio de Doble Flanco',
+      name: 'Incursión desde el Noreste',
+      startRoom: 'R8',
+      stairsPos: { x: 22, y: 2 },
       doors: [
-        { room: 'R14', x: 2, y: 14, edge: 'N' }, // Flanco Norte: R14 -> R12
-        { room: 'R12', x: 2, y: 10, edge: 'N' }, // R12 -> Pasillo Oeste
-        { room: 'R4', x: 2, y: 8, edge: 'S' },   // Pasillo -> R4
-        { room: 'R4', x: 4, y: 6, edge: 'E' },   // R4 -> R5
-        { room: 'R5', x: 8, y: 6, edge: 'E' },   // R5 -> Anillo Central Oeste
-        { room: 'R14', x: 4, y: 16, edge: 'E' }, // Flanco Sur: R14 -> R15
-        { room: 'R15', x: 8, y: 15, edge: 'E' }, // R15 -> R16
-        { room: 'R16', x: 11, y: 15, edge: 'E' }, // R16 -> Corredor Sur
-        { room: 'R11', x: 10, y: 9, edge: 'W' },  // Puerta Oeste del Jefe
-        { room: 'R11', x: 12, y: 11, edge: 'S' }, // Puerta Sur del Jefe
-        { room: 'R11', x: 15, y: 9, edge: 'E' },  // Salida Este hacia el Tesoro
-        { room: 'R17', x: 17, y: 11, edge: 'W' }, // Anillo Este -> Sala en "L" R17
-        { room: 'R17', x: 20, y: 11, edge: 'E' }, // R17 -> R18
-        { room: 'R9', x: 17, y: 7, edge: 'W' },   // Anillo Este -> R9
-        { room: 'R9', x: 18, y: 5, edge: 'N' },   // R9 -> R7
+        { room: 'R8', x: 21, y: 2, edge: 'W' },
+        { room: 'R8', x: 22, y: 4, edge: 'S' },
+        { room: 'R7', x: 17, y: 3, edge: 'W' },
+        { room: 'R6', x: 14, y: 3, edge: 'W' },
+        { room: 'R3', x: 11, y: 3, edge: 'E' },
+        { room: 'R3', x: 10, y: 5, edge: 'S' },
+        { room: 'R2', x: 8, y: 2, edge: 'E' },
+        { room: 'R10', x: 22, y: 8, edge: 'S' },
+        { room: 'R18', x: 22, y: 10, edge: 'N' },
+        { room: 'R18', x: 21, y: 11, edge: 'W' },
+        { room: 'R17', x: 17, y: 11, edge: 'W' },
+        { room: 'R11', x: 15, y: 9, edge: 'E' },
+        { room: 'R11', x: 12, y: 7, edge: 'N' },
+        { room: 'R5', x: 8, y: 6, edge: 'E' },
+        { room: 'R4', x: 4, y: 6, edge: 'E' },
       ],
-      secretDoor: { x: 22, y: 13, edge: 'S', room: 'R21' }, // R18 -> Almacén Secreto R21
+      secretDoor: { x: 4, y: 2, edge: 'E', room: 'R1' },
+      blockedWalls: [
+        { x: 12, y: 17, type: 'blocked_double', w: 2, h: 1, note: 'Ala sur derrumbada (2×1)' },
+        { x: 25, y: 14, type: 'blocked', note: 'Pasillo sureste sellado' },
+        { x: 0, y: 14, type: 'blocked', note: 'Pasillo suroeste sellado' },
+        { x: 9, y: 12, type: 'blocked', note: 'Anillo sur-oeste derrumbado' },
+      ],
+      furnRooms: ['R7', 'R10', 'R18', 'R17', 'R2', 'R5', 'R4', 'R1'],
+      combatRooms: ['R7', 'R6', 'R10', 'R18', 'R17', 'R3', 'R2', 'R5', 'R4'],
+      alchemyCandidates: ['R7', 'R18', 'R5', 'R1'],
+      traps: [
+        { type: 'trap_spear', x: 16, y: 9, label: 'Trampa de Lanza ante la Puerta Este del Jefe (DES CD 13)' },
+        { type: 'trap_pit', x: 12, y: 6, label: 'Foso en el Anillo Norte Central (DES CD 13)' },
+        { type: 'trap_falling_rock', x: 20, y: 9, label: 'Bloque Cayendo en Pasillo Medio Este (DES CD 14)' },
+      ],
+    },
+    {
+      name: 'Descenso desde el Sureste',
+      startRoom: 'R21',
+      stairsPos: { x: 22, y: 15 },
+      doors: [
+        { room: 'R21', x: 21, y: 15, edge: 'W' },
+        { room: 'R21', x: 22, y: 14, edge: 'N' },
+        { room: 'R20', x: 18, y: 15, edge: 'W' },
+        { room: 'R19', x: 14, y: 15, edge: 'W' },
+        { room: 'R16', x: 11, y: 15, edge: 'E' },
+        { room: 'R15', x: 8, y: 15, edge: 'E' },
+        { room: 'R15', x: 6, y: 13, edge: 'N' },
+        { room: 'R13', x: 6, y: 10, edge: 'N' },
+        { room: 'R18', x: 22, y: 10, edge: 'N' },
+        { room: 'R18', x: 21, y: 11, edge: 'W' },
+        { room: 'R17', x: 17, y: 11, edge: 'W' },
+        { room: 'R11', x: 12, y: 11, edge: 'S' },
+        { room: 'R11', x: 10, y: 9, edge: 'W' },
+        { room: 'R9', x: 17, y: 7, edge: 'W' },
+        { room: 'R10', x: 22, y: 8, edge: 'S' },
+      ],
+      secretDoor: { x: 22, y: 5, edge: 'N', room: 'R8' },
+      blockedWalls: [
+        { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Corredor central norte sellado (2×1)' },
+        { x: 0, y: 4, type: 'blocked', note: 'Ala noroeste derrumbada' },
+        { x: 25, y: 4, type: 'blocked', note: 'Pasillo noreste cerrado' },
+        { x: 16, y: 6, type: 'blocked', note: 'Escombros en esquina noreste del anillo' },
+      ],
+      furnRooms: ['R20', 'R19', 'R18', 'R17', 'R16', 'R15', 'R10', 'R8'],
+      combatRooms: ['R20', 'R19', 'R18', 'R17', 'R16', 'R15', 'R9', 'R10'],
+      alchemyCandidates: ['R19', 'R18', 'R15', 'R8'],
+      traps: [
+        { type: 'trap_pit', x: 12, y: 12, label: 'Foso frente a la Gran Puerta Sur (DES CD 13)' },
+        { type: 'trap_spear', x: 16, y: 11, label: 'Trampa de Lanza saliendo de la Sala en L (DES CD 13)' },
+        { type: 'trap_falling_rock', x: 9, y: 9, label: 'Bloque Cayendo en el Pasillo Oeste (DES CD 14)' },
+      ],
+    },
+    {
+      name: 'Asedio de Doble Flanco',
+      startRoom: 'R14',
+      stairsPos: { x: 2, y: 15 },
+      doors: [
+        { room: 'R14', x: 2, y: 14, edge: 'N' },
+        { room: 'R12', x: 2, y: 10, edge: 'N' },
+        { room: 'R4', x: 2, y: 8, edge: 'S' },
+        { room: 'R4', x: 4, y: 6, edge: 'E' },
+        { room: 'R5', x: 8, y: 6, edge: 'E' },
+        { room: 'R14', x: 4, y: 16, edge: 'E' },
+        { room: 'R15', x: 8, y: 15, edge: 'E' },
+        { room: 'R16', x: 11, y: 15, edge: 'E' },
+        { room: 'R11', x: 10, y: 9, edge: 'W' },
+        { room: 'R11', x: 12, y: 11, edge: 'S' },
+        { room: 'R11', x: 15, y: 9, edge: 'E' },
+        { room: 'R17', x: 17, y: 11, edge: 'W' },
+        { room: 'R17', x: 20, y: 11, edge: 'E' },
+        { room: 'R9', x: 17, y: 7, edge: 'W' },
+        { room: 'R9', x: 18, y: 5, edge: 'N' },
+      ],
+      secretDoor: { x: 22, y: 13, edge: 'S', room: 'R21' },
       blockedWalls: [
         { x: 0, y: 4, type: 'blocked', note: 'Derrumbe en ala noroeste' },
+        { x: 12, y: 1, type: 'blocked_double', w: 2, h: 1, note: 'Corredor central norte sellado (2×1)' },
         { x: 25, y: 9, type: 'blocked', note: 'Derrumbe en pasillo exterior este' },
       ],
       furnRooms: ['R12', 'R4', 'R5', 'R15', 'R16', 'R7', 'R17', 'R18', 'R21'],
@@ -865,12 +952,19 @@ function buildProceduralBoardMap({
         : 'Puerta Secreta al Almacén del Tesoro',
   });
 
-  // Paredes bloqueadas coherentes en los extremos exteriores
+  // Paredes bloqueadas coherentes
   arch.blockedWalls.forEach((bw) => items.push(bw));
 
-  // 3. Escaleras 2×2 centradas en R14 (Inicio — deja espacio libre en las puertas)
-  occupy(2, 15, 2, 2);
-  items.push({ type: 'stairs', x: 2, y: 15, w: 2, h: 2, label: 'Escaleras de Entrada (Inicio)' });
+  // 3. Escaleras 2×2 centradas en la sala de inicio del arquetipo (R14, R8 o R21)
+  occupy(arch.stairsPos.x, arch.stairsPos.y, 2, 2);
+  items.push({
+    type: 'stairs',
+    x: arch.stairsPos.x,
+    y: arch.stairsPos.y,
+    w: 2,
+    h: 2,
+    label: `Escaleras de Entrada (${arch.startRoom} · ${arch.name})`,
+  });
 
   // 4. Mobiliario Inteligente por Sala (Paredes vs Centro vs Esquina — Cero solapes y cero puertas tapadas)
   const nonAlchemyFurniture = biome.furniturePool.filter((f) => f !== 'alchemy_bench');
@@ -975,8 +1069,8 @@ function buildProceduralBoardMap({
   const notes = [
     {
       code: 'A',
-      room: 'R14',
-      title: `Inicio — ${biome.name}`,
+      room: arch.startRoom,
+      title: `Inicio (${arch.name}) — ${biome.name}`,
       text: `${biome.ambientFlavor} Regla del Bioma: ${biome.globalRule}`,
     },
     {
@@ -987,16 +1081,19 @@ function buildProceduralBoardMap({
     },
     {
       code: 'C',
-      room: 'R21',
-      title: 'Almacén Secreto',
-      text: 'Tras la puerta secreta hay un Cofre con +2 Materiales de Crafteo del bioma.',
+      room: arch.secretDoor.room,
+      title: alchemyRoomId === arch.secretDoor.room ? 'Cámara Secreta de Alquimia' : 'Almacén Secreto',
+      text:
+        alchemyRoomId === arch.secretDoor.room
+          ? 'Tras la puerta secreta hay una Mesa de Alquimia 3×2 protegida y un Cofre de ingredientes.'
+          : 'Tras la puerta secreta hay un Cofre con +2 Materiales de Crafteo del bioma.',
     },
     {
       code: 'D',
-      room: plot.id === 'rescate' ? 'R10' : 'R1',
+      room: npcRoom,
       title: plot.id === 'rescate' ? 'Prisionero (Objetivo)' : 'Explorador Herido (Secundario)',
       text: plot.id === 'rescate'
-        ? 'Libera al prisionero y escóltalo de vuelta a R14 para completar la misión.'
+        ? `Libera al prisionero y escóltalo de vuelta a ${arch.startRoom} para completar la misión.`
         : 'Ayuda al explorador para ganar +1 Ficha de Reputación.',
     },
   ];
@@ -1015,7 +1112,7 @@ function buildProceduralBoardMap({
     title,
     campaign: `Procedural · ${biome.name}`,
     recLevel: partyLevel,
-    startRoom: 'R14',
+    startRoom: arch.startRoom,
     isProcedural: true,
     biomeId: biome.id,
     biomeRule: biome.globalRule,
