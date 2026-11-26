@@ -4,6 +4,8 @@
 // Con Efectos, Mejoras y Desventajas de Balanceo + Generador Procedural
 // ============================================================================
 
+import { OFFICIAL_ARTIFACTS } from './officialCards';
+
 export const RARITIES = [
   { id: 'comun', name: 'Común', color: '#a8a29e', badge: 'bg-stone-700 text-stone-100', border: 'border-stone-600' },
   { id: 'poco_comun', name: 'Poco Común', color: '#34d399', badge: 'bg-emerald-700 text-emerald-50', border: 'border-emerald-500/70' },
@@ -181,18 +183,6 @@ export const DIGITAL_LOOT_CATALOG = [
     restriction: 'Solo Mago / Brujo / Druida / Exorcista',
   },
   {
-    id: 'l_armadura_borin',
-    name: 'Armadura Rúnica de Borin',
-    type: 'Armadura',
-    rarity: 'epico',
-    dice: '+2 Def',
-    price: 1800,
-    special: 'Armadura de placas ligera de leyenda.',
-    upgrade: '+2 Dados de Defensa SIN penalización de movimiento.',
-    flaw: 'Desventaja en pruebas de Sigilo por el brillo metálico.',
-    restriction: 'No Mago',
-  },
-  {
     id: 'l_brazaletes_duelista',
     name: 'Brazaletes del Duelista Fantasma',
     type: 'Accesorio',
@@ -205,19 +195,7 @@ export const DIGITAL_LOOT_CATALOG = [
     restriction: 'Todas las clases',
   },
 
-  // ==================== LEGENDARIO ====================
-  {
-    id: 'l_hoja_espiritu',
-    name: 'Hoja Espiritual de Barak Tor',
-    type: 'Artefacto',
-    rarity: 'legendario',
-    dice: '3 DC (4 vs No Muertos)',
-    price: 2800,
-    special: 'La reliquia sagrada capaz de destruir al Señor Brujo.',
-    upgrade: '4 DC contra No Muertos y Espectros (daña Etéreos normal) e ilumina 4 casillas en oscuridad.',
-    flaw: 'Su brillo revela tu posición: -3 a Sigilo y los No Muertos te priorizan como blanco.',
-    restriction: 'No Mago',
-  },
+  // ==================== LEGENDARIO (Únicos de Crónicas del Abismo) ====================
   {
     id: 'l_espada_devoradora',
     name: 'Filo Devorador de Almas',
@@ -230,54 +208,20 @@ export const DIGITAL_LOOT_CATALOG = [
     flaw: 'MALDICIÓN: Al inicio de cada combate pierdes 1 PM si no hieres a un enemigo en 2 turnos.',
     restriction: 'No Mago',
   },
-  {
-    id: 'l_talisman_melar',
-    name: 'Talismán de Sabiduría de Melar',
-    type: 'Artefacto',
-    rarity: 'legendario',
-    dice: '+2 PM Máx',
-    price: 2500,
-    special: 'Reliquia arcana del Juego Base de gran poder mental.',
-    upgrade: '+2 PM máximos, +2 a pruebas de Arcano y 1 vez/misión lanzas 2 hechizos en un turno.',
-    flaw: 'Mientras lo portes, sufres +1 daño por ataques de Fuego.',
-    restriction: 'Todas las clases',
-  },
-  {
-    id: 'l_matador_orcos',
-    name: 'Matador de Orcos (Artefacto Base)',
-    type: 'Artefacto',
-    rarity: 'raro',
-    dice: '3 DC (4 vs Orcos)',
-    price: 1100,
-    special: 'Espada ancha élfica del Juego Base grabada contra pieles verdes.',
-    upgrade: 'Tira 4 DC contra Orcos y Goblins; al derrotar un Orco ganas +1 casilla de movimiento.',
-    flaw: 'Solo 1 mano; los Jefes Orcos te priorizan en combate.',
-    restriction: 'No Mago',
-  },
-  {
-    id: 'l_anillo_retorno',
-    name: 'Anillo de Retorno (Artefacto Base)',
-    type: 'Artefacto',
-    rarity: 'epico',
-    dice: 'Escape Grupal',
-    price: 1600,
-    special: 'Reliquia del Juego Base: teletransporta instantáneamente a todos los héroes visibles a las escaleras de inicio.',
-    upgrade: 'Salva al grupo de una derrota segura en cualquier misión (1 uso por campaña o recargable en Ciudad por 400 MO).',
-    flaw: 'Al usarlo pierdes cualquier tesoro que aún no haya sido recogido en la sala.',
-    restriction: 'Todas las clases',
-  },
-  {
-    id: 'l_varita_magia',
-    name: 'Varita de la Magia (Artefacto Base)',
-    type: 'Artefacto',
-    rarity: 'legendario',
-    dice: '2 Hechizos/Turno',
-    price: 2400,
-    special: 'Permite al portador lanzar DOS hechizos distintos en un mismo turno.',
-    upgrade: 'Ideal para combinar control + daño o curación + ataque en momentos críticos.',
-    flaw: 'Usar doble hechizo cuesta 1 PM adicional por fatiga arcana.',
-    restriction: 'Solo Mago / Brujo / Bardo / Exorcista',
-  },
+
+  // ==================== ARTEFACTOS OFICIALES ORDENADOS (SIN DUPLICADOS) ====================
+  ...OFFICIAL_ARTIFACTS.map((art) => ({
+    id: art.id,
+    name: `${art.name} (Oficial)`,
+    type: art.type,
+    rarity: art.rarity || 'raro',
+    dice: art.dice,
+    price: art.rarity === 'legendario' ? 2500 : art.rarity === 'epico' ? 1400 : 750,
+    special: art.text,
+    upgrade: `[${art.category} · ${art.expansion}] ${art.text}`,
+    flaw: '',
+    restriction: art.restriction || 'Todas las clases',
+  })),
   {
     id: 'l_brazales_mago',
     name: 'Brazales de Mago (Artefacto Base)',

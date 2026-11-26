@@ -97,7 +97,7 @@ export default function CharacterForge({
   const [customItemSpecial, setCustomItemSpecial] = useState('');
   const [customItemFlaw, setCustomItemFlaw] = useState('');
 
-  // Estado del Creador de Personajes
+  // Estado del Creador de Personajes (Simplificado: Atributos fijos recomendados, sin Alineamiento/Motivación/Ventajas/Desventajas)
   const [name, setName] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [raceId, setRaceId] = useState('humano');
@@ -105,11 +105,6 @@ export default function CharacterForge({
   const [classId, setClassId] = useState('barbaro');
   const level = 1; // Todos los héroes nuevos inician en Nivel 1; solo el DM los sube de nivel
   const [activeKeyword, setActiveKeyword] = useState(null);
-  const [baseAttrs, setBaseAttrs] = useState(DEFAULT_ATTRS);
-  const [alignment, setAlignment] = useState('NB');
-  const [motivationId, setMotivationId] = useState('venganza');
-  const [selectedPerks, setSelectedPerks] = useState(['tactico']);
-  const [selectedFlaws, setSelectedFlaws] = useState([]);
   const [professionId, setProfessionId] = useState('herrero');
   const [quirkId, setQuirkId] = useState('fanatico_acero');
 
@@ -118,7 +113,7 @@ export default function CharacterForge({
 
   const race = RACES.find((r) => r.id === raceId);
   const cls = CLASSES.find((c) => c.id === classId);
-  const maxPerks = selectedFlaws.length >= 2 ? 2 : 1;
+  const baseAttrs = buildAttrsForClass(cls);
 
   const finalAttrs = ATTRIBUTES.reduce((acc, a) => {
     const racial = race?.bonuses?.[a.id] || 0;
@@ -129,31 +124,13 @@ export default function CharacterForge({
   const calcMaxPC = () => {
     const conMod = Math.max(0, getModifier(finalAttrs.CON));
     const raceBonus = raceId === 'enano' ? 1 : 0;
-    const perkBonus = selectedPerks.includes('duro') ? (level >= 5 ? 3 : 2) : 0;
-    return cls.basePC + conMod + raceBonus + perkBonus + (level - 1) * cls.pcPerLevel;
+    return cls.basePC + conMod + raceBonus + (level - 1) * cls.pcPerLevel;
   };
 
   const calcMaxPM = () => {
     const intMod = Math.max(0, getModifier(finalAttrs.INT));
     const raceBonus = raceId === 'alto_elfo' ? 1 : 0;
-    const perkBonus = selectedPerks.includes('mente_ferrea') ? 2 : 0;
-    return cls.basePM + Math.floor(intMod / 2) + raceBonus + perkBonus + (level - 1) * cls.pmPerLevel;
-  };
-
-  const roll4d6Stats = () => {
-    const rollOne = () => {
-      const dice = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1);
-      dice.sort((a, b) => b - a);
-      return dice[0] + dice[1] + dice[2];
-    };
-    setBaseAttrs({
-      FUE: rollOne(),
-      DES: rollOne(),
-      CON: rollOne(),
-      INT: rollOne(),
-      SAB: rollOne(),
-      CAR: rollOne(),
-    });
+    return cls.basePM + Math.floor(intMod / 2) + raceBonus + (level - 1) * cls.pmPerLevel;
   };
 
   const randomizeHero = () => {
@@ -171,51 +148,13 @@ export default function CharacterForge({
 
     const rRace = pick(RACES);
     const rCls = pick(CLASSES);
-    const rAlign = pick(ALIGNMENTS.filter((a) => a.id !== 'CM')); // Evita Caótico Malvado por defecto
-    const rMot = pick(MOTIVATIONS);
-
-    // 50% toma 1 Ventaja sin desventajas; 50% toma 2 Desventajas + 2 Ventajas
-    const takeFlaws = Math.random() < 0.5;
-    const shuffledPerks = [...PERKS].sort(() => Math.random() - 0.5);
-    const shuffledFlaws = [...FLAWS].sort(() => Math.random() - 0.5);
 
     setName(`${pick(firstNames)} ${pick(epithets)}`);
     setRaceId(rRace.id);
     setClassId(rCls.id);
-    setBaseAttrs(buildAttrsForClass(rCls));
-    setAlignment(rAlign.id);
-    setMotivationId(rMot.id);
     setProfessionId(pick(PROFESSIONS).id);
     setQuirkId(pick(QUIRKS).id);
     setDragonElement(Math.random() < 0.5 ? 'Fuego' : 'Hielo');
-
-    if (takeFlaws) {
-      setSelectedFlaws([shuffledFlaws[0].id, shuffledFlaws[1].id]);
-      setSelectedPerks([shuffledPerks[0].id, shuffledPerks[1].id]);
-    } else {
-      setSelectedFlaws([]);
-      setSelectedPerks([shuffledPerks[0].id]);
-    }
-  };
-
-  const togglePerk = (id) => {
-    if (selectedPerks.includes(id)) {
-      setSelectedPerks((prev) => prev.filter((p) => p !== id));
-    } else if (selectedPerks.length < maxPerks) {
-      setSelectedPerks((prev) => [...prev, id]);
-    }
-  };
-
-  const toggleFlaw = (id) => {
-    if (selectedFlaws.includes(id)) {
-      const next = selectedFlaws.filter((f) => f !== id);
-      setSelectedFlaws(next);
-      if (next.length < 2 && selectedPerks.length > 1) {
-        setSelectedPerks((prev) => prev.slice(0, 1));
-      }
-    } else if (selectedFlaws.length < 2) {
-      setSelectedFlaws((prev) => [...prev, id]);
-    }
   };
 
   const createHero = () => {
@@ -223,11 +162,10 @@ export default function CharacterForge({
     const levelInfo = LEVEL_TABLE.find((l) => l.level === level) || LEVEL_TABLE[0];
     const maxPC = calcMaxPC();
     const maxPM = calcMaxPM();
-    const speedBase = 8 + (race.speedMod || 0) + (selectedPerks.includes('veloz') ? 2 : 0);
-    const initMod = getModifier(finalAttrs.DES) + (selectedPerks.includes('alerta') ? 3 : 0);
+    const speedBase = 8 + (race.speedMod || 0);
+    const initMod = getModifier(finalAttrs.DES);
     const chosenSub = null; // La subclase se desbloquea cuando el DM sube al héroe a Nivel 3
 
-    const alignObj = ALIGNMENTS.find((a) => a.id === alignment) || ALIGNMENTS[1];
     const finalSkills = Array.from(new Set([...cls.proficientSkills]));
     const raceTraitFull =
       raceId === 'draconido'
@@ -265,10 +203,10 @@ export default function CharacterForge({
       resourceName: cls.resourceName,
       coreAbility: cls.coreAbility,
       proficientSkills: finalSkills,
-      alignment: `${alignObj.name} (${alignObj.effect})`,
-      motivation: MOTIVATIONS.find((m) => m.id === motivationId),
-      perks: PERKS.filter((p) => selectedPerks.includes(p.id)),
-      flaws: FLAWS.filter((f) => selectedFlaws.includes(f.id)),
+      alignment: null,
+      motivation: null,
+      perks: [],
+      flaws: [],
       inventory: cls.startingGear.map((g, idx) => ({
         id: `init-${idx}`,
         name: g,
@@ -281,11 +219,11 @@ export default function CharacterForge({
       professionName: PROFESSIONS.find((p) => p.id === professionId)?.name || 'Herrero de Batalla',
       quirk: QUIRKS.find((q) => q.id === quirkId) || null,
       materials: {
-        hierba_lunar: raceId === 'gnomo' || professionId === 'herbolario' ? 2 : 1,
         racion_mazmorra: 1,
-        ...(professionId === 'herrero' ? { acero_templado: 1 } : {}),
+        ...(professionId === 'herbolario' || raceId === 'gnomo' ? { hierba_lunar: 1 } : {}),
+        ...(professionId === 'herrero' ? { chatarra_acero: 1 } : {}),
         ...(professionId === 'escriba' || raceId === 'gnomo' ? { polvo_runico: 1 } : {}),
-        ...(professionId === 'cazador' ? { huesos_colmillos: 1 } : {}),
+        ...(professionId === 'cazador' ? { colmillos_hueso: 1 } : {}),
       },
       bankedGold: 0,
       debt: 0,
@@ -635,7 +573,6 @@ export default function CharacterForge({
                     key={c.id}
                     onClick={() => {
                       setClassId(c.id);
-                      setBaseAttrs(buildAttrsForClass(c));
                     }}
                     className={`p-4 rounded-xl border text-left transition cursor-pointer ${
                       active
@@ -661,33 +598,17 @@ export default function CharacterForge({
             </div>
           </div>
 
-          {/* Paso 4: Atributos Base D&D */}
+          {/* Paso 4: Atributos Recomendados Automáticos (Solo Lectura + Explicación Clara) */}
           <div className="grimoire-panel rounded-2xl p-6 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="text-xl font-bold text-amber-300">4. Atributos Base (D&D)</h3>
-                <p className="text-xs text-stone-400">
-                  Bonos raciales aplicados automáticamente. Recomendados para {cls.name}:{' '}
-                  <strong className="text-amber-300">{cls.primaryAttrs.join(', ')}</strong>.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setBaseAttrs(buildAttrsForClass(cls))}
-                  className="px-3 py-1.5 rounded-lg bg-stone-900 border border-stone-700 text-xs font-semibold hover:border-amber-500 cursor-pointer"
-                >
-                  Recomendados para {cls.name.split(' ')[0]} (15–8)
-                </button>
-                <button
-                  onClick={roll4d6Stats}
-                  className="px-3 py-1.5 rounded-lg bg-amber-700/30 border border-amber-500 text-amber-200 text-xs font-bold flex items-center gap-1 cursor-pointer"
-                >
-                  <Dices className="w-3.5 h-3.5" /> Tirar 4d6 (descarta menor)
-                </button>
-              </div>
+            <div>
+              <h3 className="text-xl font-bold text-amber-300">4. Atributos Recomendados de {cls.name}</h3>
+              <p className="text-xs text-stone-400">
+                Se asignan automáticamente según tu <strong>Clase + Raza</strong> para mantener el juego equilibrado. Atributos clave de tu clase:{' '}
+                <strong className="text-amber-300">{cls.primaryAttrs.join(', ')}</strong>.
+              </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {ATTRIBUTES.map((a) => {
                 const racial = race?.bonuses?.[a.id] || 0;
                 const baseVal = Number(baseAttrs[a.id] ?? 10);
@@ -697,197 +618,39 @@ export default function CharacterForge({
                 return (
                   <div
                     key={a.id}
-                    className={`p-3 rounded-xl border text-center ${
+                    className={`p-3.5 rounded-xl border text-left space-y-1.5 ${
                       isPrimary
-                        ? 'bg-amber-950/25 border-amber-600/60'
+                        ? 'bg-amber-950/25 border-amber-500/70'
                         : 'bg-stone-900/90 border-stone-800'
                     }`}
                   >
-                    <div className="text-xs font-bold text-amber-400">
-                      {a.name} {isPrimary && '★'}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-amber-300">
+                        {a.name} ({a.short}) {isPrimary && '★ Clave'}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-600/20 border border-amber-500/50 text-amber-200 font-black text-xs">
+                        {total} ({formatMod(mod)})
+                      </span>
                     </div>
-                    <div className="flex items-center justify-center gap-1.5 my-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setBaseAttrs((prev) => ({
-                            ...prev,
-                            [a.id]: Math.max(6, Number(prev[a.id] ?? 10) - 1),
-                          }))
-                        }
-                        className="w-7 h-7 rounded-lg bg-stone-800 hover:bg-red-900 text-stone-200 font-black cursor-pointer"
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        min={6}
-                        max={20}
-                        value={baseVal}
-                        onChange={(e) => {
-                          const v = parseInt(e.target.value, 10);
-                          if (!Number.isNaN(v)) {
-                            setBaseAttrs((prev) => ({
-                              ...prev,
-                              [a.id]: Math.max(3, Math.min(20, v)),
-                            }));
-                          }
-                        }}
-                        className="w-12 py-1 rounded-lg bg-stone-950 border border-stone-700 text-center text-base font-bold text-white"
-                      />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setBaseAttrs((prev) => ({
-                            ...prev,
-                            [a.id]: Math.min(20, Number(prev[a.id] ?? 10) + 1),
-                          }))
-                        }
-                        className="w-7 h-7 rounded-lg bg-stone-800 hover:bg-emerald-800 text-stone-200 font-black cursor-pointer"
-                      >
-                        +
-                      </button>
+                    <div className="text-[10px] text-stone-400">
+                      Base recomendada: <strong>{baseVal}</strong>
+                      {racial > 0 ? <span className="text-emerald-300"> + {racial} por Raza ({race.name.split(' ')[0]})</span> : ''}
                     </div>
-                    <div className="text-[11px] text-stone-400">
-                      {racial > 0 ? `${baseVal} + ${racial} raza = ` : 'Total: '}
-                      <strong className="text-stone-100">{total}</strong>
-                    </div>
-                    <div className="mt-1 inline-block px-2.5 py-0.5 rounded-full bg-amber-600/20 border border-amber-500/40 text-amber-300 font-bold text-xs">
-                      Mod {formatMod(mod)}
-                    </div>
+                    <p className="text-[11px] text-stone-300 leading-snug">{a.desc}</p>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Paso 5: Motivación, Alineamiento, Ventajas y Desventajas */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="grimoire-panel rounded-2xl p-6 space-y-4">
-              <h3 className="text-xl font-bold text-amber-300">5. Alineamiento Moral y Motivación</h3>
-              <p className="text-xs text-stone-400">
-                Tu <strong className="text-sky-300">Alineamiento Moral</strong> no es solo historia: te otorga una <strong>ventaja real en la partida</strong> según cómo actúas.
-              </p>
-              <div>
-                <label className="text-xs text-stone-400 block mb-1">Alineamiento Moral</label>
-                <select
-                  value={alignment}
-                  onChange={(e) => setAlignment(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-stone-950 border border-stone-700 text-stone-100"
-                >
-                  {ALIGNMENTS.map((a) => (
-                    <option key={a.id} value={a.id} className="bg-stone-900">
-                      {a.name} — {a.desc}
-                    </option>
-                  ))}
-                </select>
-                {(() => {
-                  const selAlign = ALIGNMENTS.find((a) => a.id === alignment);
-                  return selAlign ? (
-                    <div className="mt-2 p-3 rounded-xl bg-amber-950/30 border border-amber-700/50 text-xs text-amber-100">
-                      <RichRuleText text={selAlign.effect} onSelectKeyword={setActiveKeyword} />
-                    </div>
-                  ) : null;
-                })()}
-              </div>
-              <div>
-                <label className="text-xs text-stone-400 block mb-1">
-                  Motivación del Héroe (Guía de Rol y Recompensa)
-                </label>
-                <div className="space-y-2">
-                  {MOTIVATIONS.map((m) => (
-                    <button
-                      key={m.id}
-                      onClick={() => setMotivationId(m.id)}
-                      className={`w-full p-2.5 rounded-xl border text-left text-xs cursor-pointer ${
-                        motivationId === m.id
-                          ? 'bg-amber-950/40 border-amber-500 text-amber-100'
-                          : 'bg-stone-900/70 border-stone-800 text-stone-300'
-                      }`}
-                    >
-                      <div className="font-bold">{m.name}</div>
-                      <div className="text-stone-400">
-                        <RichRuleText text={m.desc} onSelectKeyword={setActiveKeyword} />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="grimoire-panel rounded-2xl p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-amber-300">6. Ventajas y Desventajas</h3>
-                <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-700 text-emerald-300 font-bold">
-                  Ventajas: {selectedPerks.length}/{maxPerks}
-                </span>
-              </div>
-              <p className="text-xs text-stone-400">
-                Eliges <strong>1 Ventaja</strong> gratis. Si tomas <strong>2 Desventajas</strong>, desbloqueas una <strong>2ª Ventaja</strong> extra.
-              </p>
-
-              <div>
-                <div className="text-xs font-bold uppercase text-emerald-400 mb-2">Ventajas (Perks)</div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
-                  {PERKS.map((p) => {
-                    const active = selectedPerks.includes(p.id);
-                    return (
-                      <button
-                        key={p.id}
-                        onClick={() => togglePerk(p.id)}
-                        className={`p-2.5 rounded-xl border text-left text-xs cursor-pointer transition ${
-                          active
-                            ? 'bg-emerald-950/50 border-emerald-400 text-emerald-100'
-                            : 'bg-stone-900/70 border-stone-800 text-stone-300 hover:border-stone-600'
-                        }`}
-                      >
-                        <div className="font-bold">{p.name}</div>
-                        <div className="text-[11px] text-stone-400 mt-0.5">
-                          <RichRuleText text={p.desc} onSelectKeyword={setActiveKeyword} />
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <div className="text-xs font-bold uppercase text-red-400 mb-2">
-                  Desventajas (Flaws — {selectedFlaws.length}/2)
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1">
-                  {FLAWS.map((f) => {
-                    const active = selectedFlaws.includes(f.id);
-                    return (
-                      <button
-                        key={f.id}
-                        onClick={() => toggleFlaw(f.id)}
-                        className={`p-2.5 rounded-xl border text-left text-xs cursor-pointer transition ${
-                          active
-                            ? 'bg-red-950/50 border-red-400 text-red-100'
-                            : 'bg-stone-900/70 border-stone-800 text-stone-300 hover:border-stone-600'
-                        }`}
-                      >
-                        <div className="font-bold">{f.name}</div>
-                        <div className="text-[11px] text-stone-400 mt-0.5">
-                          <RichRuleText text={f.desc} onSelectKeyword={setActiveKeyword} />
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Paso 7: Profesión (Ciudad + Mazmorra) y Rasgo de Personalidad (Quirk) */}
+          {/* Paso 5: Profesión (Ciudad + Mazmorra) y Rasgo de Personalidad (Quirk con Alertas al DM) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="grimoire-panel rounded-2xl p-6 space-y-3">
-              <h3 className="text-xl font-bold text-amber-300">7. Profesión del Héroe</h3>
+              <h3 className="text-xl font-bold text-amber-300">5. Profesión del Héroe</h3>
               <p className="text-xs text-stone-400">
                 Otorga <strong>-20% de descuento</strong> en su distrito de la Ciudad y un <strong>bono único dentro de la mazmorra</strong>.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
                 {PROFESSIONS.map((p) => (
                   <button
                     key={p.id}
@@ -907,11 +670,11 @@ export default function CharacterForge({
             </div>
 
             <div className="grimoire-panel rounded-2xl p-6 space-y-3">
-              <h3 className="text-xl font-bold text-purple-300">8. Rasgo de Personalidad (Quirk)</h3>
+              <h3 className="text-xl font-bold text-purple-300">6. Rasgo de Personalidad (Quirk)</h3>
               <p className="text-xs text-stone-400">
-                Un rasgo único y equilibrado (1 ventaja táctica + 1 manía de rol divertida).
+                Elige 1 rasgo equilibrado (1 ventaja táctica + 1 manía divertida). <strong>¡El DM recibirá alertas en vivo en el Tablero</strong> cuando tu manía pueda activarse en la sala!
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
                 {QUIRKS.map((q) => (
                   <button
                     key={q.id}
@@ -938,7 +701,7 @@ export default function CharacterForge({
               <div><span className="text-stone-400">PM Máx:</span> <strong className="text-cyan-300 text-lg">{calcMaxPM()}</strong></div>
               <div><span className="text-stone-400">Ataque:</span> <strong className="text-red-300 text-lg">{cls.baseAttackDice} DC</strong></div>
               <div><span className="text-stone-400">Defensa:</span> <strong className="text-amber-300 text-lg">{cls.baseDefendDice} DC</strong></div>
-              <div><span className="text-stone-400">Iniciativa:</span> <strong className="text-purple-300 text-lg">{formatMod(getModifier(finalAttrs.DES) + (selectedPerks.includes('alerta') ? 3 : 0))}</strong></div>
+              <div><span className="text-stone-400">Iniciativa:</span> <strong className="text-purple-300 text-lg">{formatMod(getModifier(finalAttrs.DES))}</strong></div>
             </div>
             <button
               onClick={createHero}
@@ -991,7 +754,7 @@ export default function CharacterForge({
                   </h2>
                   <p className="text-sm font-semibold text-stone-700">
                     {activeHero.raceName} · {activeHero.className}
-                    {activeHero.subclass ? ` (${activeHero.subclass.name})` : ''} · {activeHero.alignment}
+                    {activeHero.subclass ? ` (${activeHero.subclass.name})` : ''}
                   </p>
                   <p className="text-xs text-stone-600 mt-0.5">
                     Jugador: <strong>{activeHero.playerName}</strong> · Miniatura: {activeHero.miniature}
@@ -1116,7 +879,7 @@ export default function CharacterForge({
                 <div className="lg:col-span-7 space-y-4">
                   <div className="p-4 rounded-xl bg-white/60 border border-amber-900/30 space-y-2 text-xs">
                     <h4 className="font-display font-bold text-sm uppercase text-amber-950">
-                      Rasgos, Poderes y Motivación
+                      Rasgos, Poderes y Personalidad
                     </h4>
                     <p><strong>Recurso:</strong> {activeHero.resourceName}</p>
                     <p><strong>Habilidad de Clase:</strong> {activeHero.coreAbility}</p>
@@ -1124,21 +887,16 @@ export default function CharacterForge({
                     {activeHero.subclass && (
                       <p><strong>Subclase ({activeHero.subclass.name}):</strong> {activeHero.subclass.desc}</p>
                     )}
-                    {activeHero.motivation && (
-                      <p><strong>Motivación ({activeHero.motivation.name}):</strong> {activeHero.motivation.desc}</p>
+                    {activeHero.professionName && (
+                      <p><strong>Profesión:</strong> {activeHero.professionName}</p>
                     )}
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      {(activeHero.perks || []).map((p) => (
-                        <span key={p.id} className="px-2 py-0.5 rounded bg-emerald-900/15 border border-emerald-800/40 text-emerald-950 font-semibold">
-                          ✓ {p.name}
-                        </span>
-                      ))}
-                      {(activeHero.flaws || []).map((f) => (
-                        <span key={f.id} className="px-2 py-0.5 rounded bg-red-900/15 border border-red-800/40 text-red-950 font-semibold">
-                          ✗ {f.name}
-                        </span>
-                      ))}
-                    </div>
+                    {activeHero.quirk && (
+                      <p>
+                        <strong>{activeHero.quirk.icon} Rasgo ({activeHero.quirk.name}):</strong>{' '}
+                        <span className="text-emerald-900">+ {activeHero.quirk.bonus}</span> ·{' '}
+                        <span className="text-red-900">- {activeHero.quirk.drawback}</span>
+                      </p>
+                    )}
                   </div>
 
                   {/* Inventario con Espacios y Oro */}

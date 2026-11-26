@@ -753,58 +753,6 @@ export default function PlayerMobileView({ initialPlayerParam }) {
       });
     });
 
-    // Ventajas (Perks) activables en partida (ej: Manos Sanadoras, Voz de Mando, Ojo de Saqueador, Voluntad Indomable)
-    (hero.perks || []).forEach((p) => {
-      const pAct = PERK_ACTIVE_ABILITIES[p.id];
-      if (pAct) {
-        list.push({
-          id: pAct.id,
-          name: pAct.name,
-          kind: 'ventaja',
-          dice: 0,
-          damageType: pAct.damageType || 'Ventaja',
-          isMagic: false,
-          isFire: false,
-          isRanged: false,
-          isAttack: false,
-          costPM: 0,
-          maxUses: pAct.maxUses ?? 1,
-          cooldownTurns: pAct.cooldownTurns || 0,
-          buff: pAct.buff || null,
-          targetAlly: Boolean(pAct.targetAlly),
-          supportHealPC: pAct.supportHealPC || 0,
-          supportHealPM: pAct.supportHealPM || 0,
-          desc: pAct.desc,
-        });
-      }
-    });
-
-    // Alineamientos con poder activable en misión (Neutral Auténtico, Caótico Neutral, Neutral Malvado)
-    if (hero.alignment) {
-      const matchedKey = Object.keys(ALIGNMENT_ACTIVE_ABILITIES).find((k) =>
-        hero.alignment.startsWith(k)
-      );
-      if (matchedKey) {
-        const aAct = ALIGNMENT_ACTIVE_ABILITIES[matchedKey];
-        list.push({
-          id: aAct.id,
-          name: aAct.name,
-          kind: 'alineamiento',
-          dice: 0,
-          damageType: aAct.damageType || 'Alineamiento',
-          isMagic: false,
-          isFire: false,
-          isRanged: false,
-          isAttack: false,
-          costPM: 0,
-          maxUses: aAct.maxUses ?? 1,
-          cooldownTurns: aAct.cooldownTurns || 0,
-          buff: aAct.buff || null,
-          desc: aAct.desc,
-        });
-      }
-    }
-
     // Poder Racial Activable (solo si la raza tiene habilidad activable; las pasivas se muestran aparte)
     const raceAction = RACIAL_ACTIONS[hero.raceId];
     if (raceAction?.active) {
@@ -925,15 +873,30 @@ export default function PlayerMobileView({ initialPlayerParam }) {
     );
   };
 
-  // Hechizos disponibles según la clase y nivel del héroe
+  // Hechizos exactos según la clase y nivel del héroe (sin hechizos de más)
   const getHeroSpells = () => {
-    const hasSintonia = (hero.perks || []).some((p) => p.id === 'sintonizado');
+    const lvl = hero.level || 1;
+    const BASE_FIRE = ['bola_fuego', 'coraje', 'ira_fuego'];
+    const BASE_WATER = ['agua_curativa', 'sueno', 'velo_niebla'];
+    const BASE_EARTH = ['piel_piedra', 'sanar_cuerpo', 'atravesar_roca'];
+    const BASE_AIR = ['genio', 'viento_veloz', 'tempestad'];
+    const ADV_ELEMENTAL = ['llamarada_ceniza', 'escarcha_helada', 'temblor_piedra', 'relampago_arco'];
+
     if (hero.classId === 'mago') {
-      const schools = hero.level >= 5 ? ['Fuego', 'Agua', 'Tierra', 'Aire'] : ['Fuego', 'Agua', 'Tierra'];
-      return SPELLS_CATALOG.filter((sp) => schools.includes(sp.school));
+      const allowed = [
+        ...BASE_FIRE,
+        ...BASE_WATER,
+        ...BASE_EARTH,
+        ...(lvl >= 5 ? BASE_AIR : []),
+        ...(lvl >= 4 ? ADV_ELEMENTAL.slice(0, lvl >= 7 ? 4 : 2) : []),
+      ];
+      return SPELLS_CATALOG.filter((sp) => allowed.includes(sp.id));
     }
     if (hero.classId === 'explorador') {
-      return SPELLS_CATALOG.filter((sp) => sp.school === 'Aire');
+      return SPELLS_CATALOG.filter((sp) => BASE_AIR.includes(sp.id));
+    }
+    if (hero.classId === 'mago_batalla') {
+      return SPELLS_CATALOG.filter((sp) => BASE_FIRE.includes(sp.id));
     }
     if (hero.classId === 'bardo' || hero.classId === 'exorcista') {
       return SPELLS_CATALOG.filter((sp) => sp.school === 'Espíritu');
@@ -942,13 +905,7 @@ export default function PlayerMobileView({ initialPlayerParam }) {
       return SPELLS_CATALOG.filter((sp) => sp.school === 'Sombras');
     }
     if (hero.classId === 'druida') {
-      return SPELLS_CATALOG.filter((sp) => ['Tierra', 'Agua'].includes(sp.school)).slice(0, 4);
-    }
-    if (hero.classId === 'paladin') {
-      return SPELLS_CATALOG.filter((sp) => ['sanar_cuerpo', 'coraje', 'piel_piedra'].includes(sp.id));
-    }
-    if (hasSintonia) {
-      return SPELLS_CATALOG.filter((sp) => sp.level === 1).slice(0, 2);
+      return SPELLS_CATALOG.filter((sp) => ['agua_curativa', 'piel_piedra', 'sanar_cuerpo'].includes(sp.id));
     }
     return [];
   };

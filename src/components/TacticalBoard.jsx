@@ -348,6 +348,128 @@ function buildRoomTriggers(currentMap, selectedRoomId, roomItems) {
   return triggers;
 }
 
+// Evalúa qué Rasgos de Personalidad (Quirks) de los héroes se disparan en la sala actual para avisar al DM
+function evaluateRoomQuirks(heroes = [], roomItems = [], roomMonstersScaled = [], isCorridor = false) {
+  if (!Array.isArray(heroes) || heroes.length === 0) return [];
+  const types = new Set(roomItems.map((it) => it.type));
+  const hasFlammable = [
+    'table', 'bookcase', 'fireplace', 'cupboard', 'sorcerer_table', 'rack', 'weapon_rack', 'throne',
+  ].some((t) => types.has(t));
+  const hasChestOrTomb = types.has('chest') || types.has('tomb');
+  const hasTrap = types.has('trap_pit') || types.has('trap_spear') || types.has('trap_falling_rock');
+  const hasDoor = types.has('door') || types.has('secret_door');
+  const hasMagicFurniture = types.has('alchemy_bench') || types.has('sorcerer_table');
+  const hasMonsters = roomMonstersScaled.length > 0;
+  const hasBossOrElite = roomMonstersScaled.some((m) => m.item?.info?.isBoss || m.scaled?.isElite);
+  const hasIntelligent = roomMonstersScaled.some((m) =>
+    ['goblin', 'orc', 'dread_warrior', 'sorcerer', 'assassin'].includes(m.item?.info?.monsterId)
+  );
+
+  const alerts = [];
+  heroes.forEach((h) => {
+    const q = h?.quirk;
+    if (!q?.id) return;
+    if (q.id === 'piromano' && (hasFlammable || hasMonsters)) {
+      alerts.push({
+        key: `${h.id}-${q.id}`,
+        heroName: h.name,
+        icon: q.icon || '🔥',
+        quirkName: q.name,
+        trigger: hasFlammable
+          ? '¡Hay muebles/antorchas en esta sala! Pide Salvación SAB CD 11 o intentará prenderlos.'
+          : 'En combate: recuerda que gana +1 DC con Fuego/Bombas.',
+        bonus: q.bonus,
+        drawback: q.drawback,
+        urgent: hasFlammable,
+      });
+    } else if (q.id === 'coleccionista_huesos' && (hasChestOrTomb || hasBossOrElite)) {
+      alerts.push({
+        key: `${h.id}-${q.id}`,
+        heroName: h.name,
+        icon: q.icon || '🦴',
+        quirkName: q.name,
+        trigger: hasChestOrTomb
+          ? '¡Hay cofre/tumba aquí! No puede irse sin revisarlo aunque haya prisa.'
+          : '¡Jefe/Élite presente! Si lo derrotan, dale +1 Material de Crafteo extra.',
+        bonus: q.bonus,
+        drawback: q.drawback,
+        urgent: hasChestOrTomb,
+      });
+    } else if (q.id === 'temerario' && (hasTrap || hasDoor)) {
+      alerts.push({
+        key: `${h.id}-${q.id}`,
+        heroName: h.name,
+        icon: q.icon || '🚪',
+        quirkName: q.name,
+        trigger: hasTrap
+          ? '¡Hay trampa en esta sala! Si entra primero, sufre -1 a su Salvación de DES.'
+          : 'Si intenta derribar una puerta cerrada/atrancada, tiene Ventaja en FUE.',
+        bonus: q.bonus,
+        drawback: q.drawback,
+        urgent: hasTrap,
+      });
+    } else if (q.id === 'supersticioso' && (hasMagicFurniture || hasMonsters)) {
+      alerts.push({
+        key: `${h.id}-${q.id}`,
+        heroName: h.name,
+        icon: q.icon || '🔮',
+        quirkName: q.name,
+        trigger: hasMagicFurniture
+          ? '¡Altar/Banco alquímico! Se niega a beber pociones misteriosas sin identificar (+2 vs Magia).'
+          : 'Gana +2 a Salvaciones contra Hechizos del Terror en esta sala.',
+        bonus: q.bonus,
+        drawback: q.drawback,
+        urgent: hasMagicFurniture,
+      });
+    } else if (q.id === 'fanatico_acero' && hasMonsters) {
+      alerts.push({
+        key: `${h.id}-${q.id}`,
+        heroName: h.name,
+        icon: q.icon || '⚔️',
+        quirkName: q.name,
+        trigger: 'Si intentan negociar con los enemigos aquí, sufre -1 en Persuasión (puede repetir 1 DC en su 1er ataque).',
+        bonus: q.bonus,
+        drawback: q.drawback,
+        urgent: false,
+      });
+    } else if (q.id === 'insomne' && (isCorridor || hasMonsters)) {
+      alerts.push({
+        key: `${h.id}-${q.id}`,
+        heroName: h.name,
+        icon: q.icon || '👁️',
+        quirkName: q.name,
+        trigger: 'Nunca es sorprendido por emboscadas/patrullas aquí (+2 Iniciativa).',
+        bonus: q.bonus,
+        drawback: q.drawback,
+        urgent: false,
+      });
+    } else if (q.id === 'negociador_nato' && hasIntelligent) {
+      alerts.push({
+        key: `${h.id}-${q.id}`,
+        heroName: h.name,
+        icon: q.icon || '💬',
+        quirkName: q.name,
+        trigger: 'Monstruos inteligentes presentes: Ventaja al negociar, pero enemigos en Venganza lo eligen primero.',
+        bonus: q.bonus,
+        drawback: q.drawback,
+        urgent: true,
+      });
+    } else if (q.id === 'gloton_heroico' && hasMonsters && Number(h.materials?.racion_mazmorra || 0) <= 0) {
+      alerts.push({
+        key: `${h.id}-${q.id}`,
+        heroName: h.name,
+        icon: q.icon || '🍖',
+        quirkName: q.name,
+        trigger: 'No lleva Ración en mochila: recuerda aplicar -1 a Iniciativa si no comió Banquete.',
+        bonus: q.bonus,
+        drawback: q.drawback,
+        urgent: true,
+      });
+    }
+  });
+  return alerts;
+}
+
 export default function TacticalBoard({
   partyLevel = 1,
   setPartyLevel,
@@ -971,6 +1093,12 @@ export default function TacticalBoard({
   const totalRoomXP = useMemo(() => {
     return roomMonstersScaled.reduce((acc, { scaled }) => acc + (scaled.scaledXP || 0), 0);
   }, [roomMonstersScaled]);
+
+  const [triggeredQuirks, setTriggeredQuirks] = useState({});
+  const roomQuirkAlerts = useMemo(
+    () => evaluateRoomQuirks(heroes, roomItems, roomMonstersScaled, selectedRoomId === 'CORRIDOR'),
+    [heroes, roomItems, roomMonstersScaled, selectedRoomId]
+  );
 
   // Monstruo actualmente seleccionado al hacer clic en el tablero
   const selectedMonsterObj = useMemo(() => {
@@ -2353,6 +2481,54 @@ export default function TacticalBoard({
                               </button>
                             );
                           })}
+                      </div>
+                    )}
+
+                    {/* 2B) Alertas Dinámicas de Rasgos de Personalidad (Quirks) del Grupo en Esta Sala */}
+                    {roomQuirkAlerts.length > 0 && (
+                      <div className="space-y-1.5">
+                        <div className="text-[10px] font-black uppercase tracking-wider text-purple-300">
+                          🎭 Manías y Rasgos Activos Aquí ({roomQuirkAlerts.length})
+                        </div>
+                        {roomQuirkAlerts.map((qa) => {
+                          const qKey = `${selectedMapId}-${selectedRoomId}-${qa.key}`;
+                          const done = !!triggeredQuirks[qKey];
+                          return (
+                            <div
+                              key={qa.key}
+                              className={`p-2.5 rounded-xl border text-xs space-y-1 transition ${
+                                done
+                                  ? 'bg-stone-950/60 border-stone-800 opacity-60'
+                                  : qa.urgent
+                                  ? 'bg-purple-950/35 border-purple-500/70'
+                                  : 'bg-slate-900/70 border-purple-800/50'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-bold text-purple-200">
+                                  {qa.icon} {qa.heroName} · {qa.quirkName}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTriggeredQuirks((prev) => ({ ...prev, [qKey]: !prev[qKey] }));
+                                    if (!done) {
+                                      showToast?.(`🎭 Manía activada (${qa.heroName}): ${qa.trigger}`);
+                                    }
+                                  }}
+                                  className={`px-2 py-0.5 rounded-lg text-[10px] font-black cursor-pointer shrink-0 ${
+                                    done
+                                      ? 'bg-stone-800 text-stone-400'
+                                      : 'bg-purple-600 hover:bg-purple-500 text-white'
+                                  }`}
+                                >
+                                  {done ? '✓ Resuelta' : '⚡ Activar'}
+                                </button>
+                              </div>
+                              <p className="text-[11px] text-amber-100 leading-snug">{qa.trigger}</p>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
 

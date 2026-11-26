@@ -596,8 +596,8 @@ export default function DecksPanel({
                 Catálogo oficial completo del Juego Base (14) y La Luna del Terror (7). Haz clic en TV para mostrar la carta a la mesa.
               </p>
             </div>
-            <div className="flex gap-1.5">
-              {['Todos', 'Juego Base', 'La Luna del Terror'].map((f) => (
+            <div className="flex flex-wrap gap-1.5">
+              {['Todos', 'Arma', 'Armadura', 'Anillo / Amuleto', 'Reliquia', 'Poción / Pergamino'].map((f) => (
                 <button
                   key={f}
                   onClick={() => setArtifactFilter(f)}
@@ -614,7 +614,7 @@ export default function DecksPanel({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {OFFICIAL_ARTIFACTS.filter((a) => artifactFilter === 'Todos' || a.expansion === artifactFilter).map((a) => (
+            {OFFICIAL_ARTIFACTS.filter((a) => artifactFilter === 'Todos' || a.category === artifactFilter).map((a) => (
               <div
                 key={a.id}
                 className="p-4 rounded-2xl bg-gradient-to-b from-amber-950/30 to-stone-950 border border-amber-700/45 flex flex-col justify-between gap-2 text-xs"

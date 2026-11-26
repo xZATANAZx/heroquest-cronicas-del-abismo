@@ -929,7 +929,7 @@ export const LEVEL_TABLE = [
 ];
 
 export const EQUIPMENT_CATALOG = [
-  // Armas
+  // Armas (Solo Herrería / Armería — sin duplicar Artefactos Oficiales)
   { id: 'daga', name: 'Daga', type: 'Arma', dice: '1 DC', price: 50, tier: 'Fácil', traits: 'Arrojadiza (hasta 4 casillas), ligera.' },
   { id: 'baston', name: 'Bastón Rúnico', type: 'Arma', dice: '1 DC', price: 150, tier: 'Fácil', traits: 'Diagonal, Contundente, Apto Mago.' },
   { id: 'espada_corta', name: 'Espada Corta', type: 'Arma', dice: '2 DC', price: 250, tier: 'Fácil', traits: 'Equilibrada, 1 mano.' },
@@ -942,22 +942,15 @@ export const EQUIPMENT_CATALOG = [
   { id: 'arco_corto', name: 'Arco Corto', type: 'Arma', dice: '2 DC', price: 350, tier: 'Fácil', traits: 'A distancia (LdV). Sin enemigos adyacentes.' },
   { id: 'ballesta', name: 'Ballesta Pesada', type: 'Arma', dice: '3 DC', price: 600, tier: 'Medio', traits: 'A distancia (LdV). 2 manos.' },
   { id: 'varita_sombras', name: 'Varita Arcana', type: 'Arma', dice: '2 DC', price: 400, tier: 'Fácil', traits: 'Daño mágico a distancia (daña Etéreos). Mago/Brujo.' },
-  { id: 'hoja_espiritu', name: 'Hoja Espiritual (Reliquia)', type: 'Artefacto', dice: '3 DC (4 vs No Muertos)', price: 0, tier: 'Legendario', traits: 'Daño mágico, golpea Etéreos y No Muertos.' },
 
-  // Armaduras
+  // Armaduras (Solo Herrería / Armería)
   { id: 'escudo', name: 'Escudo de Hierro', type: 'Armadura', dice: '+1 Def', price: 250, tier: 'Fácil', traits: 'Mano secundaria. No con armas a 2 manos.' },
   { id: 'yelmo', name: 'Yelmo de Acero', type: 'Armadura', dice: '+1 Def', price: 300, tier: 'Fácil', traits: 'Cabeza. No Mago.' },
   { id: 'cuero', name: 'Armadura de Cuero', type: 'Armadura', dice: '+1 Def', price: 650, tier: 'Fácil', traits: 'Ligera, sin penalización de Sigilo.' },
   { id: 'cota_malla', name: 'Cota de Malla', type: 'Armadura', dice: '+1 Def', price: 1000, tier: 'Medio', traits: 'Media. No Mago.' },
   { id: 'placas', name: 'Armadura de Placas', type: 'Armadura', dice: '+2 Def', price: 1700, tier: 'Difícil', traits: 'Pesada (-2 casillas de movimiento).' },
-  { id: 'capa_magica', name: 'Capa de Protección Arcana', type: 'Armadura', dice: '+1 Def', price: 1100, tier: 'Medio', traits: 'Solo Mago / Brujo / Bardo.' },
 
-  // Pociones y Apoyo
-  { id: 'pocion_curacion_m', name: 'Poción de Curación Menor', type: 'Poción', dice: '+2 PC', price: 150, tier: 'Fácil', traits: 'Acción gratuita. Evita muerte si llegas a 0 PC.' },
-  { id: 'pocion_curacion', name: 'Poción de Curación Mayor', type: 'Poción', dice: '+4 PC', price: 400, tier: 'Medio', traits: 'Acción gratuita.' },
-  { id: 'pocion_clarividencia', name: 'Poción de Clarividencia', type: 'Poción', dice: '+2 PM', price: 300, tier: 'Medio', traits: 'Recupera PM y saca del estado de Shock.' },
-  { id: 'pocion_fuerza', name: 'Poción de Fuerza', type: 'Poción', dice: '+2 DC Ataque', price: 100, tier: 'Fácil', traits: 'Para tu próximo ataque.' },
-  { id: 'antidoto', name: 'Antídoto', type: 'Poción', dice: 'Cura Veneno', price: 75, tier: 'Fácil', traits: 'Elimina Envenenado o Paralizado.' },
+  // Herramientas de Aventura (Las Pociones ahora viven exclusivamente en la Torre del Alquimista)
   { id: 'herramientas', name: 'Kit de Herramientas', type: 'Apoyo', dice: '+2 Trampas', price: 400, tier: 'Fácil', traits: 'Permite desarmar trampas con Ventaja.' },
   { id: 'estuche_alquimia', name: 'Kit de Crafteo Maestro', type: 'Apoyo', dice: 'Crafteo +2', price: 600, tier: 'Medio', traits: 'Otorga +2 en Arcano al realizar Mezclas Experimentales y crafteo en campo.' },
   { id: 'bomba_humo', name: 'Bomba de Humo', type: 'Apoyo', dice: 'Escape', price: 200, tier: 'Fácil', traits: 'Anula Zona de Control de 1 enemigo durante 1 turno.' },
