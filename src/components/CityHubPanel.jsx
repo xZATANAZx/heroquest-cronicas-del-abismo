@@ -736,7 +736,15 @@ export default function CityHubPanel({
           return (
             <button
               key={d.id}
-              onClick={() => !locked && setActiveDistrict(d.id)}
+              onClick={() => {
+                if (locked) return;
+                setActiveDistrict(d.id);
+                if (d.id === 'herreria' && !['forja', 'equipo'].includes(craftBranch)) {
+                  setCraftBranch('forja');
+                } else if (d.id === 'alquimista' && !['alquimia', 'arcano'].includes(craftBranch)) {
+                  setCraftBranch('alquimia');
+                }
+              }}
               disabled={locked}
               className={`p-3 rounded-2xl border text-left transition cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed ${
                 active
@@ -1000,24 +1008,36 @@ export default function CityHubPanel({
       )}
 
       {/* ==================================================================== */}
-      {/* DISTRITO 2 Y 3: HERRERÍA / FORJA Y ALQUIMISTA / RUNAS / EXPERIMENTO */}
+      {/* DISTRITO 2 (HERRERÍA: Forja, Equipo, Armería, Artefactos, Reciclaje) */}
+      {/* Y DISTRITO 3 (TORRE ALQUIMISTA: Pociones, Venenos, Runas, Experimentos) */}
       {/* ==================================================================== */}
-      {(activeDistrict === 'herreria' || activeDistrict === 'alquimista') && (
+      {(activeDistrict === 'herreria' || activeDistrict === 'alquimista') && (() => {
+        const isHerreria = activeDistrict === 'herreria';
+        const allowedBranchIds = isHerreria ? ['forja', 'equipo'] : ['alquimia', 'arcano'];
+        const activeBranchId = allowedBranchIds.includes(craftBranch) ? craftBranch : allowedBranchIds[0];
+        const visibleBranches = MATERIAL_BRANCHES.filter((b) => allowedBranchIds.includes(b.id));
+        const visibleMaterials = MATERIALS_CATALOG.filter((m) =>
+          isHerreria
+            ? m.branch === 'forja' || m.id === 'gema_abismal' || m.id === 'polvo_runico'
+            : m.branch === 'alquimia' || m.branch === 'arcano'
+        );
+
+        return (
         <div className="space-y-6">
-          {/* Bolsa Digital de Materiales del Héroe + Botón DM para otorgar */}
+          {/* Bolsa Digital de Materiales del Distrito + Botón DM para otorgar */}
           {activeHero && (
             <div className="grimoire-panel rounded-2xl p-5 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="font-display text-base font-bold text-amber-300">
-                  🎒 Bolsa de Materiales de {activeHero.name} (Haz clic en +1 si el DM otorga material)
+                  🎒 Materiales de {isHerreria ? 'Forja y Herrería' : 'Alquimia y Arcano'} — {activeHero.name}
                 </h3>
                 <div className="flex gap-1.5">
-                  {MATERIAL_BRANCHES.map((b) => (
+                  {visibleBranches.map((b) => (
                     <button
                       key={b.id}
                       onClick={() => setCraftBranch(b.id)}
                       className={`px-3 py-1 rounded-lg text-xs font-bold border cursor-pointer ${
-                        craftBranch === b.id
+                        activeBranchId === b.id
                           ? 'bg-amber-600 text-black border-amber-300'
                           : 'bg-stone-900 border-stone-700 text-stone-300'
                       }`}
@@ -1029,7 +1049,7 @@ export default function CityHubPanel({
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
-                {MATERIALS_CATALOG.map((m) => {
+                {visibleMaterials.map((m) => {
                   const qty = getHeroMatQty(activeHero, m.id);
                   return (
                     <div
@@ -1061,22 +1081,25 @@ export default function CityHubPanel({
             </div>
           )}
 
-          {/* Recetas de Crafteo por Rama */}
+          {/* Recetas Exclusivas del Distrito */}
           <div className="grimoire-panel rounded-2xl p-5 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="font-display text-xl font-bold text-amber-300 flex items-center gap-2">
-                {activeDistrict === 'herreria' ? <Hammer className="w-5 h-5" /> : <FlaskConical className="w-5 h-5" />}
-                Mesa de Crafteo — {MATERIAL_BRANCHES.find((b) => b.id === craftBranch)?.name}
+                {isHerreria ? <Hammer className="w-5 h-5" /> : <FlaskConical className="w-5 h-5" />}
+                {isHerreria ? 'Yunque de Forja' : 'Alambique y Mesa Arcana'} —{' '}
+                {MATERIAL_BRANCHES.find((b) => b.id === activeBranchId)?.name}
               </h3>
-              <button
-                onClick={() => setTonicRollResult(rollTonicSideEffect())}
-                className="px-3 py-1.5 rounded-lg bg-purple-950/60 border border-purple-700 text-purple-200 text-xs font-bold cursor-pointer"
-              >
-                🧪 Tirar Efecto Secundario de Tónico (1d6)
-              </button>
+              {!isHerreria && (
+                <button
+                  onClick={() => setTonicRollResult(rollTonicSideEffect())}
+                  className="px-3 py-1.5 rounded-lg bg-purple-950/60 border border-purple-700 text-purple-200 text-xs font-bold cursor-pointer"
+                >
+                  🧪 Tirar Efecto Secundario de Tónico (1d6)
+                </button>
+              )}
             </div>
 
-            {tonicRollResult && (
+            {!isHerreria && tonicRollResult && (
               <div className="p-3 rounded-xl bg-purple-950/40 border border-purple-500/60 text-xs text-purple-100">
                 <strong>Resultado Tónico (d6 = {tonicRollResult.roll}) — {tonicRollResult.title}:</strong>{' '}
                 {tonicRollResult.effect}
@@ -1084,7 +1107,7 @@ export default function CityHubPanel({
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {CRAFTING_RECIPES.filter((r) => r.branch === craftBranch).map((r) => {
+              {CRAFTING_RECIPES.filter((r) => r.branch === activeBranchId).map((r) => {
                 const canCraft = hasRecipeIngredients(activeHero, r);
                 const price = calcPrice(r.costGold, activeDistrict);
                 return (
@@ -1322,7 +1345,8 @@ export default function CityHubPanel({
             </div>
           )}
         </div>
-      )}
+        );
+      })()}
 
       {/* ==================================================================== */}
       {/* DISTRITO 4: TEMPLO DE LA LUZ Y SANADOR                               */}
