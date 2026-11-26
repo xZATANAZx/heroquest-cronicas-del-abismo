@@ -838,7 +838,11 @@ export default function CityHubPanel({
                   <h4 className="font-display font-bold text-base text-white">
                     {townEvent.title}
                   </h4>
-                  <p className="text-xs text-stone-200 leading-relaxed">{townEvent.effect}</p>
+                  <p className="text-xs text-stone-200 leading-relaxed">
+                    {townEventLog
+                      ? townEvent.effect
+                      : `${String(townEvent.effect || '').split(':')[0].trim()}. ¿Qué deciden hacer?`}
+                  </p>
 
                   {townEvent.actions && townEvent.actions.length > 0 && (
                     <div className="flex flex-wrap gap-2 pt-1.5 border-t border-white/10">

@@ -744,7 +744,15 @@ export const TOWN_EVENTS_TABLE = [
 ];
 
 export function rollTownEvent() {
-  return TOWN_EVENTS_TABLE[Math.floor(Math.random() * TOWN_EVENTS_TABLE.length)];
+  const raw = TOWN_EVENTS_TABLE[Math.floor(Math.random() * TOWN_EVENTS_TABLE.length)];
+  return {
+    ...raw,
+    // Ocultar spoilers de recompensas/fallos en los botones de acción hasta que el grupo elija
+    actions: (raw.actions || []).map((a) => ({
+      ...a,
+      label: stripChoiceSpoilers(a.label),
+    })),
+  };
 }
 
 // ============================================================================
@@ -765,6 +773,12 @@ export function generatePersonalCityArrival(hero, cityMode = 'relaxed') {
         `La niebla del camino queda atrás y las farolas cálidas iluminan el mercado del Bastión. Herreros golpean el yunque al compás de las risas en El Grifo Dorado. Es tu momento de recorrer la ciudad a tu ritmo, ${name}.`,
       ];
   return scenes[Math.floor(Math.random() * scenes.length)];
+}
+
+export function stripChoiceSpoilers(label = '') {
+  return String(label)
+    .replace(/\s*\([^)]*(?:MO|XP|PC|PM|Fama|Rep|Reputación|Acero|Polvo|Hierba|Aceite|Ración|Esencia|Pólvora|Huesos|Glándula|DC|temp|combate|gratis)[^)]*\)/gi, '')
+    .trim();
 }
 
 export function generatePersonalCityEvent(hero, cityMode = 'relaxed') {
@@ -1160,5 +1174,13 @@ export function generatePersonalCityEvent(hero, cityMode = 'relaxed') {
   // 70% probabilidad de evento temático de SU héroe (Quirk/Profesión/Clase/Supervivencia), 30% evento divertido general
   const usePersonal = personalPool.length > 0 && Math.random() < 0.72;
   const chosenPool = usePersonal ? personalPool : generalPool;
-  return chosenPool[Math.floor(Math.random() * chosenPool.length)];
+  const rawEv = chosenPool[Math.floor(Math.random() * chosenPool.length)];
+  // Limpiar cualquier spoiler de recompensas/costes en los botones: el jugador elige por pura narrativa y descubre el resultado después
+  return {
+    ...rawEv,
+    choices: (rawEv.choices || []).map((ch) => ({
+      ...ch,
+      label: stripChoiceSpoilers(ch.label),
+    })),
+  };
 }
