@@ -3,7 +3,8 @@
 // Geometría EXACTA 26×19 del Tablero Oficial MODERNO 2021 (22 Salas Reales)
 // Incluye las 2 salas gemelas 2×3 (R13 / R13b) y la Sala en "L" (R17) + Muesca (R19)
 // ============================================================================
-import { getOfficialBlueprint } from './officialBlueprints';
+import { getOfficialBlueprint } from './officialBlueprints.js';
+import { EXPANSION_BOARD_MAPS } from './expansionQuests.js';
 
 export const BOARD_COLS = 26;
 export const BOARD_ROWS = 19;
@@ -525,73 +526,7 @@ export const OFFICIAL_QUEST_MAPS = [
     items: getOfficialBlueprint(14).items,
     darkCells: getOfficialBlueprint(14).darkCells,
   },
-  {
-    id: 'exp_luna_terror',
-    questId: 'dm1',
-    biomeId: 'laboratorio_alquimico',
-    title: 'La Luna del Terror: Sombras sobre Elethorn (Disfraz y Alquimia v2)',
-    expansion: 'La Luna del Terror',
-    startRoom: 'R14',
-    wanderingMonster: 'Asesino del Culto',
-    zargonCounters: { trampa: 3, emboscada: 3, patrulla: 3, destino: 2, escape: 1 },
-    hazardRooms: {
-      R5: { icon: '⚗️', name: 'Laboratorio Volátil', rule: 'Doble recolección de ingredientes. Fallar Arcano por 5+ causa explosión alquímica (1 PC).' },
-      R11: { icon: '🌑', name: 'Altar del Eclipse', rule: 'Los Espectros Etéreos solo reciben daño físico con Escudos Negros (o normal con Magia/Plata/Runas).' },
-    },
-    specialAlert: 'DISFRAZ Y ALQUIMIA: Empiezan disfrazados (enemigos DISTRAÍDOS hasta fallar Sigilo/Engaño CD 13). Los Espectros son Etéreos.',
-    notes: [
-      {
-        code: 'AQ',
-        room: 'R5',
-        title: 'Laboratorio de Elethorn',
-        text: 'Banco de Alquimista con 2 Hierbas Lunares y 1 Poción de Clarividencia. Tira Arcano CD 12 para destilar pociones.',
-        rewards: [
-          {
-            label: 'Poción de Clarividencia (+2 PM)',
-            loot: {
-              name: 'Poción de Clarividencia',
-              type: 'Poción',
-              rarity: 'poco_comun',
-              dice: '+2 PM',
-              upgrade: 'Restaura 2 PM y saca inmediatamente del estado de Shock.',
-              special: 'Restaura 2 PM.',
-              restriction: 'Todas las clases',
-            },
-          },
-          {
-            label: 'Hierba Lunar Pura (Alquimia)',
-            loot: {
-              name: 'Poción de Curación Mayor',
-              type: 'Poción',
-              rarity: 'poco_comun',
-              dice: '+4 PC',
-              upgrade: 'Restaura 4 PC en combate.',
-              special: 'Destilada en Elethorn.',
-              restriction: 'Todas las clases',
-            },
-          },
-        ],
-      },
-      { code: 'BO', room: 'R11', title: 'Espectro del Terror y Guardia Mago', text: 'Custodian el Altar del Eclipse en la Gran Sala Central.' },
-    ],
-    items: [
-      { x: 2, y: 15, type: 'stairs', w: 2, h: 2 },
-      { x: 2, y: 14, type: 'door', edge: 'N' },
-      { x: 2, y: 11, type: 'assassin', note: 'Asesino del Culto' },
-      { x: 2, y: 10, type: 'door', edge: 'N', note: 'Sale al pasillo medio oeste' },
-      { x: 6, y: 8, type: 'door', edge: 'S', note: 'Entrada al Laboratorio R5' },
-      { x: 5, y: 5, type: 'alchemy_bench', w: 3, h: 2, note: 'Mesa de Alquimista 3×2 (Arcano CD 12)' },
-      { x: 7, y: 7, type: 'specter', note: 'Espectro Etéreo' },
-      { x: 8, y: 6, type: 'door', edge: 'E' },
-
-      { x: 12, y: 7, type: 'sorcerer_table', w: 3, h: 2, note: 'Altar del Eclipse (3×2)' },
-      { x: 12, y: 9, type: 'specter', note: 'JEFE: ESPECTRO DEL TERROR' },
-      { x: 11, y: 8, type: 'dread_warrior', note: 'Guardia Mago' },
-      { x: 14, y: 9, type: 'assassin', note: 'Asesino Élite' },
-      { x: 10, y: 9, type: 'door', edge: 'W', note: 'Entrada Oeste Sala del Eclipse' },
-      { x: 12, y: 11, type: 'door', edge: 'S', note: 'Entrada Sur Sala del Eclipse' },
-    ],
-  },
+  ...EXPANSION_BOARD_MAPS,
 ];
 
 // ============================================================================

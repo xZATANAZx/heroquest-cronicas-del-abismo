@@ -1,16 +1,14 @@
 // ============================================================================
 // HEROQUEST: CRÓNICAS DEL ABISMO (Sistema HQ-D20 v2)
-// TODAS LAS 18 MISIONES OFICIALES REESTRUCTURADAS CON REGLAS COMPLETAS:
-// Biomas, Salas de Peligro (AHQ), Puertas Tácticas, Estados de Alerta,
-// Negociación, Fase 2 / Némesis, Objetivos Secundarios (Reputación),
-// Contadores Digitales de Zargon y Materiales de Crafteo
+// TODAS LAS 38 MISIONES OFICIALES (14 Base + 14 Reina de los Espíritus + 10 Luna del Terror)
 // ============================================================================
+import { SPIRIT_QUEEN_QUESTS, DREAD_MOON_QUESTS } from './expansionQuests.js';
 
 export const CAMPAIGNS = [
   {
     id: 'base',
     name: 'Juego Base: La Sombra de Zargon',
-    subtitle: '14 Misiones Oficiales Reestructuradas (Niveles 1–6)',
+    subtitle: '14 Misiones Oficiales (Niveles 1–6)',
     expansionId: 'base',
     levelRange: '1 – 6',
     specialRule:
@@ -19,20 +17,20 @@ export const CAMPAIGNS = [
   {
     id: 'reina_espiritus',
     name: 'El Tormento de la Reina de los Espíritus',
-    subtitle: 'Campaña Espectral de Silvana (Niveles 5–8)',
+    subtitle: '14 Misiones Oficiales del Libro · Campaña de Silvana (Niveles 5–10)',
     expansionId: 'reina_espiritus',
-    levelRange: '5 – 8',
+    levelRange: '5 – 10',
     specialRule:
-      'Modo Espíritu activo: Las miniaturas translúcidas atacan Puntos de Mente (PM). Usa Pociones de Clarividencia, Aceite de Plata Sagrada, Bardo o Exorcista.',
+      'Bardo y aliados (Sigill, Udren) disponibles. Modo Espíritu en M8–M9 (miniaturas translúcidas dañan PM). Torres de los Elementos (M10–M13) y redención de Nelath en la Aguja (M14).',
   },
   {
     id: 'luna_terror',
     name: 'La Luna del Terror (Elethorn)',
-    subtitle: 'Intriga, Disfraz, Alquimia y Etéreos (Niveles 7–10)',
+    subtitle: '10 Misiones Oficiales del Libro · Disfraz, Alquimia y Etéreos (Niveles 7–10)',
     expansionId: 'luna_terror',
     levelRange: '7 – 10',
     specialRule:
-      'Disfraz y Sabotaje activos, Espectros Etéreos (solo Escudos Negros, Magia, Runas o Artefactos Nv.4+) y doble recolección en Bancos de Alquimista.',
+      'Disfraces, Mercado Negro de Zerese, Mercenarios Élficos, Espectros Etéreos (solo Escudos Negros, Magia o Artefactos), Amuletos Lunares y Poder de la Luna (+1 DC Ataque en M7–M10).',
   },
 ];
 
@@ -473,128 +471,9 @@ export const QUESTS = [
     rewards: { xp: 1300, gold: 550, fame: 3, reputation: 2, loot: 'Título "Campeones del Imperio" + 2 Gemas Abismales + Acceso a Expansiones' },
   },
 
-  // ==================== EXPANSIÓN: REINA DE LOS ESPÍRITUS ====================
-  {
-    id: 'sq1',
-    number: 1,
-    campaignId: 'reina_espiritus',
-    biomeId: 'cripta_espectral',
-    plotId: 'exploracion',
-    title: 'Los Ecos de Silvana (Inicio de Expansión)',
-    recLevel: 5,
-    wanderingMonster: 'Espíritu Guerrero',
-    boss: 'Heraldo Translúcido (Espíritu Élite · Daña PM)',
-    bossPhase2: 'Fase 2 (al 50% PC): Se divide en 2 Espectros menores con 2 PC cada uno y lanza un lamento psíquico (SAB CD 14 o -1 PM).',
-    intro: 'Un lamento helado recorre las fronteras: la profetisa Silvana, Reina de los Espíritus, ha caído bajo un tormento oscuro y sus guardianes ahora atacan la mente de todo intruso.',
-    hqD20Twist: '👻 MODO ESPÍRITU + BRUMA PSÍQUICA: Todas las miniaturas translúcidas dañan Puntos de Mente (PM). Lleva Pociones de Clarividencia, Aceite de Plata Sagrada y mantente atento al Estado de Shock.',
-    tacticalSetup: {
-      doors: 'Puertas Espectrales (los espíritus las atraviesan, pero los héroes deben abrirlas normalmente).',
-      alertness: 'Espíritus en PATRULLA fantasmal; algunos en estado MIEDO pueden ser calmados por un Bardo/Exorcista.',
-      negotiation: 'Un Bardo o Acólito puede apaciguar (Persuasión/Religión CD 14) al guardián de la capilla para evitar un combate y ganar 1 Pista.',
-      hazardRoom: 'Bruma Psíquica (LdV 3 casillas) + Bosque de Hongos Alucinógenos (SAB CD 13 o -1 PM; da 2 Hierbas Lunares).',
-      hintClue: 'Susurros de Silvana guían hacia un altar intacto donde pueden recuperar +2 PM una vez.',
-    },
-    objectives: [
-      'Principal: Investigar la capilla espectral y derrotar o calmar al Heraldo Translúcido.',
-      'Secundario 1 (+1 🏅 Reputación): Apaciguar al menos 1 espíritu sin violencia.',
-      'Secundario 2 (+1 🏅 Reputación): Reunir las 2 pistas sobre la torre de la hechicera Kavra.',
-    ],
-    zargonCounters: { trampa: 2, emboscada: 3, patrulla: 2, destino: 2, escape: 1 },
-    materialsLoot: ['Esencia Espectral', 'Hierba Lunar', 'Polvo Rúnico', 'Pergamino Virgen'],
-    scalingTip: 'Activa "Modo Espíritu" en el Bestiario para convertir monstruos base en variantes espectrales.',
-    rewards: { xp: 720, gold: 300, fame: 2, reputation: 1, loot: '2 Pociones de Clarividencia + 2 Esencias Espectrales + Pergamino Canto de Calma' },
-  },
-  {
-    id: 'sq2',
-    number: 2,
-    campaignId: 'reina_espiritus',
-    biomeId: 'cripta_espectral',
-    plotId: 'venganza',
-    title: 'La Torre de Kavra (Clímax Espectral)',
-    recLevel: 7,
-    wanderingMonster: 'Espíritu Guerrero',
-    boss: 'Kavra, Hechicera del Tormento (2 Fases)',
-    bossPhase2: 'Fase 2 (al romper los altares): Kavra entra en frenesí arcano (+1 DC a hechizos) pero pierde su escudo de invulnerabilidad.',
-    intro: 'Tras atravesar los salones atormentados, enfrentan finalmente a Kavra, quien drena el poder de la Reina de los Espíritus para desatar una tormenta psíquica sobre todo el reino.',
-    hqD20Twist: '⚡ CONJURACIÓN DOBLE Y ALTARES DE CRISTAL: Kavra lanza 2 hechizos por turno mientras sus 2 Altares de Cristal sigan activos (destruirlos requiere 2 PC o Arcano CD 14).',
-    tacticalSetup: {
-      doors: 'Puerta de la Cima: Sello de Puzzle Móvil (o gastar 1 Esencia Espectral para atravesarla).',
-      alertness: 'Guardianes espectrales en GUARDIA junto a los 2 altares.',
-      negotiation: 'Silvana puede comunicarse telepáticamente con quien tenga más PM, revelando 1 trampa oculta.',
-      hazardRoom: 'Suelo de Runas Arcanas + Bruma Psíquica en el salón central.',
-      hintClue: 'Cada cristal roto reduce los PM máximos de Kavra y le impide usar su segundo hechizo.',
-    },
-    objectives: [
-      'Principal: Romper los Altares Espectrales, derrotar a Kavra y liberar a Silvana.',
-      'Secundario 1 (+1 🏅 Reputación): Destruir ambos altares en menos de 4 rondas.',
-      'Secundario 2 (+1 🏅 Reputación): Salvar a Silvana sin que ningún héroe quede en Shock.',
-    ],
-    zargonCounters: { trampa: 3, emboscada: 3, patrulla: 2, destino: 3, escape: 0 },
-    materialsLoot: ['Gema Abismal', 'Esencia Espectral', 'Polvo Rúnico', 'Ícor Oscuro'],
-    scalingTip: 'Nivel 8+: Kavra tiene 9 PC y recupera 1 hechizo cada 2 rondas.',
-    rewards: { xp: 1150, gold: 480, fame: 3, reputation: 2, loot: 'Reliquia de la Reina (Artefacto Nv.2: +2 PM y resistencia a Shock)' },
-  },
+  // ==================== EXPANSIÓN: REINA DE LOS ESPÍRITUS (14 MISIONES OFICIALES) ====================
+  ...SPIRIT_QUEEN_QUESTS,
 
-  // ==================== EXPANSIÓN: LA LUNA DEL TERROR ====================
-  {
-    id: 'dm1',
-    officialMapId: 'exp_luna_terror',
-    number: 1,
-    campaignId: 'luna_terror',
-    biomeId: 'laboratorio_alquimico',
-    plotId: 'exploracion',
-    title: 'Sombras sobre Elethorn (Inicio de Expansión)',
-    recLevel: 7,
-    wanderingMonster: 'Asesino del Culto',
-    boss: 'Capitán de la Guardia Mago (Élite)',
-    bossPhase2: 'Fase 2 (al 50% PC): Lanza Bomba de Humo, se teletransporta 4 casillas y activa 1 Espectro Etéreo.',
-    intro: 'El reino élfico de Elethorn está sitiado por el culto de la Luna del Terror. Como agentes encubiertos, deben infiltrarse usando disfraces, sabotaje y alquimia.',
-    hqD20Twist: '🌙 DISFRAZ, SABOTAJE Y REFUGIO (Variants 50 & 51): Empiezan disfrazados: pueden abrir puertas, espiar y sabotear mesas/bibliotecas sin combate hasta fallar Sigilo/Engaño CD 13. La sala R10 funciona como Refugio (Hideout) para craftear y curar +1 PC.',
-    tacticalSetup: {
-      doors: 'Puertas con cerraduras élficas (DES CD 14) y 1 Puerta Secreta detrás de un espejo.',
-      alertness: 'Mientras dure el Disfraz, todos están DISTRAÍDOS; al sonar la alarma pasan a EMBOSCADA y PATRULLA.',
-      negotiation: 'Con Disfraz activo, pueden engañar a una patrulla (CAR CD 13) para que abandone la sala del laboratorio.',
-      hazardRoom: 'Laboratorio Volátil (doble drop de ingredientes) + Cámara de Gas Tóxico en los túneles.',
-      hintClue: 'Un símbolo plateado de la resistencia élfica marca el Refugio seguro y el Banco de Alquimista.',
-    },
-    objectives: [
-      'Principal: Contactar a la resistencia élfica y derrotar al Capitán de la Guardia Mago.',
-      'Secundario 1 (+1 🏅 Reputación): Sabotear 2 salas del culto antes de perder el Disfraz.',
-      'Secundario 2 (+1 🏅 Reputación): Recolectar 3 ingredientes lunares en los Bancos de Alquimista.',
-    ],
-    zargonCounters: { trampa: 3, emboscada: 3, patrulla: 3, destino: 2, escape: 1 },
-    materialsLoot: ['Esencia Espectral', 'Hierba Lunar', 'Polvo Rúnico', 'Glándula de Veneno'],
-    scalingTip: 'Recuerda: armas normales solo hieren Espectros Etéreos con Escudos Negros; incentiva el uso de Runas y Aceite de Plata.',
-    rewards: { xp: 1000, gold: 420, fame: 2, reputation: 2, loot: 'Estuche de Alquimia Maestro + 2 Esencias Espectrales + 1 Gema Abismal' },
-  },
-  {
-    id: 'dm2',
-    number: 2,
-    campaignId: 'luna_terror',
-    biomeId: 'cripta_espectral',
-    plotId: 'contrarreloj',
-    title: 'El Eclipse de la Luna del Terror (Clímax)',
-    recLevel: 9,
-    wanderingMonster: 'Espectro Etéreo',
-    boss: 'Espectro del Terror (Dread Wraith — Jefe Legendario)',
-    bossPhase2: 'Fase 2 (al 50% PC): Eclipse Total — la visibilidad baja a 4 casillas, invoca 2 Espectros menores y sus ataques drenan PC y PM a la vez.',
-    intro: 'Bajo la luz carmesí del eclipse, el Espectro del Terror canaliza un ritual para sumergir Elethorn en una noche eterna. Todo lo que aprendieron y forjaron desde la Misión 1 culmina aquí.',
-    hqD20Twist: '🌑 ECLIPSE VIVO: Cada 2 rondas la Luna pulsa (SAB CD 14 o -1 PM) y el Reloj del Caos sube +1. Los Artefactos Nv.4–5, la Hoja Espiritual, las Runas Rompe-Espectros y el Fuego Griego brillan como nunca en este clímax.',
-    tacticalSetup: {
-      doors: 'Puerta del Sagrario Lunar: Sello Arcano (Puzzle Móvil de Nivel Difícil).',
-      alertness: 'Guardia Mago y Asesinos en EMBOSCADA y GUARDIA alrededor del Altar Central.',
-      negotiation: 'Ninguna negociación con el Espectro; los Seguidores Únicos contratados en Ciudad son vitales aquí.',
-      hazardRoom: 'Suelo de Runas Arcanas + Bruma Psíquica + Braseros Lunares.',
-      hintClue: 'Destruir los 2 espejos lunares del salón anula el pulso de -1 PM del Eclipse.',
-    },
-    objectives: [
-      'Principal: Interrumpir el ritual en el Altar Central y destruir al Espectro del Terror.',
-      'Secundario 1 (+1 🏅 Reputación): Destruir los 2 Espejos Lunares antes de la ronda 4.',
-      'Secundario 2 (+1 🏅 Reputación): Salvar Elethorn con todo el grupo con vida.',
-    ],
-    zargonCounters: { trampa: 3, emboscada: 3, patrulla: 3, destino: 3, escape: 0 },
-    materialsLoot: ['Gema Abismal', 'Esencia Espectral', 'Polvo Rúnico', 'Ícor Oscuro'],
-    scalingTip: 'Nivel 10: Escala al Espectro del Terror a 11 PC y añade 2 Guardias Magos de escolta.',
-    rewards: { xp: 1850, gold: 850, fame: 4, reputation: 3, loot: 'Corona de Elethorn (Reliquia Legendaria Nv.5) + Título "Salvadores del Reino"' },
-  },
+  // ==================== EXPANSIÓN: LA LUNA DEL TERROR (10 MISIONES OFICIALES) ====================
+  ...DREAD_MOON_QUESTS,
 ];
