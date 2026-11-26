@@ -4,7 +4,8 @@
 // Con Efectos, Mejoras y Desventajas de Balanceo + Generador Procedural
 // ============================================================================
 
-import { OFFICIAL_ARTIFACTS } from './officialCards';
+// NOTA OFICIAL: Los 21 Artefactos Oficiales NO están en este catálogo genérico porque son
+// objetos mágicos únicos que SOLO se obtienen cumpliendo objetivos específicos en el Libro de Misiones.
 
 export const RARITIES = [
   { id: 'comun', name: 'Común', color: '#a8a29e', badge: 'bg-stone-700 text-stone-100', border: 'border-stone-600' },
@@ -208,20 +209,6 @@ export const DIGITAL_LOOT_CATALOG = [
     flaw: 'MALDICIÓN: Al inicio de cada combate pierdes 1 PM si no hieres a un enemigo en 2 turnos.',
     restriction: 'No Mago',
   },
-
-  // ==================== ARTEFACTOS OFICIALES ORDENADOS (SIN DUPLICADOS) ====================
-  ...OFFICIAL_ARTIFACTS.map((art) => ({
-    id: art.id,
-    name: `${art.name} (Oficial)`,
-    type: art.type,
-    rarity: art.rarity || 'raro',
-    dice: art.dice,
-    price: art.rarity === 'legendario' ? 2500 : art.rarity === 'epico' ? 1400 : 750,
-    special: art.text,
-    upgrade: `[${art.category} · ${art.expansion}] ${art.text}`,
-    flaw: '',
-    restriction: art.restriction || 'Todas las clases',
-  })),
   {
     id: 'l_brazales_mago',
     name: 'Brazales de Mago (Artefacto Base)',

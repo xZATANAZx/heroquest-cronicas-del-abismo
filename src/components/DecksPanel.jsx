@@ -591,9 +591,9 @@ export default function DecksPanel({
         <div className="grimoire-panel rounded-2xl p-6 space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-2xl font-bold text-amber-300">👑 Artefactos Oficiales (21 Reliquias)</h3>
+              <h3 className="text-2xl font-bold text-amber-300">👑 Artefactos Oficiales (21 Reliquias — Solo por Misión)</h3>
               <p className="text-sm text-stone-400">
-                Catálogo oficial completo del Juego Base (14) y La Luna del Terror (7). Haz clic en TV para mostrar la carta a la mesa.
+                <strong>Regla Oficial:</strong> Objetos mágicos únicos que <strong>NO se compran en tiendas ni salen en el mazo normal de tesoros</strong>; se entregan únicamente al cumplir objetivos específicos del Libro de Misiones.
               </p>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -628,6 +628,11 @@ export default function DecksPanel({
                   </div>
                   <h4 className="font-display text-base font-bold text-amber-100">{a.name}</h4>
                   <p className="text-stone-300 leading-relaxed">{a.text}</p>
+                  {a.questSource && (
+                    <div className="text-[10px] font-bold text-amber-300 bg-amber-950/40 border border-amber-700/50 rounded-lg px-2 py-1">
+                      🏆 Exclusivo de Misión: {a.questSource}
+                    </div>
+                  )}
                 </div>
                 <div className="pt-2 border-t border-stone-800 flex items-center justify-between">
                   <span className="text-[10px] text-stone-400">{a.type} · {a.restriction}</span>

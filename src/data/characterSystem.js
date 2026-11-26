@@ -855,6 +855,142 @@ export const CLASSES = [
       10: 'Autómata Guardián (1/misión despliegas un Gólem de Bronce aliado: At 3, Def 3, 4 PC)',
     },
   },
+  {
+    id: 'caballero_runico',
+    name: 'Caballero Rúnico (Forja Arcana)',
+    role: 'Vanguardia / Barreras Rúnicas / Anti-Magia',
+    miniature: 'Caballero o Bárbaro',
+    icon: '🔷',
+    basePC: 7,
+    basePM: 4,
+    pcPerLevel: 2,
+    pmPerLevel: 1,
+    baseAttackDice: 2,
+    baseDefendDice: 3,
+    resourceName: 'Runas de Acero (3/misión)',
+    primaryAttrs: ['FUE', 'INT', 'CON'],
+    proficientSkills: ['atletismo', 'arcano', 'percepcion'],
+    startingGear: ['Espada Larga (3 DC, Diagonal)', 'Escudo de Hierro (+1 Def)', 'Poción de Curación Menor (+2 PC)'],
+    coreAbility: 'Sello Rúnico: Acción gratuita (3/misión): grabas una runa en tu hoja o escudo (+1 DC mágico contra Etéreos o +2 DC Defensa contra el próximo Hechizo del Terror).',
+    subclasses: [
+      { id: 'rompehechizos', name: 'Rompehechizos', desc: '1 vez/combate puedes anular un Hechizo del Terror dirigido a ti o un aliado en 3 casillas (Arcano CD 13).' },
+      { id: 'hoja_runa', name: 'Hoja de Escarcha y Fuego', desc: 'Tus golpes con Sello Rúnico añaden +1 daño elemental y cortan regeneración.' },
+    ],
+    progression: {
+      1: 'Sello Rúnico (3/misión) + 3 Hechizos de Tierra',
+      2: 'Barrera de Acero (+1 a Salvaciones contra Magia del Terror)',
+      3: 'Elección de Subclase',
+      4: 'Mejora de Atributo (+2 puntos)',
+      5: 'Golpe Rúnico (ignoras 1 Escudo Negro enemigo al usar Sello Rúnico)',
+      6: 'Runas de Acero suben a 5/misión',
+      7: 'Égida Grupal (aliados adyacentes ganan +1 Defensa contra magia)',
+      8: 'Mejora de Atributo (+2 puntos)',
+      9: 'Contraataque Rúnico (si bloqueas un ataque, devuelves 2 DC mágicos)',
+      10: 'Baluarte Eterno (1/misión anulas todo daño a tu grupo durante 1 turno enemigo)',
+    },
+  },
+  {
+    id: 'chaman',
+    name: 'Chamán de los Espíritus',
+    role: 'Soporte Elemental / Tótems / Curación',
+    miniature: 'Druida o Bardo',
+    icon: '🪶',
+    basePC: 6,
+    basePM: 5,
+    pcPerLevel: 1,
+    pmPerLevel: 2,
+    baseAttackDice: 2,
+    baseDefendDice: 2,
+    resourceName: 'Tótems Ancestrales (3/misión)',
+    primaryAttrs: ['SAB', 'CON', 'CAR'],
+    proficientSkills: ['supervivencia', 'medicina', 'arcano'],
+    startingGear: ['Bastón de Roble (2 DC, Diagonal)', 'Tótem Ancestral (+1 Curación)', 'Poción de Curación Menor (+2 PC)'],
+    coreAbility: 'Invocar Tótem: Colocas un Tótem en tu sala durante 3 turnos: Tótem Sanador (+1 PC al inicio de turno a aliados en 2 casillas) o Tótem de Tormenta (+1 DC a aliados cercanos).',
+    subclasses: [
+      { id: 'ancestros', name: 'Guía de los Ancestros', desc: 'Tus Tótems curan también +1 PM y protegen contra el Estado de Shock.' },
+      { id: 'tormenta_ch', name: 'Llamador de Truenos', desc: 'Al colocar un Tótem, un enemigo visible recibe 2 DC de rayo automático.' },
+    ],
+    progression: {
+      1: 'Invocar Tótem (3/misión) + 3 Hechizos de Espíritu',
+      2: 'Espíritu del Lobo (+2 casillas de movimiento en pasillos)',
+      3: 'Elección de Subclase',
+      4: 'Mejora de Atributo (+2 puntos)',
+      5: 'Doble Tótem (puedes mantener 2 Tótems activos a la vez)',
+      6: 'Tótems Ancestrales suben a 5/misión',
+      7: 'Purificación Tribal (al colocar Tótem elimina Veneno y Miedo en 3 casillas)',
+      8: 'Mejora de Atributo (+2 puntos)',
+      9: 'Furia Elemental (tus hechizos suman +1 DC adicional)',
+      10: 'Avatar Ancestral (1/misión todos los aliados recuperan 3 PC, 2 PM y ganan +1 DC por 2 rondas)',
+    },
+  },
+  {
+    id: 'nigromante',
+    name: 'Nigromante del Umbral',
+    role: 'Invocador Táctico / Control de Sombras',
+    miniature: 'Mago o Brujo',
+    icon: '💀',
+    basePC: 5,
+    basePM: 6,
+    pcPerLevel: 1,
+    pmPerLevel: 2,
+    baseAttackDice: 1,
+    baseDefendDice: 2,
+    resourceName: 'Almas Cosechadas (3/misión)',
+    primaryAttrs: ['INT', 'CAR', 'SAB'],
+    proficientSkills: ['arcano', 'investigacion', 'intimidacion'],
+    startingGear: ['Varita de Sombras (2 DC, Mágico)', 'Túnica del Velo (+1 Def)', 'Poción de Clarividencia (+2 PM)'],
+    coreAbility: 'Alzar Esqueleto Aliado: Cuando cae un enemigo en tu sala, gastas 1 Alma para levantar 1 Esqueleto Aliado (Mov 6, At 2 DC, Def 2 DC, 2 PC) durante 3 turnos.',
+    subclasses: [
+      { id: 'senor_huesos', name: 'Señor de los Huesos', desc: 'Tu Esqueleto Aliado tiene 3 PC y 3 DC de ataque.' },
+      { id: 'cosechador', name: 'Cosechador de Almas', desc: 'Cuando un enemigo muere a 4 casillas de ti recuperas +1 PC o +1 PM.' },
+    ],
+    progression: {
+      1: 'Alzar Esqueleto Aliado (3/misión) + 3 Hechizos de Sombras',
+      2: 'Toque Gélido (1/combate: 2 DC mágicos que impiden curación al objetivo)',
+      3: 'Elección de Subclase',
+      4: 'Mejora de Atributo (+2 puntos)',
+      5: 'Comandar No Muertos (los Esqueletos/Zombis enemigos sufren -1 DC contra ti)',
+      6: 'Almas Cosechadas suben a 5/misión',
+      7: 'Explosión Ósea (detonas tu Esqueleto Aliado infligiendo 3 DC en 2×2 casillas)',
+      8: 'Mejora de Atributo (+2 puntos)',
+      9: 'Inmortalidad Menor (1/misión al caer a 0 PC te levantas con 2 PC)',
+      10: 'Legión del Umbral (1/misión invocas 2 Esqueletos Aliados de élite al instante)',
+    },
+  },
+  {
+    id: 'tirador_asedio',
+    name: 'Tirador de Asedio (Ballestero)',
+    role: 'Francotirador Pesado / Perforación / Trampas',
+    miniature: 'Explorador o Enano',
+    icon: '🏹',
+    basePC: 6,
+    basePM: 3,
+    pcPerLevel: 2,
+    pmPerLevel: 1,
+    baseAttackDice: 3,
+    baseDefendDice: 2,
+    resourceName: 'Virotes Especiales (4/misión)',
+    primaryAttrs: ['DES', 'FUE', 'SAB'],
+    proficientSkills: ['percepcion', 'trampas', 'supervivencia'],
+    startingGear: ['Ballesta Pesada (3 DC, Distancia)', 'Daga (1 DC, Arrojadiza)', 'Abrojos (1 uso)'],
+    coreAbility: 'Virote Perforante: Gastas 1 Virote Especial al disparar para ignorar 1 Escudo Negro enemigo (o clavar al objetivo reduciendo su movimiento a 0 por 1 turno).',
+    subclasses: [
+      { id: 'francotirador_p', name: 'Ojo de Águila', desc: 'Si no te mueves este turno, tu disparo suma +1 DC y crítico en 19–20.' },
+      { id: 'zapador', name: 'Zapador de Pasillos', desc: 'Tus disparos pueden ser explosivos (2 DC al objetivo + 1 daño a adyacentes).' },
+    ],
+    progression: {
+      1: 'Virotes Especiales (4/misión: Perforante o Clavar)',
+      2: 'Posición Firme (si no te mueves, +1 DC Defensa contra proyectiles)',
+      3: 'Elección de Subclase',
+      4: 'Mejora de Atributo (+2 puntos)',
+      5: 'Recarga Relámpago (puedes disparar incluso tras moverte hasta 4 casillas)',
+      6: 'Virotes Especiales suben a 6/misión',
+      7: 'Disparo de Cobertura (reacción: disparas 2 DC a un enemigo que abra una puerta)',
+      8: 'Mejora de Atributo (+2 puntos)',
+      9: 'Virote de Plata (tus disparos dañan plenamente a Espectros Etéreos)',
+      10: 'Salva de Asedio (1/misión disparas 3 DC a hasta 3 enemigos distintos en LdV)',
+    },
+  },
 ];
 
 export const ALIGNMENTS = [
@@ -950,10 +1086,16 @@ export const EQUIPMENT_CATALOG = [
   { id: 'cota_malla', name: 'Cota de Malla', type: 'Armadura', dice: '+1 Def', price: 1000, tier: 'Medio', traits: 'Media. No Mago.' },
   { id: 'placas', name: 'Armadura de Placas', type: 'Armadura', dice: '+2 Def', price: 1700, tier: 'Difícil', traits: 'Pesada (-2 casillas de movimiento).' },
 
-  // Herramientas de Aventura (Las Pociones ahora viven exclusivamente en la Torre del Alquimista)
-  { id: 'herramientas', name: 'Kit de Herramientas', type: 'Apoyo', dice: '+2 Trampas', price: 400, tier: 'Fácil', traits: 'Permite desarmar trampas con Ventaja.' },
-  { id: 'estuche_alquimia', name: 'Kit de Crafteo Maestro', type: 'Apoyo', dice: 'Crafteo +2', price: 600, tier: 'Medio', traits: 'Otorga +2 en Arcano al realizar Mezclas Experimentales y crafteo en campo.' },
-  { id: 'bomba_humo', name: 'Bomba de Humo', type: 'Apoyo', dice: 'Escape', price: 200, tier: 'Fácil', traits: 'Anula Zona de Control de 1 enemigo durante 1 turno.' },
+  // Accesorios (Equilibrados para Ciudad — SIN duplicar Artefactos Oficiales)
+  { id: 'acc_botas_expl', name: 'Botas de Explorador', type: 'Accesorio', dice: '+1 Mov', price: 350, tier: 'Fácil', traits: 'Añade +1 casilla permanente a tu movimiento en exploración y combate.' },
+  { id: 'acc_brazales_cuero', name: 'Brazales Reforzados', type: 'Accesorio', dice: '+1 Def (Sin Placas)', price: 500, tier: 'Medio', traits: '+1 Dado de Defensa para clases ligeras o lanzadores (no acumulable con Cota/Placas).' },
+  { id: 'acc_amuleto_hierro', name: 'Amuleto de Voluntad Férrea', type: 'Accesorio', dice: '+1 Salvaciones', price: 420, tier: 'Medio', traits: '+1 permanente a todas tus Tiradas de Salvación d20 (Trampas, Veneno y Terror).' },
+  { id: 'acc_capa_viajero', name: 'Capa de Viajero Sombrío', type: 'Accesorio', dice: '+2 Sigilo', price: 320, tier: 'Fácil', traits: '+2 a pruebas de Sigilo y Percepción en pasillos oscuros.' },
+
+  // Herramientas de Aventura (Las Pociones viven exclusivamente en la Torre del Alquimista)
+  { id: 'herramientas', name: 'Kit de Herramientas', type: 'Herramienta', dice: '+2 Trampas', price: 400, tier: 'Fácil', traits: 'Permite desarmar trampas mecánicas con Ventaja.' },
+  { id: 'estuche_alquimia', name: 'Kit de Crafteo Maestro', type: 'Herramienta', dice: 'Crafteo +2', price: 600, tier: 'Medio', traits: 'Otorga +2 en Arcano al realizar Mezclas Experimentales y crafteo en campo.' },
+  { id: 'bomba_humo', name: 'Bomba de Humo', type: 'Consumible', dice: 'Escape', price: 200, tier: 'Fácil', traits: 'Anula Zona de Control de 1 enemigo durante 1 turno.' },
 ];
 
 export const SPELLS_CATALOG = [
@@ -1169,8 +1311,9 @@ export function getHeroUnlockedSpells(hero) {
   }
   if (hero.classId === 'explorador') return bySchools(['Aire']);
   if (hero.classId === 'mago_batalla') return bySchools(['Fuego']);
-  if (hero.classId === 'bardo' || hero.classId === 'exorcista') return bySchools(['Espíritu']);
-  if (hero.classId === 'brujo') return bySchools(['Sombras']);
+  if (hero.classId === 'caballero_runico') return bySchools(['Tierra']);
+  if (hero.classId === 'bardo' || hero.classId === 'exorcista' || hero.classId === 'chaman') return bySchools(['Espíritu']);
+  if (hero.classId === 'brujo' || hero.classId === 'nigromante') return bySchools(['Sombras']);
   if (hero.classId === 'druida') {
     const base = ['agua_curativa', 'piel_piedra', 'sanar_cuerpo'];
     const extras = [
@@ -1404,6 +1547,52 @@ export const CLASS_ACTIVE_POWERS = {
     damageType: 'Soporte',
     isAttack: false,
     buff: { id: 'cls_artif', label: '⚙️ Equipo Mejorado (+1 DC)', type: 'buff', duration: 2, attackMod: 1, note: '+1 DC de ataque o defensa por 2 turnos.' },
+  },
+  caballero_runico: {
+    name: 'Sello Rúnico (Hoja / Escudo)',
+    desc: 'Acción gratuita: grabas una runa que otorga +1 DC mágico (daña Etéreos) y +1 DC de Defensa contra Hechizos del Terror por 2 turnos.',
+    costPM: 0,
+    maxUses: 3,
+    cooldownTurns: 1,
+    dice: 0,
+    damageType: 'Mágico / Defensa',
+    isMagic: true,
+    isAttack: false,
+    buff: { id: 'cls_runico', label: '🔷 Sello Rúnico (+1 DC Mágico / +1 Def)', type: 'buff', duration: 2, attackMod: 1, defendMod: 1, note: '+1 DC mágico y +1 DC Defensa.' },
+  },
+  chaman: {
+    name: 'Invocar Tótem Ancestral',
+    desc: 'Colocas un Tótem por 3 turnos en la sala: cura +1 PC a aliados cercanos o suma +1 DC de ataque.',
+    costPM: 0,
+    maxUses: 3,
+    cooldownTurns: 2,
+    dice: 0,
+    damageType: 'Soporte',
+    isAttack: false,
+    healPC: 1,
+    buff: { id: 'cls_totem', label: '🪶 Tótem Activo (+1 DC / +1 PC)', type: 'buff', duration: 3, attackMod: 1, note: 'Tótem ancestral activo en la sala.' },
+  },
+  nigromante: {
+    name: 'Alzar Esqueleto Aliado',
+    desc: 'Al caer un enemigo en la sala, levantas 1 Esqueleto Aliado (Mov 6, At 2 DC, Def 2 DC, 2 PC) durante 3 turnos.',
+    costPM: 0,
+    maxUses: 3,
+    cooldownTurns: 1,
+    dice: 0,
+    damageType: 'Invocación',
+    isMagic: true,
+    isAttack: false,
+  },
+  tirador_asedio: {
+    name: 'Virote Perforante',
+    desc: 'Disparo de ballesta que ignora 1 Escudo Negro enemigo (o reduce a 0 el movimiento del blanco por 1 turno).',
+    costPM: 0,
+    maxUses: 4,
+    cooldownTurns: 0,
+    diceBonus: 1,
+    damageType: 'Proyectil Perforante',
+    isRanged: true,
+    isAttack: true,
   },
 };
 
@@ -1961,6 +2150,26 @@ export const CLASS_PERSONAL_GUIDES = {
     howToPlay: 'Coloca Cepos en puertas para frenar hordas, mejora el arma del DPS principal y desarma todas las trampas para ganar Acero y Pólvora extra.',
     proTip: 'Brillas aún más al craftear pociones, bombas y equipo en la Ciudad.',
   },
+  caballero_runico: {
+    summary: 'Tanque híbrido especialista en resistir Hechizos del Terror y dañar enemigos Etéreos.',
+    howToPlay: 'Activa Sello Rúnico al entrar a salas con magos o espectros y apoya con tus hechizos de Tierra.',
+    proTip: 'Eres ideal para enfrentarte a jefes hechiceros y proteger al grupo frente a Zargon.',
+  },
+  chaman: {
+    summary: 'Soporte tribal versátil que sostiene al grupo con Tótems y hechizos de Espíritu.',
+    howToPlay: 'Coloca tu Tótem Ancestral al inicio del combate y combina curación con presión elemental.',
+    proTip: 'Tu Tótem de Tormenta potencia a todo el grupo cuando pelean juntos en una sala.',
+  },
+  nigromante: {
+    summary: 'Invocador táctico que convierte los enemigos caídos en escudos y atacantes aliados.',
+    howToPlay: 'En cuanto caiga el primer monstruo, usa Alzar Esqueleto Aliado para bloquear puertas o flanquear.',
+    proTip: 'Usa tus hechizos de Sombras para debilitar al jefe antes de lanzar a tu Esqueleto.',
+  },
+  tirador_asedio: {
+    summary: 'Francotirador pesado que atraviesa armaduras enemigas desde largas distancias.',
+    howToPlay: 'Busca buena Línea de Visión en pasillos y usa Virote Perforante contra Guerreros del Terror y Gárgolas.',
+    proTip: 'Mantente detrás del Tanque: no puedes disparar ballesta si un enemigo está pegado a ti.',
+  },
 };
 
 // ============================================================================
@@ -2121,11 +2330,12 @@ export function buildStartingInventory(cls) {
       else if (lower.includes('abrojos')) traits = 'Ralentiza a la mitad a enemigos que crucen esa casilla.';
       else if (lower.includes('aceites')) traits = 'Impregna tu arma (+2 DC contra una familia elegida).';
       else if (lower.includes('cepo')) traits = 'Colócalo en 1 casilla: 2 DC e inmoviliza 1 turno.';
-    } else if (lower.includes('laúd') || lower.includes('símbolo') || lower.includes('carcaj')) {
+    } else if (lower.includes('laúd') || lower.includes('símbolo') || lower.includes('carcaj') || lower.includes('tótem')) {
       type = 'Accesorio';
       dice = inside || 'Foco de clase';
       if (lower.includes('laúd')) traits = 'Foco musical para Cantos Espirituales y +1 en pruebas de Persuasión.';
       else if (lower.includes('símbolo')) traits = 'Foco sagrado/exorcista: +1 en pruebas contra No Muertos y Espíritus.';
+      else if (lower.includes('tótem')) traits = 'Foco ancestral: tus curaciones y Tótems restauran +1 PC adicional.';
       else if (lower.includes('carcaj')) traits = 'Munición lista para disparos continuos con Arco.';
     } else {
       type = 'Herramienta';

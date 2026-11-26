@@ -44,6 +44,7 @@ import {
 } from './BoardPiecesSVG';
 import { MONSTERS, scaleMonster } from '../data/bestiary';
 import { OFFICIAL_DREAD_SPELLS } from '../data/officialCards';
+import { rollBodyLoot, rollTreasureProbability } from '../data/lootProbabilities';
 import { QUESTS } from '../data/quests';
 import { FURNITURE_DECK, TREASURE_TRAP_DECK } from '../data/decks';
 import {
@@ -757,46 +758,18 @@ export default function TacticalBoard({
   };
 
   const searchRoomTreasure = () => {
-    const roll = Math.random();
-    if (roll < 0.52) {
-      // Botín real (catálogo sin repetir / procedural infinito)
-      const loot =
-        Math.random() < 0.45
-          ? pickWithoutRepeat('treasure', DIGITAL_LOOT_CATALOG, (it) => it.id)
-          : generateProceduralLoot('auto', partyLevel);
-      const rMeta = getRarityMeta(loot.rarity || 'comun');
-      setRoomDiscovery({
-        source: 'Búsqueda de Tesoro',
-        title: `¡${loot.name} (${rMeta.name})!`,
-        badge: `${rMeta.name} · ${loot.type}`,
-        text: `${loot.dice ? `[${loot.dice}] ` : ''}${loot.upgrade || loot.special || ''}${loot.flaw ? ` | ⚠️ Desventaja: ${loot.flaw}` : ''}`,
-        rewardLoot: loot,
-        rewardGold: 0,
-      });
-      return;
-    }
-    if (roll < 0.78) {
-      const gold = (Math.floor(Math.random() * 6) + 3) * 15 + partyLevel * 10;
-      setRoomDiscovery({
-        source: 'Búsqueda de Tesoro',
-        title: `Alijo de ${gold} Monedas de Oro`,
-        badge: 'Oro Imperial',
-        text: `Entre las sombras de la sala encuentran una bolsa pesada con ${gold} MO listas para repartir.`,
-        rewardLoot: null,
-        rewardGold: gold,
-      });
-      return;
-    }
-    // Trampa o Monstruo Errante sin repetir
-    const dangers = TREASURE_TRAP_DECK.filter((c) => c.kind === 'Trampa' || c.kind === 'Peligro');
-    const card = pickWithoutRepeat('treasure', dangers, (c) => c.id || c.title);
+    const activeSearcher = heroes.find((h) => h.id === effectiveHeroId) || heroes[0] || null;
+    const res = rollTreasureProbability({ partyLevel, hero: activeSearcher });
     setRoomDiscovery({
-      source: 'Búsqueda de Tesoro',
-      title: card.title,
-      badge: card.kind,
-      text: card.text,
-      rewardLoot: null,
-      rewardGold: 0,
+      source: activeSearcher ? `Tesoro (${activeSearcher.name})` : 'Búsqueda de Tesoro',
+      title: res.title,
+      badge: res.badge,
+      text: res.text,
+      rewardLoot: res.rewardLoot,
+      rewardGold: res.rewardGold,
+      materialId: res.materialId,
+      materialQty: res.materialQty,
+      heroBonusNotes: res.heroBonusNotes,
     });
   };
 
@@ -1097,6 +1070,7 @@ export default function TacticalBoard({
 
   const [triggeredQuirks, setTriggeredQuirks] = useState({});
   const [monsterDreadSpells, setMonsterDreadSpells] = useState({});
+  const [lootedBodies, setLootedBodies] = useState(() => new Set());
   const roomQuirkAlerts = useMemo(
     () => evaluateRoomQuirks(heroes, roomItems, roomMonstersScaled, selectedRoomId === 'CORRIDOR'),
     [heroes, roomItems, roomMonstersScaled, selectedRoomId]
@@ -2058,6 +2032,75 @@ export default function TacticalBoard({
                   </button>
                 )}
               </div>
+
+              {/* Revisar Cuerpo del Monstruo Abatido (Probabilidad por Rareza + Bonos del Héroe que Revisa) */}
+              {selectedMonsterObj.currentPC <= 0 && (() => {
+                const alreadyLooted = lootedBodies.has(selectedMonsterObj.key);
+                return (
+                  <div className="p-2.5 rounded-xl bg-emerald-950/35 border border-emerald-600/60 space-y-2 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-emerald-300">
+                        🔍 Revisar Cuerpo {alreadyLooted ? '(Ya revisado ✓)' : '(Probabilidad por Rareza)'}
+                      </span>
+                    </div>
+                    {!alreadyLooted && (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {heroes.length > 0 && (
+                          <select
+                            value={effectiveHeroId}
+                            onChange={(e) => setTargetHeroId(e.target.value)}
+                            className="flex-1 px-2 py-1.5 rounded-lg bg-stone-950 border border-emerald-700/70 text-[11px] text-stone-100"
+                          >
+                            {heroes.map((h) => (
+                              <option key={h.id} value={h.id}>
+                                Revisa: {h.name}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const searcher = heroes.find((h) => h.id === effectiveHeroId) || heroes[0] || null;
+                            const res = rollBodyLoot({
+                              monsterName: selectedMonsterObj.scaled.name,
+                              isBoss: !!selectedMonsterObj.item?.info?.isBoss,
+                              isElite: !!selectedMonsterObj.scaled?.isElite,
+                              partyLevel,
+                              hero: searcher,
+                            });
+                            setLootedBodies((prev) => {
+                              const next = new Set(prev);
+                              next.add(selectedMonsterObj.key);
+                              return next;
+                            });
+                            setRoomDiscovery({
+                              source: searcher ? `Cuerpo (${searcher.name})` : 'Revisión de Cuerpo',
+                              title: res.title,
+                              badge: res.rarityLabel,
+                              text: res.text,
+                              rewardLoot: res.rewardLoot,
+                              rewardGold: res.rewardGold,
+                              materialId: res.materialId,
+                              materialQty: res.materialQty,
+                              heroBonusNotes: res.heroBonusNotes,
+                            });
+                            setRightPanelTab('tools');
+                            showToast?.(
+                              res.isEmpty
+                                ? `🔍 ${selectedMonsterObj.scaled.name}: cuerpo vacío (${res.rollPct}%).`
+                                : `🔍 ¡Hallazgo en ${selectedMonsterObj.scaled.name}: ${res.title}!`
+                            );
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] cursor-pointer shrink-0"
+                        >
+                          🔍 Revisar Cuerpo
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -2906,6 +2949,21 @@ export default function TacticalBoard({
                         </div>
                         <div className="font-display font-bold text-sm text-amber-200">{roomDiscovery.title}</div>
                         <p className="text-stone-200 leading-snug">{roomDiscovery.text}</p>
+                        {roomDiscovery.heroBonusNotes?.length > 0 && (
+                          <div className="p-2 rounded-lg bg-purple-950/50 border border-purple-500/60 text-[11px] text-purple-200 space-y-0.5">
+                            {roomDiscovery.heroBonusNotes.map((bn, bi) => (
+                              <div key={bi}>✨ <strong>Bono aplicado:</strong> {bn}</div>
+                            ))}
+                          </div>
+                        )}
+                        {roomDiscovery.materialId && roomDiscovery.materialQty > 0 && (() => {
+                          const matObj = getMaterialById(roomDiscovery.materialId);
+                          return (
+                            <div className="text-[11px] font-bold text-emerald-300">
+                              🎒 Material incluido: {roomDiscovery.materialQty}× {matObj.icon} {matObj.name}
+                            </div>
+                          );
+                        })()}
 
                         {/* Invocar Monstruo o Trampa directamente en el tablero */}
                         {(spawn.monsterType || spawn.trapType) && (
@@ -2940,8 +2998,8 @@ export default function TacticalBoard({
                           </div>
                         )}
 
-                        {/* Enviar Botín / Oro al Celular del Héroe */}
-                        {(roomDiscovery.rewardLoot || roomDiscovery.rewardGold > 0) && onSendLootToHero && (
+                        {/* Enviar Botín / Oro / Material al Celular del Héroe */}
+                        {(roomDiscovery.rewardLoot || roomDiscovery.rewardGold > 0 || (roomDiscovery.materialId && roomDiscovery.materialQty > 0)) && onSendLootToHero && (
                           <div className="pt-2 border-t border-emerald-800/60 flex flex-wrap items-center gap-2">
                             {heroes.length === 0 ? (
                               <span className="text-[11px] text-amber-300">
@@ -2962,11 +3020,20 @@ export default function TacticalBoard({
                                 </select>
                                 <button
                                   onClick={() => {
-                                    onSendLootToHero(
-                                      effectiveHeroId,
-                                      roomDiscovery.rewardLoot,
-                                      roomDiscovery.rewardGold
-                                    );
+                                    if (roomDiscovery.rewardLoot || roomDiscovery.rewardGold) {
+                                      onSendLootToHero(
+                                        effectiveHeroId,
+                                        roomDiscovery.rewardLoot,
+                                        roomDiscovery.rewardGold
+                                      );
+                                    }
+                                    if (roomDiscovery.materialId && roomDiscovery.materialQty > 0 && onSendMaterialToHero) {
+                                      onSendMaterialToHero(
+                                        effectiveHeroId,
+                                        roomDiscovery.materialId,
+                                        roomDiscovery.materialQty
+                                      );
+                                    }
                                     setRoomDiscovery(null);
                                   }}
                                   className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-black text-xs flex items-center gap-1 cursor-pointer"
