@@ -53,14 +53,6 @@ import {
 import { rollMaterialDrop } from '../data/craftingSystem';
 import { DIGITAL_LOOT_CATALOG, generateProceduralLoot, getRarityMeta } from '../data/lootCatalog';
 import { DUNGEON_NPCS, generateProceduralPuzzle } from '../data/puzzlesAndNpcs';
-import {
-  RANDOM_DUNGEON_EVENTS,
-  OUTWORLD_RANDOM_EVENT_MODES,
-  OUTWORLD_EAVESDROPPING_TABLE,
-  rollD66,
-  rollD6,
-  lookupD66,
-} from '../data/outworldTables';
 
 const COL_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const CELL = 32; // px por casilla en el plano SVG oficial
@@ -443,9 +435,6 @@ export default function TacticalBoard({
   const [initRound, setInitRound] = useState(1);
   // Oleada actual si la misión es de Defensa por Oleadas
   const [currentWave, setCurrentWave] = useState(1);
-  // Outworld Random Events (pág. 45 + tabla 11–66)
-  const [randomEventMode, setRandomEventMode] = useState('mode2');
-  const [manualRandomCode, setManualRandomCode] = useState('');
 
   const loadInitiativeForRoom = (shuffleSurprise = false) => {
     const heroEntries = (heroes || []).map((h) => ({
@@ -562,57 +551,6 @@ export default function TacticalBoard({
       text: twist.text,
       rewardLoot: twist.rewardLoot || null,
       rewardGold: twist.rewardGold || 0,
-    });
-  };
-
-  // Outworld Random Events en Mazmorra (pág. 45 + 36 entradas 11–66) con soporte para dados físicos y sync al celular
-  const triggerRandomDungeonEvent = (forcedCode = '') => {
-    const code = forcedCode && lookupD66(RANDOM_DUNGEON_EVENTS, forcedCode) ? forcedCode : rollD66();
-    const ev = lookupD66(RANDOM_DUNGEON_EVENTS, code) || RANDOM_DUNGEON_EVENTS[0];
-    const pickedHero =
-      ev.targetHero && heroes.length > 0
-        ? heroes[Math.floor(Math.random() * heroes.length)]
-        : null;
-    const targetPrefix = pickedHero ? `🎯 Héroe afectado: ${pickedHero.name}. ` : '';
-    const fullText = `${targetPrefix}${ev.text}`;
-
-    setRoomDiscovery({
-      source: `Outworld Random Event [${ev.code}]`,
-      title: `🎲 [${ev.code}] ${ev.title}`,
-      badge: ev.quiet ? 'Falsa Alarma' : 'Random Event (2D6)',
-      text: fullText,
-      rewardLoot: null,
-      rewardGold: ev.rewardGold || 0,
-    });
-
-    // Sincronizar al celular de los jugadores en tiempo real
-    fetch('/api/outworld', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        randomDungeonEvent: {
-          code: ev.code,
-          title: ev.title,
-          text: fullText,
-          targetHeroName: pickedHero?.name || null,
-          ts: Date.now(),
-        },
-      }),
-    }).catch(() => {});
-  };
-
-  // Outworld House Rule: Escuchar tras puerta cerrada (Eavesdropping, pág. 40)
-  const triggerEavesdropping = (bonus = 0) => {
-    const raw = rollD6();
-    const total = Math.min(6, raw + bonus);
-    const res = OUTWORLD_EAVESDROPPING_TABLE.find((e) => e.roll === total) || OUTWORLD_EAVESDROPPING_TABLE[1];
-    setRoomDiscovery({
-      source: `Escuchar Puerta (1D6 = ${raw}${bonus ? ` +${bonus}` : ''})`,
-      title: `👂 ${res.label}`,
-      badge: 'Outworld · Eavesdropping',
-      text: res.text,
-      rewardLoot: null,
-      rewardGold: 0,
     });
   };
 
@@ -2508,68 +2446,6 @@ export default function TacticalBoard({
                   >
                     🔥 Giro Épico
                   </button>
-                  <button
-                    onClick={() => triggerEavesdropping(0)}
-                    className="py-2.5 px-3 rounded-xl bg-indigo-900/70 hover:bg-indigo-800 border border-indigo-500/60 text-indigo-100 text-xs font-black cursor-pointer"
-                    title="Regla Outworld (pág. 40): escuchar tras puerta cerrada (1D6; +1 Elfo/Pícaro)"
-                  >
-                    👂 Escuchar Puerta
-                  </button>
-                </div>
-
-                {/* Bloque Outworld: Random Events en Mazmorra (pág. 45 + Tabla 11–66) */}
-                <div className="p-2.5 rounded-xl bg-rose-950/35 border border-rose-500/45 space-y-2 text-xs">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-display font-black text-rose-200">
-                      🎲 Outworld Random Events (11–66)
-                    </span>
-                    <select
-                      value={randomEventMode}
-                      onChange={(e) => setRandomEventMode(e.target.value)}
-                      className="px-2 py-0.5 rounded-lg bg-slate-950 border border-rose-700/60 text-[10px] text-rose-100"
-                    >
-                      {OUTWORLD_RANDOM_EVENT_MODES.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <p className="text-[10px] text-slate-300">
-                    {OUTWORLD_RANDOM_EVENT_MODES.find((m) => m.id === randomEventMode)?.desc}
-                  </p>
-                  <div className="flex gap-1.5">
-                    <button
-                      onClick={() => triggerRandomDungeonEvent('')}
-                      className="flex-1 py-2 px-2.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-black text-[11px] cursor-pointer shadow"
-                    >
-                      🎲 Tirar Random Event (2D6)
-                    </button>
-                    <input
-                      type="text"
-                      maxLength={2}
-                      value={manualRandomCode}
-                      onChange={(e) => setManualRandomCode(e.target.value.replace(/[^1-6]/g, ''))}
-                      placeholder="11-66"
-                      className="w-16 px-2 py-1 rounded-lg bg-slate-950 border border-rose-700/60 text-center text-amber-300 font-mono text-xs"
-                      title="Escribe tus 2 dados físicos (ej. 46)"
-                    />
-                    <button
-                      onClick={() => {
-                        if (manualRandomCode.length === 2) {
-                          triggerRandomDungeonEvent(manualRandomCode);
-                          setManualRandomCode('');
-                        }
-                      }}
-                      disabled={manualRandomCode.length !== 2}
-                      className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-black text-[11px] cursor-pointer"
-                    >
-                      Ver
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setQuickSendOpen((v) => !v)}
                     className={`py-2.5 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer border ${

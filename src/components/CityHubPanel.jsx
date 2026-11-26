@@ -41,7 +41,6 @@ import {
 import { MERCENARIES } from '../data/decks';
 import { EQUIPMENT_CATALOG } from '../data/characterSystem';
 import { generateContractBoard } from '../data/proceduralEngine';
-import OutworldPanel from './OutworldPanel';
 
 export default function CityHubPanel({
   heroes = [],
@@ -729,26 +728,8 @@ export default function CityHubPanel({
         </div>
       </div>
 
-      {/* Navegación de los 6 Distritos + Motor Outworld Digital */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
-        <button
-          onClick={() => setActiveDistrict('outworld')}
-          className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
-            activeDistrict === 'outworld'
-              ? 'bg-gradient-to-br from-indigo-900/70 to-amber-900/50 border-amber-400 shadow-lg'
-              : 'grimoire-panel border-indigo-700/60 hover:border-amber-400'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xl">🌍</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 font-black">
-              NUEVO
-            </span>
-          </div>
-          <div className="font-display font-bold text-xs text-amber-200 mt-1.5 leading-tight">
-            Outworld Digital (9 Tablas)
-          </div>
-        </button>
+      {/* Navegación de los 6 Distritos */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
         {CITY_DISTRICTS.map((d) => {
           const locked = fame < d.fameRequired;
           const active = activeDistrict === d.id;
@@ -778,13 +759,6 @@ export default function CityHubPanel({
           );
         })}
       </div>
-
-      {/* ==================================================================== */}
-      {/* MOTOR OUTWORLD DIGITAL (Viaje, 9 Tablas, Haven, Mentor, Arena, Stock) */}
-      {/* ==================================================================== */}
-      {activeDistrict === 'outworld' && (
-        <OutworldPanel heroes={heroes} onUpdateHeroes={onUpdateHeroes} showToast={showToast} />
-      )}
 
       {/* ==================================================================== */}
       {/* DISTRITO 1: TABERNA, DESCANSO, BANQUETES, EVENTO DE CIUDAD Y TABLÓN */}
