@@ -43,6 +43,7 @@ import {
   getPieceIconSrc,
 } from './BoardPiecesSVG';
 import { MONSTERS, scaleMonster } from '../data/bestiary';
+import { OFFICIAL_DREAD_SPELLS } from '../data/officialCards';
 import { QUESTS } from '../data/quests';
 import { FURNITURE_DECK, TREASURE_TRAP_DECK } from '../data/decks';
 import {
@@ -1095,6 +1096,7 @@ export default function TacticalBoard({
   }, [roomMonstersScaled]);
 
   const [triggeredQuirks, setTriggeredQuirks] = useState({});
+  const [monsterDreadSpells, setMonsterDreadSpells] = useState({});
   const roomQuirkAlerts = useMemo(
     () => evaluateRoomQuirks(heroes, roomItems, roomMonstersScaled, selectedRoomId === 'CORRIDOR'),
     [heroes, roomItems, roomMonstersScaled, selectedRoomId]
@@ -1898,6 +1900,114 @@ export default function TacticalBoard({
                   ))}
                 </div>
               )}
+
+              {/* Hechizo del Terror Aleatorio (Solo si el monstruo tiene habilidad de Hechizo del Terror, ej. Abominación / Hechicero) */}
+              {(() => {
+                const abilitiesJoined = (selectedMonsterObj.scaled.activeAbilities || []).join(' ').toLowerCase();
+                const hasDreadAbility =
+                  abilitiesJoined.includes('hechizo del terror') ||
+                  abilitiesJoined.includes('hechizos del terror') ||
+                  selectedMonsterObj.item?.info?.monsterId === 'sorcerer';
+                if (!hasDreadAbility) return null;
+                const isOneInThree = abilitiesJoined.includes('1 de cada 3');
+                const mKey = selectedMonsterObj.key;
+                const entry = monsterDreadSpells[mKey];
+
+                const drawDreadCard = (forceSuccess = false) => {
+                  if (isOneInThree && !forceSuccess) {
+                    const roll = Math.floor(Math.random() * 3) + 1;
+                    if (roll < 3) {
+                      setMonsterDreadSpells((prev) => ({
+                        ...prev,
+                        [mKey]: { checked: true, hasSpell: false, spell: null, used: false },
+                      }));
+                      showToast?.(`🎲 Afinidad Arcana (${roll}/3): Esta criatura NO tiene Hechizo del Terror.`);
+                      return;
+                    }
+                  }
+                  const picked = OFFICIAL_DREAD_SPELLS[Math.floor(Math.random() * OFFICIAL_DREAD_SPELLS.length)];
+                  setMonsterDreadSpells((prev) => ({
+                    ...prev,
+                    [mKey]: { checked: true, hasSpell: true, spell: picked, used: false },
+                  }));
+                  showToast?.(`💀 ¡Hechizo del Terror asignado: ${picked.name}!`);
+                };
+
+                return (
+                  <div className="p-2.5 rounded-xl bg-purple-950/45 border border-purple-500/60 space-y-2 text-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-bold text-purple-200 flex items-center gap-1">
+                        💀 Hechizo del Terror {isOneInThree ? '(Afinidad 1 de 3)' : '(Lanzador)'}
+                      </span>
+                      {!entry ? (
+                        <button
+                          type="button"
+                          onClick={() => drawDreadCard(false)}
+                          className="px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-black text-[11px] cursor-pointer"
+                        >
+                          {isOneInThree ? '🎲 Tirar Afinidad (1/3)' : '💀 Robar Carta Random'}
+                        </button>
+                      ) : !entry.hasSpell ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-stone-400">Sin hechizo</span>
+                          <button
+                            type="button"
+                            onClick={() => drawDreadCard(true)}
+                            className="px-2 py-0.5 rounded bg-purple-900/70 hover:bg-purple-700 text-purple-200 text-[10px] font-bold cursor-pointer"
+                            title="Forzar asignación de un Hechizo del Terror aleatorio"
+                          >
+                            Forzar carta
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setMonsterDreadSpells((prev) => ({
+                                ...prev,
+                                [mKey]: { ...prev[mKey], used: !prev[mKey].used },
+                              }))
+                            }
+                            className={`px-2 py-0.5 rounded text-[10px] font-black cursor-pointer ${
+                              entry.used
+                                ? 'bg-stone-800 text-stone-400'
+                                : 'bg-rose-600 hover:bg-rose-500 text-white'
+                            }`}
+                          >
+                            {entry.used ? '✓ Usado' : '⚡ Lanzar'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => drawDreadCard(true)}
+                            className="px-2 py-0.5 rounded bg-stone-800 hover:bg-stone-700 text-amber-300 text-[10px] font-bold cursor-pointer"
+                            title="Robar otro Hechizo del Terror al azar"
+                          >
+                            🔄
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    {entry?.hasSpell && entry.spell && (
+                      <div
+                        className={`p-2 rounded-lg border ${
+                          entry.used
+                            ? 'bg-stone-950/60 border-stone-800 opacity-55'
+                            : 'bg-rose-950/40 border-rose-500/60'
+                        }`}
+                      >
+                        <div className="font-display font-bold text-rose-200 flex items-center justify-between gap-2">
+                          <span>{entry.spell.name}</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/50 text-amber-300">
+                            {entry.spell.expansion}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-stone-200 mt-1 leading-snug">{entry.spell.text}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               <div className="flex flex-wrap gap-1.5">
                 <button
