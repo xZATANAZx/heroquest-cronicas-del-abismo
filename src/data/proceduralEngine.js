@@ -480,15 +480,79 @@ const ROOM_DOORS_PRESETS = [
 
 const ALERTNESS_LIST = ['Distraído', 'Alerta', 'Patrulla', 'Guardia', 'Venganza'];
 
+// ============================================================================
+// MOTOR ANTI-REPETICIÓN (BARAJADO SIN REPETIR HASTA AGOTAR EL CATÁLOGO)
+// ============================================================================
+const FRESH_DECK_MEMORY = {};
+function pickFresh(deckKey, arr, getKey = (x) => (typeof x === 'string' ? x : x.id || x.name), avoidSet = null) {
+  if (!arr || arr.length === 0) return null;
+  if (!FRESH_DECK_MEMORY[deckKey]) FRESH_DECK_MEMORY[deckKey] = [];
+  const used = new Set(FRESH_DECK_MEMORY[deckKey]);
+  let pool = arr.filter((item) => {
+    const k = getKey(item);
+    if (avoidSet && avoidSet.has(k)) return false;
+    return !used.has(k);
+  });
+  if (pool.length === 0) {
+    FRESH_DECK_MEMORY[deckKey] = [];
+    pool = arr.filter((item) => !(avoidSet && avoidSet.has(getKey(item))));
+    if (pool.length === 0) pool = arr;
+  }
+  const chosen = pool[Math.floor(Math.random() * pool.length)];
+  FRESH_DECK_MEMORY[deckKey].push(getKey(chosen));
+  return chosen;
+}
+
 const BOSS_NAMES = [
   'Kragor el Desollador',
   'Vexia la Tejedora de Almas',
   'Lord Malakor de las Cenizas',
   'Skarn Colmillo de Hierro',
-  'Archimago Morvath',
+  'Archimago Morvath el Sin Rostro',
   'Baronesa Sanguina de Elethorn',
   'Grimjaw el Quebrantahuesos',
-  'El Carcelero sin Rostro',
+  'Inquisidor Caído Malrick',
+  'Duquesa Valeriana de la Cripta',
+  'Thorgar Martillo de Obsidiana',
+  'Oráculo Zephira de la Niebla',
+  'Capitán Draug el Ahorcado',
+  'Alquimista Vespera la Venenosa',
+  'General Kaelen el Traidor',
+  'Morgul Boca de Abismo',
+  'Lady Isolde la Dama de Hielo',
+  'Vorak el Carnicero de Piedra',
+  'Escriba Oscuro Nyxarion',
+  'Centurión Rúnico Khaz-Dul',
+  'Sacerdotisa Umbra del Eclipse',
+  'Rey Mendigo Osgar',
+  'Balthazar el Nigromante Roto',
+  'Gorgutz Garras de Sangre',
+  'El Vigía de las Mil Llaves',
+];
+
+const BOSS_DIALOGUES = [
+  '“¿Así que la ciudad envió carne fresca? Sus huesos reforzarán mis muros.”',
+  '“Llegan tarde, héroes. El sello ya se agrieta bajo sus propios pies.”',
+  '“Dejen sus armas y tal vez les permita marcharse con sus almas intactas.”',
+  '“¡Nadie profana mi santuario y vive para contarlo en la taberna!”',
+  '“He esperado siglos a oponentes dignos… muéstrenme de qué están hechos.”',
+  '“Cada paso que dieron por estos pasillos fue parte de mi plan.”',
+];
+
+const ACT2_DISCOVERIES = [
+  'En un cadáver antiguo hallan un diario manchado: revela que el verdadero objetivo del jefe no es el oro, sino un sello enterrado bajo la sala central.',
+  'Un prisionero herido susurra un secreto antes de desmayarse: las patrullas obedecen una señal rúnica oculta cerca de la cámara principal.',
+  'Grabados recientes en la piedra muestran un mapa incompleto y una advertencia: uno de los contactos de la ciudad filtró la ruta de los héroes.',
+  'Encuentran un estandarte quemado de una expedición anterior; entre las cenizas hay una pista que delata la debilidad táctica del jefe.',
+  'Un altar profanado vibra con energía oscura: al examinarlo descubren que el jefe intentó negociar con Zargon y fue traicionado.',
+  'Hallan una carta sellada con cera imperial que vincula esta mazmorra con una conspiración mayor en los barrios altos de la ciudad.',
+];
+
+const EPILOGUES = [
+  'Al regresar a la ciudad con pruebas de su victoria, los guardias les abren paso con respeto y los bardos ya componen una nueva balada.',
+  'El Concejo recompensa al grupo, aunque entre las sombras un mensajero anónimo observa su regreso y desaparece hacia el norte.',
+  'Los comerciantes celebran el fin de la amenaza; la fama del grupo crece y nuevos clientes se acercan al tablón de contratos.',
+  'La paz vuelve a los caminos cercanos, pero un objeto recuperado en la sala del jefe emite un tenue pulso arcano que presagia futuros peligros.',
 ];
 
 const QUEST_TITLES_PREFIX = [
@@ -500,6 +564,14 @@ const QUEST_TITLES_PREFIX = [
   'Sangre en',
   'La Maldición de',
   'El Último Sello de',
+  'Cenizas de',
+  'El Juramento de',
+  'Susurros en',
+  'La Vigilia de',
+  'El Despertar de',
+  'Traición en',
+  'Las Ruinas de',
+  'El Juicio de',
 ];
 
 const QUEST_PLACES = [
@@ -511,6 +583,14 @@ const QUEST_PLACES = [
   'la Fragua del Abismo',
   'el Sagrario Olvidado',
   'las Minas de Kael',
+  'la Abadía Silenciosa',
+  'el Panteón de Ceniza',
+  'la Fortaleza del Eclipse',
+  'las Catacumbas de Sal',
+  'el Laboratorio de Elethorn',
+  'la Cámara del Trono Roto',
+  'el Paso de los Lamentos',
+  'el Relicario de Obsidiana',
 ];
 
 function buildProceduralBoardMap({
@@ -904,7 +984,7 @@ function buildProceduralBoardMap({
     },
   ];
 
-  const arch = pick(ARCHETYPES);
+  const arch = pickFresh('archetype', ARCHETYPES, (a) => a.name);
 
   // 2. Cámara de Alquimia Única Opcional (~72%; 100% en Laboratorio Alquímico)
   const hasAlchemyChamber = biome.id === 'laboratorio_alquimico' || Math.random() < 0.72;
@@ -1140,27 +1220,37 @@ export function generateProceduralQuest({
   partySize = 4,
   arcInfo = null, // { arcId, arcTitle, partNumber, totalParts, continuityNote }
   nemesis = null,
+  existingTitles = [],
 } = {}) {
   const biome =
     biomeId === 'random'
-      ? pick(PROCEDURAL_BIOMES)
+      ? pickFresh('biome', PROCEDURAL_BIOMES, (b) => b.id)
       : PROCEDURAL_BIOMES.find((b) => b.id === biomeId) || PROCEDURAL_BIOMES[0];
 
   const plot =
     plotId === 'random'
-      ? pick(QUEST_PLOTS)
+      ? pickFresh('plot', QUEST_PLOTS, (p) => p.id)
       : QUEST_PLOTS.find((p) => p.id === plotId) || QUEST_PLOTS[0];
 
-  const twist = pick(QUEST_TWISTS);
-  const sideObjective = pick(SIDE_OBJECTIVES);
-  const bossName = nemesis ? `${nemesis.name} (Némesis Nv.${nemesis.rank || 2})` : pick(BOSS_NAMES);
+  const twist = pickFresh('twist', QUEST_TWISTS);
+  const sideObjective = pickFresh('sideObj', SIDE_OBJECTIVES);
+  const bossName = nemesis
+    ? `${nemesis.name} (Némesis Nv.${nemesis.rank || 2})`
+    : pickFresh('boss', BOSS_NAMES);
+  const bossDialogue = pickFresh('bossDlg', BOSS_DIALOGUES);
+  const act2Discovery = pickFresh('act2', ACT2_DISCOVERIES);
+  const epilogue = pickFresh('epilogue', EPILOGUES);
   const id = `proc-q-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`;
 
-  const title = arcInfo
+  const existingSet = new Set(existingTitles || []);
+  let title = arcInfo
     ? `${arcInfo.arcTitle} — Parte ${arcInfo.partNumber}/${arcInfo.totalParts}`
     : nemesis
     ? `Venganza contra ${nemesis.name}`
-    : `${pick(QUEST_TITLES_PREFIX)} ${pick(QUEST_PLACES)}`;
+    : `${pickFresh('prefix', QUEST_TITLES_PREFIX)} ${pickFresh('place', QUEST_PLACES)}`;
+  if (!arcInfo && !nemesis && existingSet.has(title)) {
+    title = `${pickFresh('prefix', QUEST_TITLES_PREFIX)} ${pickFresh('place', QUEST_PLACES)}`;
+  }
 
   // Asignar 2–3 Salas de Peligro aleatorias
   const hazardCandidates = ['R4', 'R5', 'R12', 'R7', 'R18', 'R2'];
@@ -1174,7 +1264,7 @@ export function generateProceduralQuest({
   const baseXP = 220 + partyLevel * 90 + (mode === 'arc_part' ? 60 : 0);
   const baseGold = 80 + partyLevel * 35 + (nemesis ? 60 : 0);
 
-  const narrative = buildQuestNarrative({
+  const rawNarrative = buildQuestNarrative({
     biome,
     plot,
     title,
@@ -1182,6 +1272,15 @@ export function generateProceduralQuest({
     arcInfo,
     nemesis,
   });
+  const narrative = {
+    ...rawNarrative,
+    storyBeats: {
+      ...(rawNarrative.storyBeats || {}),
+      act2Discovery,
+      bossDialogue,
+      epilogue,
+    },
+  };
 
   const mapData = buildProceduralBoardMap({
     id,

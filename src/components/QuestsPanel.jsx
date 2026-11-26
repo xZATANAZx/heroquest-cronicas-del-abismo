@@ -20,6 +20,11 @@ import {
   generateProceduralQuest,
   generateCampaignArc,
 } from '../data/proceduralEngine';
+import {
+  enhanceQuestWithGeminiAI,
+  getSavedGeminiKey,
+  saveGeminiKey,
+} from '../data/aiQuestWriter';
 
 export default function QuestsPanel({
   completedQuests = [],
@@ -41,10 +46,14 @@ export default function QuestsPanel({
   const [selectedCampaign, setSelectedCampaign] = useState('base');
   const [selectedQuestId, setSelectedQuestId] = useState('q1');
 
-  // Controles de El Arquitecto del Abismo
+  // Controles de El Arquitecto del Abismo + IA Narrativa opcional (Gemini)
   const [biomeId, setBiomeId] = useState('random');
   const [plotId, setPlotId] = useState('random');
   const [selectedProcQuest, setSelectedProcQuest] = useState(proceduralQuests[0] || null);
+  const [aiKeyOpen, setAiKeyOpen] = useState(false);
+  const [geminiKey, setGeminiKey] = useState(() => getSavedGeminiKey());
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiError, setAiError] = useState('');
 
   const campaign = CAMPAIGNS.find((c) => c.id === selectedCampaign);
   const campaignQuests = QUESTS.filter((q) => q.campaignId === selectedCampaign);
@@ -53,15 +62,48 @@ export default function QuestsPanel({
   const isDone = activeQuest && completedQuests.includes(activeQuest.id);
 
   const handleGenerateOneShot = () => {
+    setAiError('');
     const q = generateProceduralQuest({
       mode: 'oneshot',
       biomeId,
       plotId,
       partyLevel,
       partySize,
+      existingTitles: proceduralQuests.map((x) => x.title),
     });
     setProceduralQuests?.((prev) => [q, ...prev].slice(0, 12));
     setSelectedProcQuest(q);
+  };
+
+  const handleGenerateWithAI = async () => {
+    if (!geminiKey.trim()) {
+      setAiKeyOpen(true);
+      setAiError('Pega tu API Key gratuita de Google Gemini abajo para activar la escritura con IA.');
+      return;
+    }
+    setAiGenerating(true);
+    setAiError('');
+    try {
+      const baseQuest = generateProceduralQuest({
+        mode: 'oneshot',
+        biomeId,
+        plotId,
+        partyLevel,
+        partySize,
+        existingTitles: proceduralQuests.map((x) => x.title),
+      });
+      const aiQuest = await enhanceQuestWithGeminiAI({
+        quest: baseQuest,
+        existingTitles: proceduralQuests.map((x) => x.title),
+        apiKey: geminiKey,
+      });
+      setProceduralQuests?.((prev) => [aiQuest, ...prev].slice(0, 12));
+      setSelectedProcQuest(aiQuest);
+    } catch (err) {
+      setAiError(err?.message || 'Error al generar historia con IA.');
+    } finally {
+      setAiGenerating(false);
+    }
   };
 
   const handleGenerateArc = () => {
@@ -157,16 +199,77 @@ export default function QuestsPanel({
                   onClick={handleGenerateOneShot}
                   className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-black font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-lg"
                 >
-                  <Sparkles className="w-4 h-4" /> Generar Misión Única (One-Shot)
+                  <Sparkles className="w-4 h-4" /> Nueva Misión (Sin Repetir)
+                </button>
+                <button
+                  onClick={handleGenerateWithAI}
+                  disabled={aiGenerating}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-lg disabled:opacity-50"
+                  title="Escribe una historia 100% original con Google Gemini sobre el mapa BFS"
+                >
+                  <Wand2 className="w-4 h-4" /> {aiGenerating ? 'Escribiendo historia...' : '🤖 Crear con IA (Gemini)'}
                 </button>
                 <button
                   onClick={handleGenerateArc}
                   className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-700 to-red-700 hover:from-purple-600 hover:to-red-600 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-lg"
                 >
-                  <GitBranch className="w-4 h-4" /> Crear Arco Conectado (3 Partes)
+                  <GitBranch className="w-4 h-4" /> Arco 3 Partes
+                </button>
+                <button
+                  onClick={() => setAiKeyOpen((o) => !o)}
+                  className={`px-3 py-2.5 rounded-xl border text-xs font-bold cursor-pointer ${
+                    geminiKey
+                      ? 'bg-emerald-950/50 border-emerald-500/60 text-emerald-300'
+                      : 'bg-stone-900 border-stone-700 text-stone-300 hover:border-sky-400'
+                  }`}
+                  title="Configurar tu API Key gratuita de Google Gemini (se guarda solo en tu PC)"
+                >
+                  {geminiKey ? '🔑 IA Lista' : '🔑 Configurar IA'}
                 </button>
               </div>
             </div>
+
+            {aiKeyOpen && (
+              <div className="p-3.5 rounded-xl bg-slate-950/90 border border-sky-500/40 space-y-2 text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-bold text-sky-300">
+                    🤖 API Key Gratuita de Google Gemini (se guarda solo en tu navegador, nunca se sube a GitHub)
+                  </span>
+                  <a
+                    href="https://aistudio.google.com/apikey"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-amber-300 underline font-bold"
+                  >
+                    Obtener clave gratis aquí →
+                  </a>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    value={geminiKey}
+                    onChange={(e) => {
+                      setGeminiKey(e.target.value);
+                      saveGeminiKey(e.target.value);
+                    }}
+                    placeholder="Pega tu clave AIzaSy... aquí"
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-stone-900 border border-stone-700 text-stone-100 text-xs focus:border-sky-400 focus:outline-none"
+                  />
+                  <button
+                    onClick={() => setAiKeyOpen(false)}
+                    className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold cursor-pointer"
+                  >
+                    Guardar
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {aiError && (
+              <div className="p-2.5 rounded-xl bg-rose-950/50 border border-rose-500/50 text-xs text-rose-200 font-semibold">
+                ⚠️ {aiError}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-stone-800">
               <label className="text-xs space-y-1">
@@ -408,6 +511,42 @@ export default function QuestsPanel({
                       {selectedProcQuest.biome.globalRule}
                     </div>
                   </div>
+
+                  {/* GUION DE 4 ACTOS (SOLO DM — Historia conectada y coherente) */}
+                  {(selectedProcQuest.storyBeats?.act2Discovery ||
+                    selectedProcQuest.storyBeats?.bossDialogue ||
+                    selectedProcQuest.storyBeats?.epilogue) && (
+                    <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2 text-xs">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-display font-bold uppercase tracking-wider text-sky-300">
+                          📖 Guion de Historia por Actos (Solo DM)
+                        </span>
+                        {selectedProcQuest.aiGenerated && (
+                          <span className="px-2 py-0.5 rounded-full bg-indigo-950 border border-indigo-400/60 text-indigo-200 text-[10px] font-bold">
+                            🤖 Historia Original por IA
+                          </span>
+                        )}
+                      </div>
+                      {selectedProcQuest.storyBeats?.act2Discovery && (
+                        <p className="text-slate-200">
+                          <strong className="text-amber-300">🔍 Acto II (Descubrimiento):</strong>{' '}
+                          {selectedProcQuest.storyBeats.act2Discovery}
+                        </p>
+                      )}
+                      {selectedProcQuest.storyBeats?.bossDialogue && (
+                        <p className="text-rose-200 italic">
+                          <strong className="not-italic text-rose-400">⚔️ Acto III (Diálogo de {selectedProcQuest.bossName}):</strong>{' '}
+                          {selectedProcQuest.storyBeats.bossDialogue}
+                        </p>
+                      )}
+                      {selectedProcQuest.storyBeats?.epilogue && (
+                        <p className="text-emerald-200">
+                          <strong className="text-emerald-400">🏆 Epílogo en la Ciudad:</strong>{' '}
+                          {selectedProcQuest.storyBeats.epilogue}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Escenas Progresivas Conectadas al Mapa */}
                   {selectedProcQuest.storyBeats && (
