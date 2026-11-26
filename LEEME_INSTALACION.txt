@@ -1,0 +1,20 @@
+====================================================================
+  HEROQUEST: CRONICAS DEL ABISMO (Sistema HQ-D20 v2)
+  Guia Rapida para Amigos (100% Automatico)
+====================================================================
+
+1) INSTALACION EN 1 CLIC
+   - Dale doble clic a: INSTALAR_HEROQUEST_DM.bat
+   - Instalara todo solo y te creara el acceso directo "HeroQuest DM"
+     en tu Escritorio.
+   - El programa arranca COMPLETAMENTE NUEVO para crear tus propios
+     aventureros y tu propia campana.
+
+2) JUGAR Y ACTUALIZAR (TODO EN 1 CLIC)
+   - Cada vez que abras "HeroQuest DM" (ABRIR_HEROQUEST_DM.bat):
+     * Busca automaticamente si hay actualizaciones nuevas y las aplica
+       solas, SIN borrar jamas tus personajes ni tu campana.
+     * Abre el navegador listo para jugar.
+     * Pulsa el boton "Conectar" arriba a la derecha para mostrar el QR
+       y que tus amigos se conecten desde sus celulares.
+====================================================================

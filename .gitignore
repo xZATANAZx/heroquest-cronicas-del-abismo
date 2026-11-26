@@ -1,0 +1,17 @@
+# Dependencias y compilaciones
+node_modules/
+dist/
+*.zip
+releases/
+
+# Datos privados de campaña, héroes y versión local (CADA PC GUARDA LOS SUYOS)
+.hq_data/
+.hq_version
+campaign_heroes.json
+
+# Archivos del sistema / editor
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.local

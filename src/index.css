@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-display: 'Cinzel', Georgia, serif;
+    --font-serif: 'Crimson Pro', Georgia, serif;
+    --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+
+    --bg-canvas: #0f141e;
+    --bg-surface: #171f2e;
+    --bg-surface-elevated: #1e283b;
+    --border-subtle: rgba(148, 163, 184, 0.16);
+    --border-accent: rgba(245, 158, 11, 0.38);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-canvas);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(56, 189, 248, 0.08), transparent 60%),
+      radial-gradient(ellipse 70% 50% at 85% 0%, rgba(245, 158, 11, 0.09), transparent 55%),
+      radial-gradient(ellipse 60% 45% at 50% 100%, rgba(168, 85, 247, 0.06), transparent 60%);
+    background-attachment: fixed;
+    color: #f1f5f9;
+    min-height: 100vh;
+    letter-spacing: -0.005em;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+  }
+
+  .font-lore {
+    font-family: var(--font-serif);
+  }
+}
+
+/* Modern Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #0f141e;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f59e0b;
+}
+
+/* Modern Studio Surface Cards (mucho más claras, limpias y legibles) */
+.grimoire-panel {
+  background: linear-gradient(180deg, rgba(26, 35, 52, 0.94) 0%, rgba(19, 26, 40, 0.97) 100%);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow:
+    0 12px 32px -12px rgba(2, 6, 23, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+}
+
+.grimoire-panel:hover {
+  border-color: rgba(148, 163, 184, 0.26);
+}
+
+.parchment-sheet {
+  background: linear-gradient(180deg, #faf4e6 0%, #efe3c8 100%);
+  color: #1e1812;
+  border: 2px solid #b48528;
+  box-shadow: 0 20px 45px -15px rgba(2, 6, 23, 0.7);
+}
+
+/* Mejor contraste global para textos secundarios en tarjetas oscuras */
+.text-stone-400 {
+  color: #94a3b8;
+}
+.text-stone-300 {
+  color: #cbd5e1;
+}
+.bg-stone-950,
+.bg-stone-950\/80,
+.bg-stone-950\/70,
+.bg-stone-950\/60 {
+  background-color: rgba(15, 23, 42, 0.78);
+}
+.bg-stone-900,
+.bg-stone-900\/80,
+.bg-stone-900\/90,
+.bg-stone-900\/70 {
+  background-color: rgba(30, 41, 59, 0.78);
+}
+.border-stone-800,
+.border-stone-800\/80 {
+  border-color: rgba(148, 163, 184, 0.18);
+}
+.border-stone-700 {
+  border-color: rgba(148, 163, 184, 0.28);
+}
+
+/* Print Styles for Character Sheet & Player Book */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #111111 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .parchment-sheet {
+    background: #ffffff !important;
+    border: 2px solid #222222 !important;
+    box-shadow: none !important;
+    color: #111111 !important;
+    break-inside: avoid;
+  }
+  @page {
+    margin: 1cm;
+    size: A4;
+  }
+}
