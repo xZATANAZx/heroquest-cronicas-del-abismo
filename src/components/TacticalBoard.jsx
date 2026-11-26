@@ -92,7 +92,7 @@ const TRAP_RULES = {
 
 // Detecta si un evento/tesoro/mueble menciona un monstruo o trampa para poder invocarlo en el tablero con 1 clic
 function detectSpawnable(disc, currentMap) {
-  if (!disc) return { monsterType: null, monsterLabel: null, trapType: null };
+  if (!disc || disc.isBodyLoot) return { monsterType: null, monsterLabel: null, trapType: null };
   const txt = `${disc.title || ''} ${disc.badge || ''} ${disc.text || ''}`.toLowerCase();
 
   let monsterType = null;
@@ -2463,9 +2463,10 @@ export default function TacticalBoard({
                 {roomDiscovery && (() => {
                   const spawn = detectSpawnable(roomDiscovery, currentMap);
                   const discTxtLow = `${roomDiscovery.title || ''} ${roomDiscovery.text || ''}`.toLowerCase();
-                  const spawnedMonsterId =
-                    (spawn.monsterType && PIECE_TYPES[spawn.monsterType]?.monsterId) ||
-                    (discTxtLow.includes('araña') ? 'arana_gigante' : null);
+                  const spawnedMonsterId = !roomDiscovery.isBodyLoot
+                    ? (spawn.monsterType && PIECE_TYPES[spawn.monsterType]?.monsterId) ||
+                      (discTxtLow.includes('araña') ? 'arana_gigante' : null)
+                    : null;
                   const spawnedBase = spawnedMonsterId ? MONSTERS.find((m) => m.id === spawnedMonsterId) : null;
                   const spawnedScaled = spawnedBase
                     ? scaleMonster(spawnedBase, partyLevel, 4, false, false, isSurvivalMode)
