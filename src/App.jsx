@@ -415,24 +415,22 @@ export default function App() {
     const baseTotalGold = Math.round((quest.rewards?.gold || 100) * goldMult);
     const goldPerHero = Math.max(15, Math.round(baseTotalGold / heroes.length));
     const xpGain = Math.round((quest.rewards?.xp || 160) * xpMult);
-    const fameGain = quest.rewards?.fame || 1;
-    const repGain = quest.rewards?.reputation || 1;
+    const repGain = quest.rewards?.reputation || quest.rewards?.fame || 1;
     updateHeroesSynced((prev) =>
       prev.map((h) => ({
         ...h,
         xp: (h.xp || 0) + xpGain,
         gold: (h.gold || 0) + goldPerHero,
-        fame: (h.fame || 0) + fameGain,
         reputation: (h.reputation || 0) + repGain,
       }))
     );
     if (!completedQuests.includes(quest.id)) {
       setCompletedQuests((prev) => [...prev, quest.id]);
     }
-    setFame((f) => f + fameGain);
+    setFame((f) => f + repGain);
     setReputation((r) => r + repGain);
     showToast(
-      `🏆 Misión completada${cityMode === 'survival' ? ' (🔥 Supervivencia)' : ''}: +${xpGain} XP, +${goldPerHero} MO, +${fameGain} ⭐ Fama y +${repGain} 🏅 Rep. a cada héroe.`
+      `🏆 Misión completada${cityMode === 'survival' ? ' (🔥 Supervivencia)' : ''}: +${xpGain} XP, +${goldPerHero} MO y +${repGain} 🏅 Reputación a cada héroe.`
     );
   };
 

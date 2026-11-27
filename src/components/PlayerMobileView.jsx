@@ -2506,7 +2506,8 @@ export default function PlayerMobileView({ initialPlayerParam }) {
         )}
         {/* ==================== TAB 5: CIUDAD INDIVIDUAL (SOLO CUANDO EL DM LA ABRE) ==================== */}
         {tab === 'city' && cityOpen && (() => {
-          const fameTier = getHeroFameTier(hero.fame || 0);
+          const totalRep = Number(hero.reputation || 0) + Number(hero.fame || 0);
+          const fameTier = getHeroFameTier(totalRep);
           const myProf = PROFESSIONS.find((p) => p.id === hero.professionId);
           const calcMyPrice = (base, district) => {
             let disc = fameTier.discount;
@@ -2662,7 +2663,7 @@ export default function PlayerMobileView({ initialPlayerParam }) {
 
           return (
             <div className="space-y-4">
-              {/* Perfil de Fama y Reputación Individual */}
+              {/* Perfil Unificado de Reputación del Héroe */}
               <div className="grimoire-panel rounded-2xl p-4 border-emerald-500/50 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <div className="font-display font-bold text-base text-emerald-300 flex items-center gap-1.5">
@@ -2670,15 +2671,14 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                   </div>
                   <span className="text-xs font-black text-amber-300">{hero.gold || 0} MO</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-slate-900/90 border border-amber-500/30">
-                    <div className="text-[10px] text-slate-400 uppercase font-bold">Tu Fama Individual</div>
-                    <div className="font-black text-amber-300">⭐ {hero.fame || 0} · {fameTier.rank}</div>
+                <div className="p-2.5 rounded-xl bg-slate-900/90 border border-emerald-500/35 flex items-center justify-between gap-2 text-xs">
+                  <div>
+                    <div className="text-[10px] text-slate-400 uppercase font-bold">Tu Reputación en El Bastión</div>
+                    <div className="font-black text-emerald-300">🏅 {totalRep} · {fameTier.rank}</div>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-slate-900/90 border border-emerald-500/30">
-                    <div className="text-[10px] text-slate-400 uppercase font-bold">Tu Reputación</div>
-                    <div className="font-black text-emerald-300">🏅 {hero.reputation || 0} Fichas</div>
-                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-600/50 text-emerald-200 font-bold">
+                    {fameTier.discount > 0 ? `-${Math.round(fameTier.discount * 100)}% Ciudad` : 'Rango Base'}
+                  </span>
                 </div>
                 <p className="text-[11px] text-slate-300">{fameTier.perk}</p>
                 {myProf && (

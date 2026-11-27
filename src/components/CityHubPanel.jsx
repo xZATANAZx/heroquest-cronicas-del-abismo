@@ -657,18 +657,29 @@ export default function CityHubPanel({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Fama */}
-            <div className="px-3 py-1.5 rounded-xl bg-amber-950/50 border border-amber-700/60 text-xs flex items-center gap-2">
-              <span className="text-amber-300 font-bold">⭐ Fama: {fame}</span>
-              <button onClick={() => setFame((f) => Math.max(0, f - 1))} className="px-1.5 rounded bg-stone-900 text-stone-300 cursor-pointer">-</button>
-              <button onClick={() => setFame((f) => f + 1)} className="px-1.5 rounded bg-stone-900 text-amber-300 cursor-pointer">+</button>
-            </div>
-
-            {/* Fichas de Reputación */}
+            {/* Reputación Unificada del Grupo */}
             <div className="px-3 py-1.5 rounded-xl bg-emerald-950/50 border border-emerald-700/60 text-xs flex items-center gap-2">
               <span className="text-emerald-300 font-bold">🏅 Reputación: {reputation}</span>
-              <button onClick={() => setReputation((r) => Math.max(0, r - 1))} className="px-1.5 rounded bg-stone-900 text-stone-300 cursor-pointer">-</button>
-              <button onClick={() => setReputation((r) => r + 1)} className="px-1.5 rounded bg-stone-900 text-emerald-300 cursor-pointer">+</button>
+              <button
+                onClick={() => {
+                  const next = Math.max(0, reputation - 1);
+                  setReputation(next);
+                  setFame?.(next);
+                }}
+                className="px-1.5 rounded bg-stone-900 text-stone-300 cursor-pointer"
+              >
+                -
+              </button>
+              <button
+                onClick={() => {
+                  const next = reputation + 1;
+                  setReputation(next);
+                  setFame?.(next);
+                }}
+                className="px-1.5 rounded bg-stone-900 text-emerald-300 cursor-pointer"
+              >
+                +
+              </button>
             </div>
 
             {/* Toggle Modo Relajado vs Supervivencia */}
