@@ -60,6 +60,7 @@ import {
   generatePersonalCityEvent,
 } from '../data/citySystem';
 import { OFFICIAL_ALCHEMY_DECK } from '../data/officialCards';
+import { rollWindsOfMagic } from '../data/magicWinds';
 
 // Enriquece automáticamente cualquier objeto (incluyendo equipo inicial de clase) para que SIEMPRE muestre tipo real, dados y efecto claro
 function enrichGearItem(raw) {
@@ -250,6 +251,8 @@ export default function PlayerMobileView({ initialPlayerParam }) {
   const [tradeTargetId, setTradeTargetId] = useState('');
   const [craftRollInput, setCraftRollInput] = useState('');
   const [craftOutcome, setCraftOutcome] = useState(null);
+  const [windsResult, setWindsResult] = useState(null);
+  const [spellRepeats, setSpellRepeats] = useState({});
   const [cityOpen, setCityOpen] = useState(false);
   const [cityModeMobile, setCityModeMobile] = useState('relaxed');
   const [cityVisitId, setCityVisitId] = useState(0);
@@ -2410,33 +2413,99 @@ export default function PlayerMobileView({ initialPlayerParam }) {
               )}
             </div>
 
-            {/* Grimorio / Hechizos Interactivos (1 uso por misión -> se deshabilita al lanzar) */}
+            {/* Grimorio / Hechizos Interactivos (1 uso por misión + Repetir por Vientos de la Magia) */}
             {getHeroSpells().length > 0 && (
               <div className="grimoire-panel rounded-2xl p-4 space-y-2.5 border-purple-700/50">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-purple-300">
                     📜 Tus Hechizos / Cantos ({getHeroSpells().length - usedSpells.filter((id) => getHeroSpells().some((s) => s.id === id)).length}/{getHeroSpells().length} disponibles)
                   </h3>
-                  <span className="text-[10px] text-stone-400">1 uso por misión</span>
+                  <span className="text-[10px] text-stone-400">Repetir: -1 PM (2d6 Vientos)</span>
                 </div>
+
+                {windsResult && (
+                  <div
+                    className={`p-3 rounded-xl border text-xs space-y-1 ${
+                      windsResult.outcome === 'critico' || windsResult.outcome === 'favorable'
+                        ? 'bg-emerald-950/50 border-emerald-500 text-emerald-100'
+                        : windsResult.outcome === 'pifia' || windsResult.outcome === 'inestable'
+                        ? 'bg-rose-950/55 border-rose-500 text-rose-100'
+                        : 'bg-purple-950/50 border-purple-500 text-purple-100'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 font-black">
+                      <span>{windsResult.title}</span>
+                      <button
+                        onClick={() => setWindsResult(null)}
+                        className="text-[10px] px-1.5 py-0.5 rounded bg-black/40 text-white cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <p className="text-[11px] leading-snug">{windsResult.text}</p>
+                  </div>
+                )}
+
                 <div className="space-y-2 text-xs">
                   {getHeroSpells().map((sp) => {
                     const isUsed = usedSpells.includes(sp.id);
                     const curPM = hero.currentPM ?? hero.maxPM;
                     const noPM = (sp.costPM || 0) > curPM;
+                    const maxRepeats = (sp.level || 1) === 1 ? 2 : (sp.level || 1) === 2 ? 1 : 0;
+                    const usedReps = Number(spellRepeats[sp.id] || 0);
+                    const canRepeat = isUsed && maxRepeats > 0 && usedReps < maxRepeats && curPM >= 1;
+
+                    const repeatSpellByWinds = async () => {
+                      const res = rollWindsOfMagic(isShock);
+                      let nextPC = hero.currentPC ?? hero.maxPC;
+                      let nextPM = Math.max(0, curPM - res.pmCost);
+                      let nextEffects = [...(hero.activeEffects || [])];
+                      if (res.chaos?.entry) {
+                        const ce = res.chaos.entry;
+                        if (typeof ce.pcSet === 'number') nextPC = Math.min(nextPC, ce.pcSet);
+                        if (ce.pcDelta) nextPC = Math.max(0, Math.min(hero.maxPC, nextPC + ce.pcDelta));
+                        if (ce.pmDelta) nextPM = Math.max(0, Math.min(hero.maxPM, nextPM + ce.pmDelta));
+                        if (ce.buff) nextEffects = [...nextEffects.filter((e) => e.id !== ce.buff.id), ce.buff];
+                        if (ce.debuff) nextEffects = [...nextEffects.filter((e) => e.id !== ce.debuff.id), ce.debuff];
+                      }
+                      if (res.castSuccess) {
+                        if (sp.effectiveHealPC > 0) nextPC = Math.min(hero.maxPC, nextPC + sp.effectiveHealPC);
+                        if (sp.effectiveHealPM > 0) nextPM = Math.min(hero.maxPM, nextPM + sp.effectiveHealPM);
+                        if (sp.buff) nextEffects = [...nextEffects.filter((e) => e.id !== sp.buff.id), sp.buff];
+                      }
+                      if (res.consumeUse) {
+                        setSpellRepeats((prev) => ({ ...prev, [sp.id]: (prev[sp.id] || 0) + 1 }));
+                      }
+                      await pushHeroUpdate({
+                        ...hero,
+                        currentPC: nextPC,
+                        currentPM: nextPM,
+                        activeEffects: nextEffects,
+                      });
+                      setWindsResult(res);
+                      await notifyDMAction({
+                        abilityName: `🌪️ Vientos (${res.total}): ${sp.name}`,
+                        attackDice: res.castSuccess ? sp.effectiveDice || 0 : 0,
+                        damageType: 'Mágico',
+                        isMagic: true,
+                        isFire: Boolean(sp.isFire),
+                        description: `${res.title} — ${res.text}`,
+                      });
+                    };
+
                     return (
                       <div
                         key={sp.id}
                         className={`p-3 rounded-xl border transition space-y-1.5 ${
-                          isUsed
-                            ? 'bg-stone-950/50 border-stone-800/80 opacity-50'
+                          isUsed && !canRepeat
+                            ? 'bg-stone-950/50 border-stone-800/80 opacity-55'
                             : 'bg-stone-950 border-purple-900/60'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <div className={`font-bold flex flex-wrap items-center gap-1.5 ${isUsed ? 'line-through text-stone-500' : 'text-purple-200'}`}>
-                              <span>[{sp.school}] {sp.name}</span>
+                            <div className={`font-bold flex flex-wrap items-center gap-1.5 ${isUsed ? 'text-stone-400' : 'text-purple-200'}`}>
+                              <span className={isUsed ? 'line-through' : ''}>[{sp.school}] {sp.name}</span>
                               <span className={`text-[10px] px-1.5 py-0.5 rounded font-black ${
                                 (sp.spellLevel || 1) > 1
                                   ? 'bg-amber-500/25 text-amber-200 border border-amber-400/60'
@@ -2467,19 +2536,33 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                               </p>
                             )}
                           </div>
-                          <button
-                            disabled={isUsed || noPM}
-                            onClick={() => castSpell(sp)}
-                            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold shrink-0 cursor-pointer ${
-                              isUsed
-                                ? 'bg-stone-800 text-stone-500 cursor-not-allowed'
-                                : noPM
-                                ? 'bg-stone-800 text-red-300 cursor-not-allowed'
-                                : 'bg-purple-700 hover:bg-purple-600 text-white'
-                            }`}
-                          >
-                            {isUsed ? '✓ Usado' : noPM ? 'Sin PM' : '✨ Lanzar'}
-                          </button>
+                          <div className="flex flex-col gap-1 shrink-0">
+                            {!isUsed ? (
+                              <button
+                                disabled={noPM}
+                                onClick={() => castSpell(sp)}
+                                className={`px-3 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer ${
+                                  noPM
+                                    ? 'bg-stone-800 text-red-300 cursor-not-allowed'
+                                    : 'bg-purple-700 hover:bg-purple-600 text-white'
+                                }`}
+                              >
+                                {noPM ? 'Sin PM' : '✨ Lanzar'}
+                              </button>
+                            ) : canRepeat ? (
+                              <button
+                                onClick={repeatSpellByWinds}
+                                className="px-2.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-slate-950 text-[10px] font-black cursor-pointer"
+                                title="Repetir hechizo gastando 1 PM y tirando 2d6 en Vientos de la Magia"
+                              >
+                                🌪️ Repetir ({maxRepeats - usedReps})
+                              </button>
+                            ) : (
+                              <span className="px-2.5 py-1.5 rounded-lg bg-stone-800 text-stone-500 text-[10px] font-bold text-center">
+                                ✓ Agotado
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
@@ -3334,7 +3417,12 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                     return (
                       <div key={fam.id} className="p-3 rounded-xl bg-slate-900/85 border border-slate-800 space-y-1.5 text-xs">
                         <div className="flex items-center justify-between gap-2">
-                          <div className="font-bold text-amber-200">{fam.icon} {fam.name}</div>
+                          <div>
+                            <div className="font-bold text-amber-200">{fam.icon} {fam.name}</div>
+                            {fam.stats && (
+                              <div className="text-[10px] text-sky-300 font-semibold">{fam.stats}</div>
+                            )}
+                          </div>
                           <button
                             disabled={owned || (hero.gold || 0) < price}
                             onClick={async () => {

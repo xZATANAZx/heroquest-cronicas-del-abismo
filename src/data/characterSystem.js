@@ -1305,19 +1305,30 @@ export const LEVEL_TABLE = [
 ];
 
 export const EQUIPMENT_CATALOG = [
-  // Armas (Solo Herrería / Armería — sin duplicar Artefactos Oficiales)
-  { id: 'daga', name: 'Daga', type: 'Arma', dice: '1 DC', price: 50, tier: 'Fácil', traits: 'Arrojadiza (hasta 4 casillas), ligera.' },
-  { id: 'baston', name: 'Bastón Rúnico', type: 'Arma', dice: '1 DC', price: 150, tier: 'Fácil', traits: 'Diagonal, Contundente, Apto Mago.' },
-  { id: 'espada_corta', name: 'Espada Corta', type: 'Arma', dice: '2 DC', price: 250, tier: 'Fácil', traits: 'Equilibrada, 1 mano.' },
-  { id: 'maza', name: 'Maza / Martillo', type: 'Arma', dice: '2 DC', price: 300, tier: 'Fácil', traits: 'Contundente (escudo negro no bloqueado aturde).' },
+  // Armas (Armería Expandida Fetenquest — Contundentes, Alcance, Especiales y Pólvora)
+  { id: 'daga', name: 'Daga', type: 'Arma', dice: '1 DC', price: 50, tier: 'Fácil', traits: 'Lanzable a tantas casillas como tus PC máx. (se pierde al lanzarla).' },
+  { id: 'hacha_mano', name: 'Hacha de Mano', type: 'Arma', dice: '1 DC', price: 100, tier: 'Fácil', traits: 'Lanzable a tantas casillas como tus PC máx. Recuperable.' },
+  { id: 'baston', name: 'Bastón Rúnico', type: 'Arma', dice: '1 DC', price: 150, tier: 'Fácil', traits: 'Diagonal, Contundente (Escudo Negro aturde), 2 manos. Apto Mago.' },
+  { id: 'espada_corta', name: 'Espada Corta', type: 'Arma', dice: '2 DC', price: 250, tier: 'Fácil', traits: 'Equilibrada, 1 mano. No Mago.' },
+  { id: 'maza', name: 'Maza / Martillo', type: 'Arma', dice: '2 DC', price: 300, tier: 'Fácil', traits: 'Contundente (Escudo Negro no bloqueado aturde 1 turno). No Mago.' },
+  { id: 'guadana', name: 'Guadaña de Guerra', type: 'Arma', dice: '1 DC', price: 300, tier: 'Fácil', traits: 'Diagonal, 2 manos. El Escudo Negro cuenta como Calavera adicional. No Mago.' },
+  { id: 'cimitarra', name: 'Cimitarra Curva', type: 'Arma', dice: '2 DC', price: 420, tier: 'Medio', traits: '1 mano: puedes repetir 1 dado de tu tirada de ataque. No Mago.' },
   { id: 'estoque', name: 'Estoque', type: 'Arma', dice: '2 DC', price: 450, tier: 'Medio', traits: 'Ataque diagonal, 1 mano.' },
-  { id: 'espada_ancha', name: 'Espada Ancha', type: 'Arma', dice: '3 DC', price: 500, tier: 'Medio', traits: '1 mano, sólida y letal.' },
-  { id: 'lanza', name: 'Lanza de Guerra', type: 'Arma', dice: '2 DC', price: 550, tier: 'Medio', traits: 'Diagonal y alcance 2 casillas. Arrojadiza.' },
-  { id: 'espada_larga', name: 'Espada Larga', type: 'Arma', dice: '3 DC', price: 750, tier: 'Medio', traits: 'Ataque diagonal, 1 mano.' },
-  { id: 'hacha_batalla', name: 'Hacha de Batalla', type: 'Arma', dice: '4 DC', price: 900, tier: 'Difícil', traits: '2 manos. No permite escudo.' },
-  { id: 'arco_corto', name: 'Arco Corto', type: 'Arma', dice: '2 DC', price: 350, tier: 'Fácil', traits: 'A distancia (LdV). Sin enemigos adyacentes.' },
-  { id: 'ballesta', name: 'Ballesta Pesada', type: 'Arma', dice: '3 DC', price: 600, tier: 'Medio', traits: 'A distancia (LdV). 2 manos.' },
-  { id: 'varita_sombras', name: 'Varita Arcana', type: 'Arma', dice: '2 DC', price: 400, tier: 'Fácil', traits: 'Daño mágico a distancia (daña Etéreos). Mago/Brujo.' },
+  { id: 'mangual', name: 'Mangual con Cadena', type: 'Arma', dice: '2 DC', price: 480, tier: 'Medio', traits: 'Diagonal y Contundente (Escudo Negro no bloqueado aturde). No Mago.' },
+  { id: 'espada_ancha', name: 'Espada Ancha', type: 'Arma', dice: '3 DC', price: 500, tier: 'Medio', traits: '1 mano, sólida y letal. No Mago.' },
+  { id: 'martillo_guerra', name: 'Martillo de Guerra', type: 'Arma', dice: '3 DC', price: 550, tier: 'Medio', traits: '1 mano, Contundente (Escudo Negro no bloqueado aturde 1 turno). No Mago.' },
+  { id: 'lanza', name: 'Lanza de Guerra', type: 'Arma', dice: '2 DC', price: 550, tier: 'Medio', traits: 'Diagonal y alcance 2 casillas ortogonal. Lanzable y recuperable. 2 manos.' },
+  { id: 'alabarda', name: 'Alabarda Imperial', type: 'Arma', dice: '3 DC', price: 700, tier: 'Medio', traits: 'Ataque diagonal o a 1 casilla ortogonal de distancia. 2 manos. No Mago.' },
+  { id: 'espada_larga', name: 'Espada Larga', type: 'Arma', dice: '3 DC', price: 750, tier: 'Medio', traits: 'Ataque diagonal, 1 mano. No Mago.' },
+  { id: 'hacha_batalla', name: 'Hacha de Batalla', type: 'Arma', dice: '4 DC', price: 900, tier: 'Difícil', traits: '2 manos. No permite escudo. No Mago.' },
+  { id: 'mandoble', name: 'Mandoble a Dos Manos', type: 'Arma', dice: '4 DC', price: 1250, tier: 'Difícil', traits: 'Ataque diagonal pesado a 2 manos. No Mago ni razas pequeñas.' },
+  { id: 'gran_martillo', name: 'Gran Martillo de Batalla', type: 'Arma', dice: '4 DC', price: 1300, tier: 'Difícil', traits: '2 manos, Contundente (Escudo Negro no bloqueado aturde 1 turno). No Mago.' },
+  { id: 'baculo_magico', name: 'Báculo Mágico de Éter', type: 'Arma', dice: '2 DC', price: 1100, tier: 'Difícil', traits: 'Solo Mago. Diagonal, Contundente y recarga 1 uso de un hechizo por misión.' },
+  { id: 'arco_corto', name: 'Arco Corto', type: 'Arma', dice: '2 DC', price: 350, tier: 'Fácil', traits: 'A distancia (LdV). Sin enemigos adyacentes. 2 manos.' },
+  { id: 'ballesta', name: 'Ballesta Pesada', type: 'Arma', dice: '3 DC', price: 600, tier: 'Medio', traits: 'A distancia (LdV). Sin enemigos adyacentes. 2 manos.' },
+  { id: 'arco_compuesto', name: 'Arco Compuesto', type: 'Arma', dice: '3 DC', price: 720, tier: 'Medio', traits: 'A distancia (LdV) sin penalizar movimiento. 2 manos. No Mago.' },
+  { id: 'arcabuz', name: 'Arcabuz de Pólvora', type: 'Arma', dice: '4 DC', price: 1150, tier: 'Difícil', traits: 'A distancia (LdV). Cada Escudo Negro causa 1 daño a miniaturas adyacentes al objetivo. 2 manos.' },
+  { id: 'varita_sombras', name: 'Varita Arcana', type: 'Arma', dice: '2 DC', price: 400, tier: 'Fácil', traits: 'Daño mágico a distancia (daña Etéreos). Mago/Brujo/Nigromante.' },
 
   // Armaduras (Solo Herrería / Armería)
   { id: 'escudo', name: 'Escudo de Hierro', type: 'Armadura', dice: '+1 Def', price: 250, tier: 'Fácil', traits: 'Mano secundaria. No con armas a 2 manos.' },
@@ -1332,10 +1343,11 @@ export const EQUIPMENT_CATALOG = [
   { id: 'acc_amuleto_hierro', name: 'Amuleto de Voluntad Férrea', type: 'Accesorio', dice: '+1 Salvaciones', price: 420, tier: 'Medio', traits: '+1 permanente a todas tus Tiradas de Salvación d20 (Trampas, Veneno y Terror).' },
   { id: 'acc_capa_viajero', name: 'Capa de Viajero Sombrío', type: 'Accesorio', dice: '+2 Sigilo', price: 320, tier: 'Fácil', traits: '+2 a pruebas de Sigilo y Percepción en pasillos oscuros.' },
 
-  // Herramientas de Aventura (Las Pociones viven exclusivamente en la Torre del Alquimista)
-  { id: 'herramientas', name: 'Kit de Herramientas', type: 'Herramienta', dice: '+2 Trampas', price: 400, tier: 'Fácil', traits: 'Permite desarmar trampas mecánicas con Ventaja.' },
-  { id: 'estuche_alquimia', name: 'Kit de Crafteo Maestro', type: 'Herramienta', dice: 'Crafteo +2', price: 600, tier: 'Medio', traits: 'Otorga +2 en Arcano al realizar Mezclas Experimentales y crafteo en campo.' },
-  { id: 'bomba_humo', name: 'Bomba de Humo', type: 'Consumible', dice: 'Escape', price: 200, tier: 'Fácil', traits: 'Anula Zona de Control de 1 enemigo durante 1 turno.' },
+  // Herramientas de Aventura (Las Pociones viven en la Torre del Alquimista)
+  { id: 'herramientas', name: 'Kit de Herramientas', type: 'Herramienta', dice: 'Ventaja AGI', price: 400, tier: 'Fácil', traits: 'Permite desarmar trampas mecánicas con Ventaja.' },
+  { id: 'cuerda_garfio', name: 'Cuerda con Garfio', type: 'Herramienta', dice: 'Repetir Salto', price: 350, tier: 'Fácil', traits: 'Al saltar foso o grieta puedes repetir la tirada (con Escudo Negro no caes, pero pierdes la cuerda).' },
+  { id: 'abrojos', name: 'Bolsa de Abrojos', type: 'Consumible', dice: 'Frena Enemigo', price: 180, tier: 'Fácil', traits: 'Acción gratuita: deja abrojos en una casilla; quien cruce tira 1 DC (sin Escudo Blanco acaba su movimiento).' },
+  { id: 'bomba_humo', name: 'Bomba de Humo', type: 'Consumible', dice: 'Escape', price: 200, tier: 'Fácil', traits: 'Anula el Área de Influencia de 1 enemigo adyacente durante 1 turno para atravesarlo sin penalización.' },
 ];
 
 export const SPELLS_CATALOG = [

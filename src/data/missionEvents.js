@@ -595,6 +595,16 @@ export const GENERIC_DUNGEON_EVENTS = {
       text: 'Se oyen pisadas acercándose por el cruce. AGI grupal CD 12: si se esconden pegados a la pared, dejan pasar a la patrulla sin combatir; si fallan, aparece 1 Monstruo Errante.',
     },
     {
+      title: 'Hacha Pendular Oculta en el Techo',
+      badge: 'Trampa de Pasillo',
+      text: 'Una ranura fina recorre el arco de piedra. Mente (MEN CD 12) para verla a tiempo y desarmarla (AGI CD 13 → +1 Acero); si alguien pasa sin verla, el péndulo barre 2 casillas infligiendo 2 DC defendibles.',
+    },
+    {
+      title: 'Roca Rodante en la Pendiente',
+      badge: 'Peligro Mayor',
+      text: '¡Un estruendo sacude el pasillo! Una esfera de piedra se desprende detrás del grupo: todos tienen 1 turno para apartarse a una sala o cruce (AGI CD 13). La roca avanza 1d6 casillas por turno arrollando cualquier miniatura en su camino (3 DC indefendible).',
+    },
+    {
       title: 'Antorcha de Pared con Palanca',
       badge: 'Mecanismo Oculto',
       text: 'Una antorcha está ligeramente torcida. MEN CD 12: al girarla desactiva una trampa cercana o abre un nicho con una Poción de Curación Menor (+2 PC).',

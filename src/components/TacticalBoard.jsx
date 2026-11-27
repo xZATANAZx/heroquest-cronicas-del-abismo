@@ -85,7 +85,21 @@ const TRAP_RULES = {
     name: 'Trampa de Bloque Cayendo',
     detect: 'Mente (MEN CD 13 / 15 en Supervivencia) buscando grietas en el techo.',
     disarm: 'Agilidad (AGI CD 13 / 15 en Supervivencia — Enano/Ingeniero con Ventaja).',
-    effect: 'Cae un bloque de piedra: Agilidad (AGI CD 13) o sufre 2 PC (1 PC si supera) y la casilla queda bloqueada como Muro.',
+    effect: 'Cae un bloque de piedra: 3 DC de daño (no defendible), pierde el turno y la casilla queda bloqueada como Muro.',
+    disarmMaterial: { id: 'chatarra_acero', label: '⚙️ Acero Templado' },
+  },
+  trap_rolling_boulder: {
+    name: 'Trampa de Roca Rodante',
+    detect: 'Mente (MEN CD 13) notando surcos profundos en las losas del pasillo.',
+    disarm: 'Agilidad (AGI CD 14) trabando el mecanismo del muro.',
+    effect: 'Cae una roca colosal (3 DC no defendible y pierde el turno). En cada turno de Zargon avanza 1d6 casillas en línea recta: toda miniatura arrollada sufre 5 DC no defendibles.',
+    disarmMaterial: { id: 'chatarra_acero', label: '⚙️ Acero Templado' },
+  },
+  trap_pendulum_axe: {
+    name: 'Trampa de Hacha Pendular',
+    detect: 'Mente (MEN CD 12) observando ranuras ocultas en el techo.',
+    disarm: 'Agilidad (AGI CD 13 — Enano/Pícaro con Ventaja).',
+    effect: 'Un péndulo de acero barre 2 casillas en línea: todo héroe en su trayectoria sufre 2 DC defendibles y la trampa queda desactivada.',
     disarmMaterial: { id: 'chatarra_acero', label: '⚙️ Acero Templado' },
   },
 };
@@ -135,19 +149,19 @@ function detectSpawnable(disc, currentMap) {
   };
 }
 
-// Guía rápida de reglas tácticas para cada mueble que aparezca en la sala (4 Pilares v6)
+// Guía rápida de reglas tácticas para cada mueble que aparezca en la sala (Fetenquest + HQ-D20)
 const FURNITURE_QUICK_RULES = {
-  table: 'Táctica: Volcar mesa (Acción gratuita, FUE CD 11) da +1 Def vs proyectiles. Subir encima (+1 mov) da Ventaja de altura.',
-  alchemy_bench: 'Examinar (Acción): Guarda ingredientes frescos (Hierbas, Polvo Rúnico o Veneno). Recuerda: las pociones se destilan desde el celular en cualquier momento por Suerte o Calificación.',
-  bookcase: 'Examinar (Acción): Puede revelar pergaminos, mapas de puertas secretas o debilidades de jefes (MEN CD 12).',
-  weapon_rack: 'Examinar (Acción): Puede contener armas de repuesto, dagas arrojadizas o piedra de afilar (+1 DC próximo ataque).',
+  table: 'Altura pequeña: subir cuesta +1 mov y otorga Ventaja (ataque y defensa). Si te empujan desde la mesa sufres 1 DC indefendible. Volcar mesa (gratis, FUE CD 11) da cobertura.',
+  alchemy_bench: 'Examinar (gratis adyacente): guarda ingredientes frescos (Hierbas, Veneno o Polvo Rúnico) o 1 Poción al azar. Las pociones se destilan desde el celular en cualquier momento.',
+  bookcase: 'Examinar (gratis adyacente): puede revelar 1 de los 20 Pergaminos de Hechizo, mapas de puertas secretas o pistas de jefes (MEN CD 12).',
+  weapon_rack: 'Examinar (gratis adyacente): puede contener dagas, hachas de mano, escudos, lanzas o piedra de afilar (+1 DC próximo ataque).',
   chest: 'Revisar Trampas primero (AGI/MEN CD 12). Abrir sin revisar puede activar aguja/gas o despertar un Mímico.',
-  tomb: 'Examinar (Acción): Puede guardar reliquias o oro, pero perturbarla puede despertar Esqueletos/Espectros.',
-  sorcerer_table: 'Altar del Mago: Mente (MEN CD 12) puede recuperar 1 hechizo gastado o +2 PM; fallar cuesta 1 PM.',
-  throne: 'Trono: Mente (MEN CD 12) puede hallar compartimentos secretos o palancas de puertas ocultas.',
-  cupboard: 'Armario: Puede esconder pociones, capas o emboscadas de arañas.',
-  fireplace: 'Chimenea: Revisar brasas puede ocultar bolsas ignífugas de oro o activar humo sofocante.',
-  torture_rack: 'Potro: Puede contener llaves del carcelero (Ventaja en AGI) o causar pérdida de 1 PM (MEN CD 13).',
+  tomb: 'Examinar (gratis adyacente): puede guardar tesoros o despertar un Esqueleto, Zombi o Momia.',
+  sorcerer_table: 'Mesa del Brujo: si conoces hechizos puede recargar 1 uso gastado, darte 1 Pergamino de Hechizo o causar 1 daño de PM si fallas MEN CD 12.',
+  throne: 'Altura pequeña con respaldo: subir cuesta +1 mov y da Ventaja de altura; nadie puede atacarte por la espalda. MEN CD 12 puede revelar palancas ocultas.',
+  cupboard: 'Armario: puede esconder tesoros, pociones o emboscadas de arañas.',
+  fireplace: 'Chimenea: al examinar puede ocultar un tesoro o brindar calor (+1 PC a todos los héroes en la sala).',
+  torture_rack: 'Altura pequeña: puede subirse (+1 mov → Ventaja; si te empujan sufres 1 DC indefendible). Puede guardar llaves del carcelero.',
 };
 
 // Construye los Disparadores / Eventos ESPECÍFICOS de la sala actual con CUÁNDO y PARA QUÉ claros

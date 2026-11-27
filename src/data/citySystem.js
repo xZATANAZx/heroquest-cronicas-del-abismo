@@ -336,7 +336,7 @@ export const UNIQUE_FOLLOWERS = [
 ];
 
 // ============================================================================
-// FAMILIARES DE UTILIDAD (Acompañantes sin estorbar el combate)
+// DOMADOR DE BESTIAS Y FAMILIARES (Exploración y Combate — Fetenquest 4.1)
 // ============================================================================
 export const FAMILIARS = [
   {
@@ -344,28 +344,80 @@ export const FAMILIARS = [
     name: 'Cuervo Vigía',
     icon: '🐦‍⬛',
     cost: 160,
-    ability: 'Asoma por puertas entreabiertas: 1 vez por misión te dice exactamente qué monstruos hay tras una puerta cerrada sin abrirla.',
-  },
-  {
-    id: 'fam_sabueso',
-    name: 'Sabueso de Caza',
-    icon: '🐕',
-    cost: 185,
-    ability: 'Olfato infalible: +2 a detectar Emboscadas/Patrullas y 1 vez por combate muerde al objetivo (-1 DC Defensa enemigo).',
+    stats: 'Mov 12 · At 1 · Def 1 · PC 1',
+    ability: 'Asoma por puertas: 1 vez por misión revela qué monstruos hay tras una puerta cerrada sin abrirla.',
   },
   {
     id: 'fam_huron',
     name: 'Hurón Ladronzuelo',
     icon: '🦡',
     cost: 175,
-    ability: 'Manos rápidas: 1 vez por misión puede recoger 1 llave, moneda o material a 3 casillas sin activar trampas de presión.',
+    stats: 'Mov 8 · At 0 · Def 1 · PC 1',
+    ability: 'Tamaño pequeño (atraviesa enemigos y fosos): 1 vez por misión recoge 1 llave, moneda o material a 3 casillas sin activar trampas.',
+  },
+  {
+    id: 'fam_sabueso',
+    name: 'Sabueso de Caza',
+    icon: '🐕',
+    cost: 190,
+    stats: 'Mov 10 · At 2 · Def 1 · PC 2',
+    ability: 'Olfato infalible (+1 MEN contra emboscadas) y 1 vez por combate muerde al objetivo (-1 DC Defensa enemigo).',
   },
   {
     id: 'fam_buho',
     name: 'Búho Rúnico',
     icon: '🦉',
     cost: 210,
-    ability: 'Ojo Arcano: +2 a pruebas de Arcano e Investigación, y te avisa si un cofre es un Mímico antes de abrirlo.',
+    stats: 'Mov 12 · At 1 · Def 1 · PC 1',
+    ability: 'Ojo Arcano: +1 a pruebas de Mente (MEN) y te avisa si un cofre es un Mímico antes de abrirlo.',
+  },
+  {
+    id: 'fam_ave_rapaz',
+    name: 'Ave Rapaz de Presa',
+    icon: '🦅',
+    cost: 280,
+    stats: 'Mov 12 · At 1 DC · Def 1 · PC 1',
+    ability: 'Ignora Áreas de Influencia enemigas: puede atravesar enemigos, atacar con 1 DC y continuar su movimiento.',
+  },
+  {
+    id: 'fam_murcielago',
+    name: 'Murciélago Vampiro',
+    icon: '🦇',
+    cost: 340,
+    stats: 'Mov 10 · At 1 DC · Def 1 · PC 2',
+    ability: 'Ataca sin interrumpir su movimiento; por cada PC de daño que cause recupera +1 PC (hasta 3 PC máx.).',
+  },
+  {
+    id: 'fam_lobo',
+    name: 'Lobo de Guerra',
+    icon: '🐺',
+    cost: 480,
+    stats: 'Mov 10 · At 2 DC · Def 1 · PC 3',
+    ability: 'Puede atacar en diagonal y saltar trampas detectadas automáticamente.',
+  },
+  {
+    id: 'fam_raptor',
+    name: 'Raptor Cazador',
+    icon: '🦖',
+    cost: 680,
+    stats: 'Mov 8 · At 2 DC · Def 2 · PC 3',
+    ability: 'Puede atacar sin interrumpir su movimiento, abrir puertas normales y ser montado.',
+  },
+  {
+    id: 'fam_dientes_sable',
+    name: 'Tigre Dientes de Sable',
+    icon: '🐅',
+    cost: 820,
+    stats: 'Mov 10 · At 3 DC · Def 3 · PC 5',
+    ability: 'Ataca en diagonal y puede ser montado (en exteriores o salas grandes da Ventaja al jinete).',
+  },
+  {
+    id: 'fam_oso',
+    name: 'Oso de Combate',
+    icon: '🐻',
+    cost: 900,
+    stats: 'Mov 8 · At 3 DC · Def 3 · PC 5',
+    ability: 'Compañero blindado que puede ser montado y cargar hasta 2 objetos extra del héroe.',
   },
 ];
 

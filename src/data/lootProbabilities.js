@@ -6,6 +6,7 @@
 
 import { DIGITAL_LOOT_CATALOG, generateProceduralLoot, getRarityMeta } from './lootCatalog';
 import { getMaterialById } from './craftingSystem';
+import { rollRandomSpellScroll } from './magicWinds';
 
 const COMMON_MATS = ['hierba_lunar', 'chatarra_acero', 'colmillos_hueso', 'aceite_alquitran', 'racion_mazmorra'];
 const UNCOMMON_MATS = ['glandula_veneno', 'sangre_icor', 'polvora_negra', 'polvo_runico', 'pergamino_virgen'];
@@ -222,11 +223,17 @@ export function rollTreasureProbability({ partyLevel = 1, hero = null }) {
     text = `Recuperan 1× ${mat.icon} ${mat.name} listo para la Forja o el Alquimista.`;
   } else if (rollPct <= 94) {
     badge = 'Poco Común';
-    const pool = DIGITAL_LOOT_CATALOG.filter((it) => it.rarity === 'poco_comun');
-    rewardLoot = pool.length ? pick(pool) : generateProceduralLoot('poco_comun', partyLevel);
-    const rMeta = getRarityMeta(rewardLoot.rarity);
-    title = `¡${rewardLoot.name} (${rMeta.name})!`;
-    text = `${rewardLoot.special || rewardLoot.upgrade || ''}`;
+    if (Math.random() < 0.38) {
+      rewardLoot = rollRandomSpellScroll();
+      title = `📜 ¡${rewardLoot.name}!`;
+      text = `${rewardLoot.special}`;
+    } else {
+      const pool = DIGITAL_LOOT_CATALOG.filter((it) => it.rarity === 'poco_comun');
+      rewardLoot = pool.length ? pick(pool) : generateProceduralLoot('poco_comun', partyLevel);
+      const rMeta = getRarityMeta(rewardLoot.rarity);
+      title = `¡${rewardLoot.name} (${rMeta.name})!`;
+      text = `${rewardLoot.special || rewardLoot.upgrade || ''}`;
+    }
   } else if (rollPct <= 98) {
     badge = 'Raro';
     const pool = DIGITAL_LOOT_CATALOG.filter((it) => it.rarity === 'raro');
