@@ -108,42 +108,37 @@ export default function GrimoirePanel() {
         </div>
       </div>
 
-      {/* ==================== 1. REGLAS BÁSICAS ==================== */}
+      {/* ==================== 1. REGLAS BÁSICAS (GUÍA RÁPIDA CLARA) ==================== */}
       {subTab === 'rules' && (
         <div className="space-y-5">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <div className="grimoire-panel rounded-2xl p-6 space-y-3">
               <h3 className="font-display text-lg font-bold text-amber-300 flex items-center gap-2">
-                <Dices className="w-5 h-5 text-amber-400" /> 1. Dados (HeroQuest + D20)
+                <Dices className="w-5 h-5 text-amber-400" /> 1. Turno, Movimiento y Área de Influencia
               </h3>
-              <div className="text-xs text-stone-300 space-y-2.5 leading-relaxed">
-                <div className="p-3 rounded-xl bg-stone-900/90 border border-stone-800 space-y-1">
-                  <div className="font-bold text-red-300">A) Dados de Combate de HeroQuest (DC):</div>
-                  <p>• Al atacar tiras tantos DC como indique tu arma. Cada <strong>💀 Calavera</strong> es 1 impacto.</p>
-                  <p>• El defensor tira Defensa: héroes bloquean con <strong>🛡️ Escudos Blancos</strong> y monstruos con <strong>🖤 Escudos Negros</strong>.</p>
-                  <p>• Cada Calavera no bloqueada resta <strong>1 Punto de Cuerpo (PC)</strong>.</p>
-                </div>
-                <div className="p-3 rounded-xl bg-stone-900/90 border border-stone-800 space-y-1">
-                  <div className="font-bold text-amber-300">B) Dados D&D (d20) y Dado de Destino:</div>
-                  <p>• Para habilidades, trampas, crafteo experimental o negociar: <strong>1d20 + Mod + Comp</strong> vs <strong>CD</strong> (Fácil 10 · Media 13 · Difícil 16 · Legendaria 19).</p>
-                  <p>• <strong>Dado de Destino:</strong> 20 Natural = +1 Calavera Crítica indefendible. 1 Natural = Pifia (+1 Reloj del Caos).</p>
-                </div>
+              <div className="text-xs text-stone-300 space-y-2 leading-relaxed">
+                <p><strong>Orden de turno:</strong> Primero actúan todos los Héroes en el orden que el grupo decida; después actúa Zargon con los monstruos visibles.</p>
+                <ul className="list-disc list-inside space-y-1.5">
+                  <li><strong>En tu turno:</strong> 1 Movimiento + 1 Acción Principal (en cualquier orden) + Acciones Gratuitas.</li>
+                  <li><strong>Movimiento:</strong> <strong>8 casillas fijas</strong> sin enemigos visibles; <strong>2d6</strong> en combate (no se mueve en diagonal, sí puedes cruzar casillas de aliados).</li>
+                  <li><strong>Área de Influencia:</strong> Abandonar una casilla adyacente a un enemigo cuesta +1 movimiento extra (salvo Pícaro, Monje, Paso Fantasma o Bomba de Humo).</li>
+                  <li><strong>Subir a un mueble / Terreno difícil:</strong> Cuesta +1 punto de movimiento adicional.</li>
+                  <li><strong>Acciones Gratuitas:</strong> Beber poción, abrir puerta normal, revisar un mueble adyacente, pasar un objeto guardado a un aliado adyacente o saltar una trampa detectada (1 DC: sin Calavera saltas).</li>
+                </ul>
               </div>
             </div>
 
             <div className="grimoire-panel rounded-2xl p-6 space-y-3">
               <h3 className="font-display text-lg font-bold text-amber-300 flex items-center gap-2">
-                <Swords className="w-5 h-5 text-red-400" /> 2. Tu Turno y Combate Táctico
+                <Swords className="w-5 h-5 text-red-400" /> 2. Combate, Empujar y Ventaja
               </h3>
               <div className="text-xs text-stone-300 space-y-2 leading-relaxed">
-                <p>En tu turno haces <strong>1 Movimiento</strong> + <strong>1 Acción Principal</strong> (en cualquier orden) + <strong>Acciones Gratuitas</strong>:</p>
                 <ul className="list-disc list-inside space-y-1.5">
-                  <li><strong>Movimiento sin enemigos:</strong> <strong>8 casillas fijas</strong> (+ bonos) sin tirar dados.</li>
-                  <li><strong>Movimiento en combate:</strong> <strong>2d6 + Mod. DES</strong> (mínimo 4 casillas).</li>
-                  <li><strong>Acciones Principales (1):</strong> Atacar, Lanzar Hechizo, Buscar Tesoros/Trampas/Secretos, Desarmar Trampa, Examinar Mueble o Negociar.</li>
-                  <li><strong>Acciones Gratuitas:</strong> Beber poción/tónico, abrir puerta normal, volcar mesa (FUE CD 11 → +1 Def cobertura), aplicar veneno a hoja o pasar objeto a un aliado adyacente.</li>
-                  <li><strong>Ventaja Táctica:</strong> Flanqueo, altura (sobre mesa) o sorprender enemigos Distraídos permite <strong>repetir 1 DC fallido</strong>.</li>
-                  <li><strong>Empujar y Anti-Campeo:</strong> Al herir cuerpo a cuerpo puedes empujar 1 casilla. Los monstruos Veteranos/Jefes pueden usar <em>Romper Filas</em> para impedir que los héroes tapen una puerta eternamente.</li>
+                  <li><strong>Dados de Combate (DC):</strong> Cada <strong>💀 Calavera</strong> es 1 impacto. Héroes bloquean con <strong>🛡️ Escudos Blancos</strong> y monstruos con <strong>🖤 Escudos Negros</strong>.</li>
+                  <li><strong>Empujar:</strong> Si infliges ≥1 PC cuerpo a cuerpo (ortogonal) puedes empujar al enemigo 1 casilla y ocupar su lugar. Si cae desde un mueble sufre 1 DC indefendible. Miniaturas grandes no pueden ser empujadas.</li>
+                  <li><strong>Ventaja en Combate:</strong> Atacar por la espalda, desde altura (sobre un mueble), flanqueando o con cobertura permite <strong>repetir tu tirada de ataque o defensa</strong> (te quedas con el 2º resultado).</li>
+                  <li><strong>Armas Contundentes (Maza/Martillo/Bastón):</strong> Los Escudos Negros no bloqueados aturden al enemigo 1 turno (Jefes y miniaturas grandes son inmunes).</li>
+                  <li><strong>A Distancia:</strong> Requiere Línea de Visión libre y ningún enemigo adyacente.</li>
                 </ul>
               </div>
             </div>
@@ -151,95 +146,38 @@ export default function GrimoirePanel() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             <div className="grimoire-panel rounded-2xl p-5 space-y-2">
-              <h3 className="font-display font-bold text-amber-300 flex items-center gap-2">
-                <Swords className="w-5 h-5 text-rose-400" /> 3. Tipos de Ataque (Mesa Física)
+              <h3 className="font-display font-bold text-purple-300 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-purple-400" /> 3. Magia, Resistencia y Preparación
               </h3>
               <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside leading-relaxed">
-                <li><strong>Cuerpo a Cuerpo (Ortogonal):</strong> Solo en las 4 casillas adyacentes (N, S, E, O). Si hieres, puedes <strong>Empujar</strong> 1 casilla.</li>
-                <li><strong>Diagonal / Alcance:</strong> Solo con armas que indiquen <em>Diagonal</em> (Espada Larga, Estoque, Bastón, Lanza).</li>
-                <li><strong>A Distancia (Arco/Ballesta/Varita):</strong> Requiere <strong>Línea de Visión</strong> sin muros ni miniaturas tapando, y <strong>ningún enemigo adyacente</strong>.</li>
-                <li><strong>Flanqueo y Sinergia:</strong> Atacar a un enemigo que ya combate contra un aliado (o por la espalda) da <strong>Ventaja</strong> (repites 1 DC fallido).</li>
-                <li><strong>Mágico / Plata vs Etéreos:</strong> Armas físicas normales solo hieren Espectros sacando <strong>Escudos Negros</strong>; Magia, Plata y Runas hieren normal.</li>
+                <li><strong>Preparación entre Misiones:</strong> Antes de cada misión, cada lanzador elige sus <strong>Escuelas de Hechizos activas</strong> y cada clase marcial elige sus <strong>2 Técnicas de Combate</strong> desde su celular.</li>
+                <li><strong>Resistencia a Hechizos:</strong> Cuando un hechizo afecta a un monstruo, este tira <strong>1 dado rojo (d6) por cada PM</strong>; si saca al menos un <strong>6</strong>, resiste el efecto. Los No Muertos (`0 PM`) son inmunes a magia mental.</li>
+                <li><strong>Etéreos (Espectros):</strong> Atraviesan muros y muebles. Armas físicas normales solo los hieren con <strong>Escudos Negros</strong>; magia, plata y artefactos los hieren normal.</li>
               </ul>
             </div>
 
             <div className="grimoire-panel rounded-2xl p-5 space-y-2">
               <h3 className="font-display font-bold text-emerald-300 flex items-center gap-2">
-                <Armchair className="w-5 h-5 text-amber-400" /> 4. Búsquedas, Movimiento y Puertas
+                <Armchair className="w-5 h-5 text-amber-400" /> 4. Búsquedas, Trampas y 4 Pilares
               </h3>
               <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside leading-relaxed">
-                <li><strong>Movimiento:</strong> <strong>8 casillas fijas</strong> sin enemigos visibles; <strong>2d6 + Mod. DES</strong> en combate (mín. 4). No se mueve en diagonal; sí puedes cruzar casillas de aliados.</li>
-                <li><strong>Buscar Tesoros:</strong> 1 vez por sala por héroe (solo sin monstruos visibles).</li>
-                <li><strong>Buscar Trampas / Secretos:</strong> Solo sin monstruos visibles. Desarmar pide <strong>AGI CD 12–14</strong> (al desarmar trampas mecánicas rescatas Acero o Pólvora).</li>
-                <li><strong>Examinar Muebles:</strong> 1 vez por mueble; sueltan <strong>Vendas, Objetos, Oro y Materiales de Crafteo</strong> enviados al celular.</li>
-                <li><strong>Puertas Tácticas:</strong> <em>Normal</em> (gratis), <em>Cerrada</em> (AGI CD 13 / Llave), <em>Atrancada</em> (FUE CD 15), <em>Entreabierta</em> (espiar gratis), <em>Sello Puzzle</em> (minijuego al celular).</li>
+                <li><strong>Los 4 Pilares (`FUE`, `AGI`, `MEN`, `SUE`):</strong> En pruebas fuera del combate tiras <strong>1d20 + tu Pilar</strong> contra la dificultad (Fácil 10 · Media 12 · Difícil 15).</li>
+                <li><strong>Buscar Tesoros / Trampas / Secretos:</strong> Solo sin monstruos visibles. 1 búsqueda de tesoro por sala por héroe.</li>
+                <li><strong>Desactivar Trampas:</strong> Con <strong>AGI CD 12–14</strong> (Enano, Pícaro o Herramientas tienen Ventaja). Desarmar trampas mecánicas otorga materiales de crafteo.</li>
+                <li><strong>Alquimia en Campo:</strong> Cualquier héroe puede destilar pociones desde su celular: Calificados tiran con Ventaja y los demás por Suerte (`SUE`).</li>
               </ul>
             </div>
 
             <div className="grimoire-panel rounded-2xl p-5 space-y-2">
               <h3 className="font-display font-bold text-cyan-300 flex items-center gap-2">
-                <Brain className="w-5 h-5 text-cyan-400" /> 5. Mente, Shock, Moral y Caos
+                <Brain className="w-5 h-5 text-cyan-400" /> 5. Muerte, Shock y Reloj del Caos
               </h3>
               <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside leading-relaxed">
-                <li><strong>Estado de Shock (0 PM):</strong> Solo mueves 1d6, atacas con 1 DC, defiendes máx. 2 DC y no puedes buscar hasta curar ≥1 PM.</li>
-                <li><strong>Reloj del Caos (0–10):</strong> Sube +1 con pifias (1 natural), forzar puertas o ruido. Al llegar a 10 dispara un <strong>Evento de Mazmorra</strong> y vuelve a 0.</li>
-                <li><strong>Moral de Monstruos (AHQ):</strong> Si cae el líder o pierden la mitad de la sala, Goblins y Orcos pueden pasar a <em>Miedo</em> (negocian, se rinden o huyen).</li>
-                <li><strong>Forja de Equipo:</strong> Consumibles en campo/ciudad; <strong>Armas y Armaduras por Rareza</strong> solo se forjan en la <strong>Herrería de la Ciudad</strong>.</li>
+                <li><strong>Muerte (0 PC):</strong> Si tienes una Poción de Curación puedes beberla al instante para salvarte.</li>
+                <li><strong>Estado de Shock (0 PM):</strong> Solo mueves 1d6, atacas con 1 DC, defiendes con 2 DC y no puedes buscar hasta recuperar al menos 1 PM.</li>
+                <li><strong>Reloj del Caos (0–10):</strong> Sube +1 por ruido, pifias (1 natural) o demoras. Al llegar a <strong>5</strong> y a <strong>10</strong> se dispara una <strong>Crisis del Caos</strong>.</li>
+                <li><strong>Dado de Destino (d20 opcional):</strong> 20 Natural = +1 Calavera Crítica indefendible; 1 Natural = +1 Reloj del Caos.</li>
               </ul>
-            </div>
-          </div>
-
-          {/* 6. GUÍA DE USOS ATREVIDOS DE HABILIDADES D20 EN MESA */}
-          <div className="grimoire-panel rounded-2xl p-5 space-y-3">
-            <h3 className="font-display text-base font-bold text-amber-300">
-              🎲 6. Usos Atrevidos de las 10 Habilidades D20 (Combate + Exploración)
-            </h3>
-            <p className="text-xs text-slate-400">
-              Todas las tiradas D20 se hacen en físico (<strong>1d20 + Modificador + Competencia</strong> vs CD: Fácil 10 · Media 13 · Difícil 16). ¡Anima a tus jugadores a intentar maniobras creativas!
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2.5 text-[11px]">
-              {[
-                { name: 'Atletismo (FUE)', use: 'Volcar mesas (+1 Def cobertura, CD 11), saltar fosos, derribar puertas atrancadas o empujar enemigos a trampas/braseros.' },
-                { name: 'Sigilo (DES)', use: 'Abrir puertas sin alertar, emboscar enemigos Distraídos (Ventaja en 1ª ronda) o infiltrarse con Disfraz.' },
-                { name: 'Trampas (DES)', use: 'Desarmar trampas (rescata Acero/Pólvora), forzar cerraduras y sabotear mecanismos enemigos.' },
-                { name: 'Percepción (SAB)', use: 'Escuchar tras puertas entreabiertas, detectar Mímicos antes de abrir cofres y evitar emboscadas.' },
-                { name: 'Investigación (INT)', use: 'Hallar puertas secretas, fondos falsos en muebles y descubrir debilidades del Jefe en bibliotecas.' },
-                { name: 'Arcano (INT)', use: 'Mezclas Experimentales de Crafteo, desactivar runas/altares, recargar magia y reconocer hechizos.' },
-                { name: 'Medicina (SAB)', use: 'Estabilizar a un aliado a 0 PC sin pociones (CD 12), curar venenos/Shock y acelerar a NPCs heridos.' },
-                { name: 'Supervivencia (SAB)', use: 'Seguir huellas (Pistas), evitar emboscadas en Viajes y recolectar Hierbas Lunares en salas de hongos.' },
-                { name: 'Persuasión (CAR)', use: 'Sobornar o negociar paso libre con Goblins/Orcos inteligentes, y conseguir descuentos en Ciudad.' },
-                { name: 'Intimidación (CAR)', use: 'Romper la moral de esbirros (CD 12–14) para que suelten información, llaves o huyan del combate.' },
-              ].map((sk) => (
-                <div key={sk.name} className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
-                  <div className="font-bold text-amber-200">{sk.name}</div>
-                  <p className="text-slate-300 leading-snug">{sk.use}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* 7. SINERGIA DE ROLES DE EQUIPO (BALANCEO COOPERATIVO) */}
-          <div className="grimoire-panel rounded-2xl p-5 space-y-2.5">
-            <h3 className="font-display text-base font-bold text-emerald-300">
-              🤝 7. Sinergia de Roles (Nadie gana solo: todos se apoyan)
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5 text-xs">
-              <div className="p-3 rounded-xl bg-sky-950/30 border border-sky-700/40">
-                <div className="font-bold text-sky-300">🛡️ Tanques (Caballero, Paladín, Maestro de Armas)</div>
-                <p className="text-[11px] text-slate-300 mt-1">Bloquean accesos, interceptan golpes, derriban jefes y protegen al grupo frágil.</p>
-              </div>
-              <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-700/40">
-                <div className="font-bold text-emerald-300">💚 Soportes (Clérigo, Bardo, Exorcista, Artificiero)</div>
-                <p className="text-[11px] text-slate-300 mt-1">Curan PC y PM, eliminan Shock, mejoran armas/escudos aliados y salvan el combate.</p>
-              </div>
-              <div className="p-3 rounded-xl bg-rose-950/30 border border-rose-700/40">
-                <div className="font-bold text-rose-300">⚔️ DPS (Bárbaro, Pícaro, Explorador, Monje, Cazador)</div>
-                <p className="text-[11px] text-slate-300 mt-1">Aprovechan el flanqueo que abre el Tanque para rematar enemigos clave rápidamente.</p>
-              </div>
-              <div className="p-3 rounded-xl bg-purple-950/30 border border-purple-700/40">
-                <div className="font-bold text-purple-300">🔮 Magia / Híbridos (Mago, Brujo, Druida, Hechicero Batalla, Alquimista)</div>
-                <p className="text-[11px] text-slate-300 mt-1">Controlan masas, destruyen Etéreos, queman regeneración y cubren cualquier brecha táctica.</p>
-              </div>
             </div>
           </div>
         </div>

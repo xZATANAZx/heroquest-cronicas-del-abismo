@@ -26,7 +26,10 @@ import {
   SPELLS_CATALOG,
   SPELL_UPGRADE_TIERS,
   STATUS_CATALOG,
+  COMBAT_TECHNIQUES,
   getHeroPillars,
+  getHeroLoadoutConfig,
+  getHeroActiveTechniques,
   getHeroUnlockedSpells,
   getUpgradedSpellView,
   CLASS_ACTIVE_POWERS,
@@ -810,6 +813,29 @@ export default function PlayerMobileView({ initialPlayerParam }) {
       });
     });
 
+    // Técnicas de Combate Preparadas (intercambiables antes de cada misión para clases marciales)
+    const activeTechniques = getHeroActiveTechniques(hero);
+    activeTechniques.forEach((tech) => {
+      list.push({
+        id: tech.id,
+        name: `${tech.icon} ${tech.name}`,
+        kind: 'tecnica',
+        dice: tech.dice || 0,
+        damageType: tech.damageType || 'Técnica',
+        isMagic: false,
+        isFire: false,
+        isRanged: false,
+        isAttack: Boolean(tech.isAttack),
+        costPM: 0,
+        maxUses: tech.maxUses ?? 2,
+        cooldownTurns: tech.cooldownTurns || 1,
+        buff: tech.buff || null,
+        targetAlly: Boolean(tech.targetAlly),
+        supportHealPC: tech.supportHealPC || 0,
+        desc: tech.desc,
+      });
+    });
+
     // Poder Racial Activable (solo si la raza tiene habilidad activable; las pasivas se muestran aparte)
     const raceAction = RACIAL_ACTIONS[hero.raceId];
     if (raceAction?.active) {
@@ -1568,14 +1594,14 @@ export default function PlayerMobileView({ initialPlayerParam }) {
               );
             })()}
 
-            {/* Los 4 Pilares Simplificados (Sin confusión de 6 atributos + 10 habilidades) */}
+            {/* Pilares del Héroe */}
             {(() => {
               const pillars = getHeroPillars(hero);
               return (
                 <div className="grimoire-panel rounded-2xl p-4 space-y-2.5">
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="text-xs font-black uppercase tracking-wider text-amber-400">
-                      ⚡ Tus 4 Pilares (Suma directo a 1d20)
+                      ⚡ Tus 4 Pilares (Bono a 1d20)
                     </h3>
                     <span className="text-[10px] text-slate-400">Fácil 10 · Media 12 · Difícil 15</span>
                   </div>
@@ -1978,7 +2004,7 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                             <>
                               <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div className="text-xs font-bold text-amber-300">
-                                  🧪 Preparar Pociones y Consumibles (Sin Mesa)
+                                  🧪 Alquimia en Campo
                                 </div>
                                 <span
                                   className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
@@ -2121,6 +2147,103 @@ export default function PlayerMobileView({ initialPlayerParam }) {
         {/* ==================== TAB 3: HABILIDADES Y MAGIA ==================== */}
         {tab === 'skills' && (
           <div className="space-y-4">
+            {/* Preparación de Misión: Intercambiar Escuelas de Hechizos o Técnicas de Combate */}
+            {(() => {
+              const loadout = getHeroLoadoutConfig(hero);
+              const isSchools = loadout.mode === 'schools';
+              const currentSelected = isSchools
+                ? Array.isArray(hero.selectedSchools) && hero.selectedSchools.length > 0
+                  ? hero.selectedSchools
+                  : loadout.defaults
+                : Array.isArray(hero.selectedTechniques) && hero.selectedTechniques.length > 0
+                ? hero.selectedTechniques
+                : loadout.defaults;
+
+              const togglePick = async (val) => {
+                const exists = currentSelected.includes(val);
+                let next;
+                if (exists) {
+                  if (currentSelected.length <= 1) return; // Siempre mantener al menos 1
+                  next = currentSelected.filter((x) => x !== val);
+                } else {
+                  if (currentSelected.length >= loadout.maxPicks) {
+                    next = [...currentSelected.slice(1), val];
+                  } else {
+                    next = [...currentSelected, val];
+                  }
+                }
+                await pushHeroUpdate(
+                  isSchools
+                    ? { ...hero, selectedSchools: next }
+                    : { ...hero, selectedTechniques: next }
+                );
+                showToast(
+                  isSchools
+                    ? `🔮 Escuelas preparadas: ${next.join(', ')}`
+                    : `⚔️ Técnicas preparadas actualizadas (${next.length}/${loadout.maxPicks})`
+                );
+              };
+
+              return (
+                <details className="grimoire-panel rounded-2xl p-3.5 border-purple-600/50 space-y-2.5">
+                  <summary className="text-xs font-black uppercase tracking-wider text-purple-300 cursor-pointer flex items-center justify-between">
+                    <span>
+                      🎯 Preparar para esta Misión ({currentSelected.length}/{loadout.maxPicks}{' '}
+                      {isSchools ? 'Escuelas' : 'Técnicas'})
+                    </span>
+                    <span className="text-[10px] font-bold text-amber-300">Cambiar ▾</span>
+                  </summary>
+                  <p className="text-[11px] text-slate-300 leading-snug pt-1">
+                    {isSchools
+                      ? `Antes de iniciar una misión puedes intercambiar qué ${loadout.maxPicks} escuela(s) de magia llevarás preparadas:`
+                      : `Antes de iniciar una misión puedes elegir qué ${loadout.maxPicks} Técnicas de Combate llevarás equipadas:`}
+                  </p>
+                  <div className={isSchools ? 'grid grid-cols-2 gap-1.5' : 'space-y-1.5'}>
+                    {isSchools
+                      ? loadout.options.map((sch) => {
+                          const on = currentSelected.includes(sch);
+                          return (
+                            <button
+                              key={sch}
+                              type="button"
+                              onClick={() => togglePick(sch)}
+                              className={`p-2 rounded-xl border text-xs font-bold text-left cursor-pointer transition flex items-center justify-between ${
+                                on
+                                  ? 'bg-purple-700/80 border-purple-400 text-white'
+                                  : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-purple-500/60'
+                              }`}
+                            >
+                              <span>🔮 {sch}</span>
+                              <span className="text-[10px]">{on ? '✓' : '+'}</span>
+                            </button>
+                          );
+                        })
+                      : COMBAT_TECHNIQUES.map((tech) => {
+                          const on = currentSelected.includes(tech.id);
+                          return (
+                            <button
+                              key={tech.id}
+                              type="button"
+                              onClick={() => togglePick(tech.id)}
+                              className={`w-full p-2.5 rounded-xl border text-left cursor-pointer transition space-y-0.5 ${
+                                on
+                                  ? 'bg-amber-950/50 border-amber-400 text-amber-100'
+                                  : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-amber-500/50'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2 text-xs font-black">
+                                <span>{tech.icon} {tech.name}</span>
+                                <span className="text-[10px]">{on ? '✓ EQUIPADA' : '+ Elegir'}</span>
+                              </div>
+                              <div className="text-[10px] text-slate-300 leading-snug">{tech.desc}</div>
+                            </button>
+                          );
+                        })}
+                  </div>
+                </details>
+              );
+            })()}
+
             {/* Botones de Activación de Habilidades con Cooldown / Usos (Notifican en Vivo al DM) */}
             <div className="grimoire-panel rounded-2xl p-4 space-y-3 border-amber-600/50">
               <div className="flex items-center justify-between gap-2">

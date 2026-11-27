@@ -82,10 +82,10 @@ export const MONSTERS = [
     miniature: 'Zombi (Base)',
     mov: 5, at: 2, def: 3, pc: 2, pm: 0, initMod: -2, xp: 75,
     abilities: [
-      'No Muerto: Inmune a veneno y miedo.',
-      'Horda Sofocante: Si 2 o más Zombis atacan al mismo héroe en un turno, cada uno tira +1 DC.',
+      'No Muerto: Inmune a veneno, sueño, miedo y hechizos mentales.',
+      'Superioridad Numérica: Si 2 o más Zombis atacan al mismo héroe en un turno, cada uno tira +1 DC adicional.',
     ],
-    eliteAbility: 'Zombi de Plaga (Élite): Al morir explota en gas pútrido (salvación FUE CD 12 o 1 daño + Envenenado).',
+    eliteAbility: 'Zombi de Plaga (Élite): Al morir libera gas pútrido; héroes adyacentes pierden 1 PC (pueden evitarlo bebiendo un Antídoto).',
     lore: 'Lentos pero tenaces; en grupo pueden arrastrar al suelo incluso al bárbaro más fuerte.',
   },
   {
@@ -113,8 +113,8 @@ export const MONSTERS = [
     miniature: 'Guerrero del Terror (Base)',
     mov: 7, at: 4, def: 4, pc: 3, pm: 3, initMod: 1, xp: 240,
     abilities: [
-      'Armadura Maldita: No puede ser empujado y tiene Ventaja defendiendo contra armas comunes.',
-      'Golpe Brutal: Si saca 3+ Calaveras, el objetivo debe salvar FUE CD 13 o caer derribado.',
+      'Armadura Maldita: No puede ser empujado por ataques normales.',
+      'Arma Embrujada (opcional): El DM puede darle un arma embrujada (+1 DC de ataque adicional).',
     ],
     eliteAbility: 'Campeón del Terror (Élite): Arma Embrujada (+1 DC) y 1 Hechizo del Terror.',
     lore: 'Caballeros condenados sellados en acero oscuro, juramentados a la ruina del Imperio.',
@@ -129,8 +129,8 @@ export const MONSTERS = [
     image: '/art/boss_gargoyle.jpg',
     mov: 6, at: 4, def: 5, pc: 4, pm: 4, initMod: 0, xp: 400,
     abilities: [
-      'Piel de Piedra Viva: Ignora el primer punto de daño físico en cada ronda si no es mágico.',
-      'Aliento Tóxico (recarga 5-6 en d6): En vez de atacar, todos los héroes en 3 casillas salvan FUE CD 13 o pierden 1 PC.',
+      'Piel de Piedra Viva: Ignora el primer punto de daño físico en cada ronda si el arma no es mágica.',
+      'Aliento Venenoso: En vez de atacar, lanza su aliento venenoso por toda la habitación. Todos los héroes en la sala pierden 1 PC (pueden beber un Antídoto para evitarlo).',
     ],
     eliteAbility: 'Gárgola Primordial (Élite): Puede volar ignorando muebles/trampas y ataca con 5 DC.',
     lore: 'Estatuas demoníacas que despiertan en el momento exacto para masacrar intrusos.',
@@ -348,7 +348,7 @@ export const MONSTERS = [
     miniature: 'Token / Proxy (o Goblin)',
     mov: 8, at: 2, def: 2, pc: 2, pm: 1, initMod: 3, xp: 100,
     abilities: [
-      'Veneno Paralizante: Al hacer daño, el defensor salva FUE CD 12 o queda sin poder moverse su próximo turno.',
+      'Veneno: Cada vez que ataque y haga daño, el defensor tira 1 DC. Si saca Calavera, no podrá moverse su próximo turno. Si saca Escudo Negro, sufre 1 PC adicional.',
       'Telaraña: Ignora terreno difícil y muebles.',
     ],
     eliteAbility: 'Reina Arácnida (Élite): Dispara telaraña a 5 casillas (inmoviliza hasta superar FUE CD 13).',
@@ -383,6 +383,96 @@ export const MONSTERS = [
     ],
     eliteAbility: 'Señor del Laberinto (Jefe): Rugido atronador (salvación FUE CD 14 o Aturdido 1 turno).',
     lore: 'Furia cornuda que destroza líneas defensivas en los pasillos estrechos.',
+  },
+  // ==================== BESTIARIO EXTRA (FETENQUEST) ====================
+  {
+    id: 'orco_negro',
+    name: 'Orco Negro',
+    expansion: 'extra',
+    family: 'Pieles Verdes',
+    tier: 'Medio',
+    miniature: 'Orco (Base)',
+    mov: 8, at: 3, def: 4, pc: 2, pm: 2, initMod: 0, xp: 190,
+    abilities: [
+      'Bien Armado: Al colocarlo, el DM elige mejor armamento (+1 DC de Ataque) o mejor armadura (+1 DC de Defensa y +1 PC).',
+    ],
+    eliteAbility: 'Jefe Orco Negro (Élite): No puede ser empujado y repite 1 dado fallido en ataque.',
+    lore: 'Los guerreros pieles verdes más disciplinados y mejor equipados de la fortaleza.',
+  },
+  {
+    id: 'chaman_goblin',
+    name: 'Chamán Goblin',
+    expansion: 'extra',
+    family: 'Pieles Verdes',
+    tier: 'Medio',
+    miniature: 'Goblin / Hechicero Proxy',
+    mov: 10, at: 2, def: 2, pc: 2, pm: 4, initMod: 2, xp: 220,
+    abilities: [
+      'Conocimiento Arcano: Conoce los hechizos Invocar Orcos, Oxidar, Miedo y Rayo Mortífero.',
+      'Movilidad: Puede moverse, lanzar un hechizo y terminar su movimiento.',
+    ],
+    eliteAbility: 'Gran Chamán (Élite): +1 PC y puede lanzar 2 hechizos en su primer turno.',
+    lore: 'Hechiceros diminutos y escurridizos que canalizan la furia verde a distancia.',
+  },
+  {
+    id: 'hombre_bestia',
+    name: 'Hombre Bestia',
+    expansion: 'extra',
+    family: 'Caos y Terror',
+    tier: 'Medio',
+    miniature: 'Orco / Abominación Proxy',
+    mov: 6, at: 3, def: 3, pc: 2, pm: 1, initMod: 1, xp: 170,
+    abilities: [
+      'Emboscada: La primera vez que ataque en el combate puede realizar 2 ataques seguidos con una sola acción (ambos defendibles).',
+    ],
+    eliteAbility: 'Bestigor (Élite): +1 DC Ataque y +1 PC.',
+    lore: 'Bestias salvajes del Caos que cargan sin aviso en cuanto se abre la puerta.',
+  },
+  {
+    id: 'bandido',
+    name: 'Bandido Saqueador',
+    expansion: 'extra',
+    family: 'Forajidos',
+    tier: 'Fácil',
+    miniature: 'Asesino / Guerrero Élfico Proxy',
+    mov: 8, at: 2, def: 2, pc: 1, pm: 2, initMod: 2, xp: 90,
+    abilities: [
+      'Robar (1 vez/misión, gratis): Un héroe adyacente tira 1 dado rojo por PM; si no saca ningún 6, le roba 1d6×10 MO o 1 objeto no equipado (se recupera al matarlo).',
+      'Armas a Distancia (opcional): Puede llevar arco (2 DC en Línea de Visión).',
+    ],
+    eliteAbility: 'Líder Forajido (Élite): Los aliados a 5 casillas repiten 1 dado de combate por turno.',
+    lore: 'Asaltantes rápidos que prefieren vaciar tu mochila y huir hacia la salida.',
+  },
+  {
+    id: 'conde_vampiro',
+    name: 'Conde Vampiro',
+    expansion: 'extra',
+    family: 'No Muertos',
+    tier: 'Legendario',
+    miniature: 'Hechicero del Terror / Jefe',
+    mov: 8, at: 5, def: 5, pc: 5, pm: 4, initMod: 3, xp: 750,
+    abilities: [
+      'No Muerto: Inmune a veneno, sueño y miedo.',
+      'La Sangre es Poder: Cuando cause daño en combate se cura tantos PC como PC haya infligido (sin superar su máximo).',
+      'Forma de Niebla: Al moverse ignora Áreas de Influencia enemigas.',
+      'Conocimiento Arcano: Conoce los hechizos Dominar e Invocar No Muertos.',
+    ],
+    eliteAbility: 'Señor de la Noche (Jefe): Si queda a 1 PC se convierte en niebla y reaparece a 5 casillas.',
+    lore: 'Aristócrata inmortal que drena la vitalidad de sus enemigos con cada corte.',
+  },
+  {
+    id: 'basilisco',
+    name: 'Basilisco de Caverna',
+    expansion: 'extra',
+    family: 'Bestias',
+    tier: 'Difícil',
+    miniature: 'Gárgola / Bestia Proxy',
+    mov: 8, at: 4, def: 5, pc: 5, pm: 2, initMod: 1, xp: 480,
+    abilities: [
+      'Mirada Petrificante (acción gratuita): Escoge un héroe en Línea de Visión; este tira 1 dado rojo por cada PM. Si no saca ningún 6 queda Petrificado (pierde su turno y no recibe daño; se cura con cualquier poción o hechizo curativo).',
+    ],
+    eliteAbility: 'Basilisco Ancestral (Élite): +1 PC y piel escamosa (+1 DC Defensa).',
+    lore: 'Reptil monstruoso cuya mirada convierte en piedra a los imprudentes.',
   },
   {
     id: 'liche',
@@ -439,22 +529,18 @@ export function scaleMonster(
   const scaledAt = Math.min(9, monster.at + atBonusFromLevel + eliteAt);
   const scaledDef = Math.min(8, monster.def + defBonusFromLevel + eliteDef);
 
-  // Resistencias nativas HeroQuest (reemplaza la confusa "CD" en monstruos):
-  // - Resistencia Mental: tira 1 dado rojo por cada PM (si saca al menos un 6, resiste el hechizo). 0 PM = Inmune a magia mental.
-  // - Resistencia Física: tira 1 dado rojo por cada PC actual (o 1d6: 5-6 resiste empujes/venenos/aturdir).
+  // Resistencia a hechizos (clara y directa con dados rojos d6 por PM)
   const isMindImmune = (monster.pm || 0) <= 0;
   const mindResistLabel = isMindImmune
-    ? 'Inmune (0 PM)'
-    : `${monster.pm}d6 (6 resiste)`;
+    ? 'Inmune a magia mental (0 PM)'
+    : `${monster.pm}d6 (con un 6 resiste)`;
   const physResistLabel =
     scaledPC >= 5
-      ? 'Fuerte (5–6 en 1d6)'
-      : scaledPC >= 3
-      ? 'Media (6 en 1d6)'
-      : 'Débil (sin resistencia)';
+      ? 'Grande (no puede ser empujado)'
+      : 'Normal (puede ser empujado al recibir daño)';
   const resistGuide = isMindImmune
-    ? `Mente: Inmune a Miedo/Sueño/Control (0 PM). Físico: ${physResistLabel} contra empujes, aturdir o venenos.`
-    : `Mente: tira ${monster.pm} dado(s) rojo(s) — si sale al menos un 6, resiste el hechizo mental. Físico: ${physResistLabel} contra empujes o aturdir.`;
+    ? 'No Muerto (0 PM): Inmune a hechizos mentales, sueño y miedo.'
+    : `Resistencia a hechizos: tira ${monster.pm} dado(s) rojo(s) (1 por PM). Si sale al menos un 6, resiste el hechizo.`;
 
   // XP rebalanceada para evitar subida explosiva de nivel (+25% en Modo Supervivencia)
   const scaledXP = Math.round(
@@ -466,7 +552,7 @@ export function scaleMonster(
     activeAbilities.push(`⭐ ${monster.eliteAbility}`);
   }
   if (isSurvivalMode) {
-    activeAbilities.push('💀 MODO SUPERVIVENCIA: +1 PC y mayor tenacidad en combate.');
+    activeAbilities.push('💀 MODO SUPERVIVENCIA: +1 PC adicional.');
   }
   if (isSpiritMode && monster.id !== 'espiritu_guerrero') {
     activeAbilities.unshift('👻 MODO ESPÍRITU (Reina de los Espíritus): Sus ataques dañan Puntos de Mente (PM) en lugar de PC.');

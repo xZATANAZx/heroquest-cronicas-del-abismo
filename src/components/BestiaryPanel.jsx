@@ -259,13 +259,13 @@ export default function BestiaryPanel({
                   </div>
                 </div>
 
-                {/* Resistencias Nativas HeroQuest (reemplaza CD confusa) */}
+                {/* Resistencia a hechizos y empuje */}
                 <div className="mb-3 px-2.5 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px] text-slate-300 space-y-0.5">
                   <div>
-                    <strong className="text-purple-300">🧠 Res. Mental:</strong> {m.mindResistLabel}
+                    <strong className="text-purple-300">🧠 Resistencia a Hechizos:</strong> {m.mindResistLabel}
                   </div>
                   <div>
-                    <strong className="text-amber-300">🛡️ Res. Física:</strong> {m.physResistLabel}
+                    <strong className="text-amber-300">🛡️ Empuje:</strong> {m.physResistLabel}
                   </div>
                 </div>
 

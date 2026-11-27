@@ -455,12 +455,12 @@ export default function CharacterForge({
             </div>
           </div>
 
-          {/* Paso 4: Los 4 Pilares Simplificados (Fuerza, Agilidad, Mente, Suerte) */}
+          {/* Paso 4: Los 4 Pilares (Fuerza, Agilidad, Mente, Suerte) */}
           <div className="grimoire-panel rounded-2xl p-6 space-y-4">
             <div>
-              <h3 className="text-xl font-bold text-amber-300">4. Los 4 Pilares de {cls.name}</h3>
+              <h3 className="text-xl font-bold text-amber-300">4. Pilares de {cls.name}</h3>
               <p className="text-xs text-stone-400">
-                Sin tablas complicadas: tus bonos directos (<strong>+0 a +4</strong>) se asignan automáticamente según tu <strong>Clase + Raza</strong> y se suman directo a tus tiradas de d20.
+                Bonos directos (<strong>+0 a +4</strong>) asignados según tu <strong>Clase y Raza</strong>. Se suman a tus tiradas de 1d20 en pruebas de exploración, trampas, puzzles y eventos.
               </p>
             </div>
 
@@ -519,9 +519,9 @@ export default function CharacterForge({
             </div>
 
             <div className="grimoire-panel rounded-2xl p-6 space-y-3">
-              <h3 className="text-xl font-bold text-purple-300">6. Rasgo de Personalidad (Quirk)</h3>
+              <h3 className="text-xl font-bold text-purple-300">6. Rasgo de Héroe</h3>
               <p className="text-xs text-stone-400">
-                Elige 1 rasgo equilibrado (1 ventaja táctica + 1 manía divertida). <strong>¡El DM recibirá alertas en vivo en el Tablero</strong> cuando tu manía pueda activarse en la sala!
+                Elige 1 rasgo táctico equilibrado: otorga una ventaja clara en combate o exploración y una desventaja balanceada.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
                 {QUIRKS.map((q) => (

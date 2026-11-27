@@ -1726,7 +1726,7 @@ export default function TacticalBoard({
                     <div key={abIdx} className="leading-snug">• {ab}</div>
                   ))}
                   <div className="mt-1.5 pt-1.5 border-t border-amber-900/40 text-[10px] text-purple-200 leading-snug">
-                    <strong className="text-purple-300">🛡️ Resistencias (HQ Nativo):</strong>{' '}
+                    <strong className="text-purple-300">🛡️ Resistencia:</strong>{' '}
                     {selectedMonsterObj.scaled.resistGuide}
                   </div>
                 </div>
