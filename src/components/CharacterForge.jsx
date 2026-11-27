@@ -21,45 +21,20 @@ import {
 } from 'lucide-react';
 import {
   ATTRIBUTES,
-  SKILLS,
   RACES,
   CLASSES,
-  ALIGNMENTS,
-  MOTIVATIONS,
-  PERKS,
-  FLAWS,
   QUIRKS,
   LEVEL_TABLE,
-  EQUIPMENT_CATALOG,
   SPELLS_CATALOG,
+  STATUS_CATALOG,
   buildStartingInventory,
-  getModifier,
+  computeClassRacePillars,
+  getHeroPillars,
   formatMod,
 } from '../data/characterSystem';
 import { PROFESSIONS } from '../data/citySystem';
-import {
-  RARITIES,
-  DIGITAL_LOOT_CATALOG,
-  getRarityMeta,
-  generateProceduralLoot,
-} from '../data/lootCatalog';
+import { getRarityMeta } from '../data/lootCatalog';
 import { KeywordChip, RichRuleText, KeywordModal } from './KeywordTooltip';
-
-const DEFAULT_ATTRS = { FUE: 15, DES: 14, CON: 13, INT: 12, SAB: 10, CAR: 8 };
-
-// Distribuye el Arreglo Estándar (15, 14, 13, 12, 10, 8) priorizando los atributos clave de cada Clase
-function buildAttrsForClass(clsObj) {
-  const pool = [15, 14, 13, 12, 10, 8];
-  const order = [...(clsObj?.primaryAttrs || [])];
-  ['CON', 'DES', 'SAB', 'FUE', 'INT', 'CAR'].forEach((id) => {
-    if (!order.includes(id)) order.push(id);
-  });
-  const result = {};
-  order.forEach((id, idx) => {
-    result[id] = pool[idx] ?? 10;
-  });
-  return result;
-}
 
 export default function CharacterForge({
   heroes,
@@ -70,35 +45,7 @@ export default function CharacterForge({
   const [mode, setMode] = useState(mobileCreateOnly ? 'create' : heroes.length > 0 ? 'sheet' : 'create');
   const [selectedHeroId, setSelectedHeroId] = useState(heroes[0]?.id || null);
 
-  // Estado QR Universal (Wi-Fi Local instantáneo + Túnel Público HTTPS + QR directo por Héroe)
-  const [showQRPanel, setShowQRPanel] = useState(false);
-  const [networkInfo, setNetworkInfo] = useState({
-    baseUrl: '',
-    localUrl: '',
-    publicTunnelUrl: '',
-    interfaces: [],
-    isPublicTunnel: false,
-    tunnelStatus: 'starting',
-  });
-  const [qrMode, setQrMode] = useState('local'); // 'local' | 'tunnel'
-  const [selectedInterfaceUrl, setSelectedInterfaceUrl] = useState('');
-  const [qrTargetParam, setQrTargetParam] = useState('new'); // 'new' | hero.id
-  const [qrCopied, setQrCopied] = useState(false);
-  const [qrCreateUrl, setQrCreateUrl] = useState('');
-
-  // Envío de Objeto / Tesoro con 6 Rarezas del DM
-  const [lootRarityFilter, setLootRarityFilter] = useState('all');
-  const [selectedLootId, setSelectedLootId] = useState(DIGITAL_LOOT_CATALOG[0].id);
-  const [procRarity, setProcRarity] = useState('auto');
-  const [procPreview, setProcPreview] = useState(null);
-  const [customItemName, setCustomItemName] = useState('');
-  const [customItemType, setCustomItemType] = useState('Arma');
-  const [customItemRarity, setCustomItemRarity] = useState('raro');
-  const [customItemDice, setCustomItemDice] = useState('3 DC');
-  const [customItemSpecial, setCustomItemSpecial] = useState('');
-  const [customItemFlaw, setCustomItemFlaw] = useState('');
-
-  // Estado del Creador de Personajes (Simplificado: Atributos fijos recomendados, sin Alineamiento/Motivación/Ventajas/Desventajas)
+  // Estado del Creador de Personajes (Simplificado: 4 Pilares automáticos según Clase + Raza)
   const [name, setName] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [raceId, setRaceId] = useState('humano');
@@ -108,30 +55,22 @@ export default function CharacterForge({
   const [activeKeyword, setActiveKeyword] = useState(null);
   const [professionId, setProfessionId] = useState('herrero');
   const [quirkId, setQuirkId] = useState('fanatico_acero');
+  const [showStatusPicker, setShowStatusPicker] = useState(false);
 
-  // Estado de Tienda / Inventario en Hoja
-  const [itemToAdd, setItemToAdd] = useState(EQUIPMENT_CATALOG[0].id);
-
-  const race = RACES.find((r) => r.id === raceId);
-  const cls = CLASSES.find((c) => c.id === classId);
-  const baseAttrs = buildAttrsForClass(cls);
-
-  const finalAttrs = ATTRIBUTES.reduce((acc, a) => {
-    const racial = race?.bonuses?.[a.id] || 0;
-    acc[a.id] = Number(baseAttrs[a.id] || 10) + racial;
-    return acc;
-  }, {});
+  const race = RACES.find((r) => r.id === raceId) || RACES[0];
+  const cls = CLASSES.find((c) => c.id === classId) || CLASSES[0];
+  const finalAttrs = computeClassRacePillars(cls, race);
 
   const calcMaxPC = () => {
-    const conMod = Math.max(0, getModifier(finalAttrs.CON));
+    const fueBonus = Math.max(0, Math.floor((finalAttrs.FUE || 0) / 2));
     const raceBonus = raceId === 'enano' ? 1 : 0;
-    return cls.basePC + conMod + raceBonus + (level - 1) * cls.pcPerLevel;
+    return cls.basePC + fueBonus + raceBonus + (level - 1) * cls.pcPerLevel;
   };
 
   const calcMaxPM = () => {
-    const intMod = Math.max(0, getModifier(finalAttrs.INT));
+    const menBonus = Math.max(0, Math.floor((finalAttrs.MEN || 0) / 2));
     const raceBonus = raceId === 'alto_elfo' ? 1 : 0;
-    return cls.basePM + Math.floor(intMod / 2) + raceBonus + (level - 1) * cls.pmPerLevel;
+    return cls.basePM + menBonus + raceBonus + (level - 1) * cls.pmPerLevel;
   };
 
   const randomizeHero = () => {
@@ -164,7 +103,7 @@ export default function CharacterForge({
     const maxPC = calcMaxPC();
     const maxPM = calcMaxPM();
     const speedBase = 8 + (race.speedMod || 0);
-    const initMod = getModifier(finalAttrs.DES);
+    const initMod = finalAttrs.AGI || 1;
     const chosenSub = null; // La subclase se desbloquea cuando el DM sube al héroe a Nivel 3
 
     const finalSkills = Array.from(new Set([...cls.proficientSkills]));
@@ -240,64 +179,33 @@ export default function CharacterForge({
 
   const activeHero = heroes.find((h) => h.id === selectedHeroId) || heroes[0] || null;
 
-  // Consultar red local y túnel público mientras el panel QR esté abierto
-  useEffect(() => {
-    if (mobileCreateOnly || !showQRPanel) return;
-    let cancelled = false;
-
-    const refreshNetwork = async () => {
-      try {
-        const res = await fetch('/api/network-info', { cache: 'no-store' });
-        const info = res.ok
-          ? await res.json()
-          : {
-              localUrl: window.location.origin,
-              baseUrl: window.location.origin,
-              interfaces: [],
-              isPublicTunnel: false,
-              tunnelStatus: 'local',
-            };
-        if (cancelled) return;
-        setNetworkInfo(info);
-        if (!selectedInterfaceUrl && info.localUrl) {
-          setSelectedInterfaceUrl(info.localUrl);
-        }
-      } catch {
-        // ignore
-      }
-    };
-
-    refreshNetwork();
-    const timer = setInterval(refreshNetwork, 3000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, [showQRPanel, mobileCreateOnly]);
-
-  // Calcular URL activa del QR y generar imagen al instante
-  const activeQrBaseUrl =
-    qrMode === 'tunnel' && networkInfo.publicTunnelUrl
-      ? networkInfo.publicTunnelUrl
-      : selectedInterfaceUrl || networkInfo.localUrl || (typeof window !== 'undefined' ? window.location.origin : '');
-  const activeQrLink = activeQrBaseUrl ? `${activeQrBaseUrl}/?player=${qrTargetParam || 'new'}` : '';
-
-  useEffect(() => {
-    if (mobileCreateOnly || !showQRPanel || !activeQrLink) return;
-    let cancelled = false;
-    QRCode.toDataURL(activeQrLink, { width: 280, margin: 2, errorCorrectionLevel: 'M' })
-      .then((img) => {
-        if (!cancelled) setQrCreateUrl(img);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [activeQrLink, showQRPanel, mobileCreateOnly]);
-
   const updateActiveHero = (updater) => {
     if (!activeHero) return;
     setHeroes((prev) => prev.map((h) => (h.id === activeHero.id ? updater(h) : h)));
+  };
+
+  const toggleStatusOnHero = (statusObj) => {
+    if (!activeHero) return;
+    updateActiveHero((h) => {
+      const curr = Array.isArray(h.activeEffects) ? h.activeEffects : [];
+      const exists = curr.some((e) => e.id === statusObj.id);
+      if (exists) {
+        return { ...h, activeEffects: curr.filter((e) => e.id !== statusObj.id) };
+      }
+      return {
+        ...h,
+        activeEffects: [
+          ...curr,
+          {
+            id: statusObj.id,
+            label: `${statusObj.icon} ${statusObj.name}`,
+            type: statusObj.type,
+            duration: statusObj.type === 'buff' ? 3 : 99,
+            note: statusObj.effect,
+          },
+        ],
+      };
+    });
   };
 
   const levelUpHero = () => {
@@ -318,69 +226,10 @@ export default function CharacterForge({
     }));
   };
 
-  const addItemToHero = () => {
-    const item = EQUIPMENT_CATALOG.find((i) => i.id === itemToAdd);
-    if (!item || !activeHero) return;
-    updateActiveHero((h) => ({
-      ...h,
-      inventory: [
-        ...h.inventory,
-        {
-          id: `it-${Date.now()}`,
-          name: item.name,
-          type: item.type,
-          dice: item.dice,
-          traits: item.traits,
-          equipped: false,
-          qty: 1,
-        },
-      ],
-    }));
-  };
-
-  const sendLootObjectToHero = (lootObj) => {
-    if (!lootObj || !activeHero) return;
-    updateActiveHero((h) => ({
-      ...h,
-      inventory: [
-        ...h.inventory,
-        {
-          ...lootObj,
-          id: `loot-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
-          equipped: false,
-          qty: 1,
-        },
-      ],
-    }));
-  };
-
-  const sendCatalogLootToHero = () => {
-    const found = DIGITAL_LOOT_CATALOG.find((i) => i.id === selectedLootId);
-    if (found) sendLootObjectToHero(found);
-  };
-
-  const sendCustomItemToHero = () => {
-    if (!customItemName.trim() || !activeHero) return;
-    sendLootObjectToHero({
-      name: customItemName.trim(),
-      type: customItemType,
-      rarity: customItemRarity,
-      dice: customItemDice.trim(),
-      special: customItemSpecial.trim() || 'Tesoro especial entregado por el DM.',
-      upgrade: customItemSpecial.trim() || 'Tesoro especial entregado por el DM.',
-      flaw: customItemFlaw.trim(),
-      traits: customItemSpecial.trim() || 'Tesoro especial entregado por el DM.',
-      restriction: 'Todas las clases',
-    });
-    setCustomItemName('');
-    setCustomItemSpecial('');
-    setCustomItemFlaw('');
-  };
-
   const removeItemFromHero = (itemId) => {
     updateActiveHero((h) => ({
       ...h,
-      inventory: h.inventory.filter((i) => i.id !== itemId),
+      inventory: (h.inventory || []).filter((i) => i.id !== itemId),
     }));
   };
 
@@ -604,45 +453,37 @@ export default function CharacterForge({
             </div>
           </div>
 
-          {/* Paso 4: Atributos Recomendados Automáticos (Solo Lectura + Explicación Clara) */}
+          {/* Paso 4: Los 4 Pilares Simplificados (Fuerza, Agilidad, Mente, Suerte) */}
           <div className="grimoire-panel rounded-2xl p-6 space-y-4">
             <div>
-              <h3 className="text-xl font-bold text-amber-300">4. Atributos Recomendados de {cls.name}</h3>
+              <h3 className="text-xl font-bold text-amber-300">4. Los 4 Pilares de {cls.name}</h3>
               <p className="text-xs text-stone-400">
-                Se asignan automáticamente según tu <strong>Clase + Raza</strong> para mantener el juego equilibrado. Atributos clave de tu clase:{' '}
-                <strong className="text-amber-300">{cls.primaryAttrs.join(', ')}</strong>.
+                Sin tablas complicadas: tus bonos directos (<strong>+0 a +4</strong>) se asignan automáticamente según tu <strong>Clase + Raza</strong> y se suman directo a tus tiradas de d20.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {ATTRIBUTES.map((a) => {
-                const racial = race?.bonuses?.[a.id] || 0;
-                const baseVal = Number(baseAttrs[a.id] ?? 10);
-                const total = finalAttrs[a.id];
-                const mod = getModifier(total);
-                const isPrimary = cls.primaryAttrs.includes(a.id);
+                const val = finalAttrs[a.id] ?? 1;
+                const isStrong = val >= 3;
                 return (
                   <div
                     key={a.id}
-                    className={`p-3.5 rounded-xl border text-left space-y-1.5 ${
-                      isPrimary
-                        ? 'bg-amber-950/25 border-amber-500/70'
-                        : 'bg-stone-900/90 border-stone-800'
+                    className={`p-4 rounded-xl border text-left space-y-1.5 ${
+                      isStrong
+                        ? 'bg-amber-950/30 border-amber-500/70'
+                        : 'bg-slate-900/90 border-slate-800'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-bold text-amber-300">
-                        {a.name} ({a.short}) {isPrimary && '★ Clave'}
+                      <span className={`text-sm font-black ${a.color || 'text-amber-300'}`}>
+                        {a.icon} {a.name}
                       </span>
-                      <span className="px-2.5 py-0.5 rounded-full bg-amber-600/20 border border-amber-500/50 text-amber-200 font-black text-xs">
-                        {total} ({formatMod(mod)})
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-200 font-black text-sm">
+                        {formatMod(val)}
                       </span>
                     </div>
-                    <div className="text-[10px] text-stone-400">
-                      Base recomendada: <strong>{baseVal}</strong>
-                      {racial > 0 ? <span className="text-emerald-300"> + {racial} por Raza ({race.name.split(' ')[0]})</span> : ''}
-                    </div>
-                    <p className="text-[11px] text-stone-300 leading-snug">{a.desc}</p>
+                    <p className="text-[11px] text-slate-300 leading-snug">{a.desc}</p>
                   </div>
                 );
               })}
@@ -707,7 +548,7 @@ export default function CharacterForge({
               <div><span className="text-stone-400">PM Máx:</span> <strong className="text-cyan-300 text-lg">{calcMaxPM()}</strong></div>
               <div><span className="text-stone-400">Ataque:</span> <strong className="text-red-300 text-lg">{cls.baseAttackDice} DC</strong></div>
               <div><span className="text-stone-400">Defensa:</span> <strong className="text-amber-300 text-lg">{cls.baseDefendDice} DC</strong></div>
-              <div><span className="text-stone-400">Iniciativa:</span> <strong className="text-purple-300 text-lg">{formatMod(getModifier(finalAttrs.DES))}</strong></div>
+              <div><span className="text-stone-400">Iniciativa:</span> <strong className="text-purple-300 text-lg">{formatMod(finalAttrs.AGI || 1)}</strong></div>
             </div>
             <button
               onClick={createHero}
@@ -747,410 +588,397 @@ export default function CharacterForge({
             )}
           </div>
 
-          {activeHero && (
-            <div className="parchment-sheet rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6">
-              {/* Encabezado de Hoja */}
-              <div className="flex flex-wrap items-start justify-between gap-4 border-b-2 border-amber-900/40 pb-4">
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-widest text-amber-900">
-                    HeroQuest: Crónicas del Abismo (HQ-D20) · Hoja Oficial de Héroe
-                  </div>
-                  <h2 className="font-display text-3xl font-black text-stone-950 mt-1">
-                    {activeHero.name}
-                  </h2>
-                  <p className="text-sm font-semibold text-stone-700">
-                    {activeHero.raceName} · {activeHero.className}
-                    {activeHero.subclass ? ` (${activeHero.subclass.name})` : ''}
-                  </p>
-                  <p className="text-xs text-stone-600 mt-0.5">
-                    Jugador: <strong>{activeHero.playerName}</strong> · Miniatura: {activeHero.miniature}
-                  </p>
-                </div>
+          {activeHero && (() => {
+            const heroPillars = getHeroPillars(activeHero);
+            const activeEffects = Array.isArray(activeHero.activeEffects) ? activeHero.activeEffects : [];
+            const activeEffectIds = new Set(activeEffects.map((e) => e.id));
+            const curPC = activeHero.currentPC ?? activeHero.maxPC;
+            const curPM = activeHero.currentPM ?? activeHero.maxPM;
+            const totalRep = Number(activeHero.reputation || 0) + Number(activeHero.fame || 0);
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="px-4 py-2 rounded-xl bg-amber-900/15 border-2 border-amber-800/50 text-center">
-                    <div className="text-[10px] font-bold uppercase text-amber-900">Nivel</div>
-                    <div className="font-display text-2xl font-black text-stone-950 leading-none">
-                      {activeHero.level}
+            return (
+              <div className="rounded-3xl bg-gradient-to-b from-slate-900/95 via-[#111827] to-slate-950 border border-slate-700/80 p-5 sm:p-6 shadow-2xl space-y-5">
+                {/* Encabezado Moderno del Monitor DM */}
+                <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-800 pb-4">
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-amber-400">
+                      Monitor DM en Vivo · Sincronizado con Celular
                     </div>
-                  </div>
-                  <div className="px-4 py-2 rounded-xl bg-amber-900/15 border-2 border-amber-800/50 text-center">
-                    <div className="text-[10px] font-bold uppercase text-amber-900">XP</div>
-                    <div className="font-bold text-base text-stone-950">
-                      {activeHero.xp}{nextLevelInfo ? ` / ${nextLevelInfo.xp}` : ' (MÁX)'}
-                    </div>
+                    <h2 className="font-display text-2xl sm:text-3xl font-black text-white mt-0.5">
+                      {activeHero.name}
+                    </h2>
+                    <p className="text-sm font-semibold text-slate-300">
+                      {activeHero.raceName} · {activeHero.className}
+                      {activeHero.subclass ? ` (${activeHero.subclass.name})` : ''}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Jugador: <strong className="text-slate-200">{activeHero.playerName}</strong> · Miniatura: {activeHero.miniature}
+                    </p>
                   </div>
 
-                  <div className="no-print flex flex-col gap-1">
-                    {activeHero.level < 10 && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="px-3.5 py-2 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-center">
+                      <div className="text-[10px] font-bold uppercase text-amber-300">Nivel</div>
+                      <div className="font-display text-xl font-black text-white leading-none mt-0.5">
+                        Nv.{activeHero.level}
+                      </div>
+                    </div>
+                    <div className="px-3.5 py-2 rounded-2xl bg-slate-800/80 border border-slate-700 text-center">
+                      <div className="text-[10px] font-bold uppercase text-slate-400">XP</div>
+                      <div className="font-bold text-sm text-sky-300 mt-0.5">
+                        {activeHero.xp}{nextLevelInfo ? ` / ${nextLevelInfo.xp}` : ' (MÁX)'}
+                      </div>
+                    </div>
+                    <div className="px-3.5 py-2 rounded-2xl bg-emerald-950/50 border border-emerald-700/50 text-center">
+                      <div className="text-[10px] font-bold uppercase text-emerald-300">Reputación</div>
+                      <div className="font-black text-base text-emerald-200 mt-0.5">🏅 {totalRep}</div>
+                    </div>
+
+                    <div className="no-print flex flex-col gap-1.5">
+                      {activeHero.level < 10 && (
+                        <button
+                          onClick={levelUpHero}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black flex items-center gap-1 cursor-pointer shadow"
+                        >
+                          <TrendingUp className="w-3.5 h-3.5" /> Subir Nivel
+                        </button>
+                      )}
                       <button
-                        onClick={levelUpHero}
-                        className="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold flex items-center gap-1 cursor-pointer"
+                        onClick={() => deleteHero(activeHero.id)}
+                        className="px-3 py-1.5 rounded-xl bg-rose-950/80 hover:bg-rose-800 border border-rose-700/70 text-rose-200 text-xs font-bold flex items-center gap-1 cursor-pointer"
                       >
-                        <TrendingUp className="w-3.5 h-3.5" /> Subir Nivel
+                        <Trash2 className="w-3.5 h-3.5" /> Eliminar
                       </button>
-                    )}
-                    <button
-                      onClick={() => deleteHero(activeHero.id)}
-                      className="px-3 py-1.5 rounded-lg bg-red-800/90 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" /> Eliminar
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Estadísticas de Combate HQ + D20 */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-center">
-                <div className="p-3 rounded-xl bg-red-900/10 border border-red-900/40">
-                  <div className="text-[11px] font-bold uppercase text-red-900 flex items-center justify-center gap-1">
-                    <Heart className="w-3.5 h-3.5" /> Puntos Cuerpo
-                  </div>
-                  <div className="text-2xl font-black text-red-950 mt-1">{activeHero.maxPC} PC</div>
-                </div>
-                <div className="p-3 rounded-xl bg-cyan-900/10 border border-cyan-900/40">
-                  <div className="text-[11px] font-bold uppercase text-cyan-900 flex items-center justify-center gap-1">
-                    <Brain className="w-3.5 h-3.5" /> Puntos Mente
-                  </div>
-                  <div className="text-2xl font-black text-cyan-950 mt-1">{activeHero.maxPM} PM</div>
-                </div>
-                <div className="p-3 rounded-xl bg-amber-900/10 border border-amber-900/40">
-                  <div className="text-[11px] font-bold uppercase text-amber-900 flex items-center justify-center gap-1">
-                    <Swords className="w-3.5 h-3.5" /> Ataque Base
-                  </div>
-                  <div className="text-2xl font-black text-stone-950 mt-1">{activeHero.attackDice} DC</div>
-                </div>
-                <div className="p-3 rounded-xl bg-amber-900/10 border border-amber-900/40">
-                  <div className="text-[11px] font-bold uppercase text-amber-900 flex items-center justify-center gap-1">
-                    <Shield className="w-3.5 h-3.5" /> Defensa Base
-                  </div>
-                  <div className="text-2xl font-black text-stone-950 mt-1">{activeHero.defendDice} DC</div>
-                </div>
-                <div className="p-3 rounded-xl bg-stone-900/10 border border-stone-700/40">
-                  <div className="text-[11px] font-bold uppercase text-stone-800">Mov / Init</div>
-                  <div className="text-xl font-black text-stone-950 mt-1">
-                    {activeHero.speed} cas · {formatMod(activeHero.initMod)}
-                  </div>
-                </div>
-                <div className="p-3 rounded-xl bg-amber-600/20 border border-amber-800/50">
-                  <div className="text-[11px] font-bold uppercase text-amber-950 flex items-center justify-center gap-1">
-                    <Coins className="w-3.5 h-3.5" /> Oro / Insp.
-                  </div>
-                  <div className="text-xl font-black text-stone-950 mt-1">
-                    {activeHero.gold} MO
-                  </div>
-                </div>
-              </div>
-
-              {/* Atributos + Competencias */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <div className="lg:col-span-5 space-y-4">
-                  <div className="grid grid-cols-3 gap-2">
-                    {ATTRIBUTES.map((a) => {
-                      const val = activeHero.attributes?.[a.id] ?? 10;
-                      const mod = getModifier(val);
-                      return (
-                        <div key={a.id} className="p-2.5 rounded-xl bg-white/60 border border-amber-900/30 text-center">
-                          <div className="text-[10px] font-bold uppercase text-amber-900">{a.short}</div>
-                          <div className="text-xl font-black text-stone-950">{formatMod(mod)}</div>
-                          <div className="text-xs font-semibold text-stone-600">({val})</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-white/60 border border-amber-900/30">
-                    <h4 className="font-display font-bold text-sm uppercase text-amber-950 mb-2">
-                      Competencias (Bono +{activeHero.profBonus ?? 2})
-                    </h4>
-                    <div className="grid grid-cols-2 gap-1.5 text-xs">
-                      {SKILLS.map((sk) => {
-                        const prof = (activeHero.proficientSkills || []).includes(sk.id);
-                        const bonus = getModifier(activeHero.attributes?.[sk.attr] ?? 10) + (prof ? (activeHero.profBonus ?? 2) : 0);
-                        return (
-                          <div key={sk.id} className="flex items-center justify-between px-2 py-1 rounded bg-amber-900/5">
-                            <span className={prof ? 'font-bold text-stone-950' : 'text-stone-600'}>
-                              {prof ? '● ' : '○ '}
-                              {sk.name}
-                            </span>
-                            <span className="font-bold text-amber-950">{formatMod(bonus)}</span>
-                          </div>
-                        );
-                      })}
                     </div>
                   </div>
                 </div>
 
-                {/* Rasgos, Habilidades, Inventario */}
-                <div className="lg:col-span-7 space-y-4">
-                  <div className="p-4 rounded-xl bg-white/60 border border-amber-900/30 space-y-2 text-xs">
-                    <h4 className="font-display font-bold text-sm uppercase text-amber-950">
-                      Rasgos, Poderes y Personalidad
-                    </h4>
-                    <p><strong>Recurso:</strong> {activeHero.resourceName}</p>
-                    <p><strong>Habilidad de Clase:</strong> {activeHero.coreAbility}</p>
-                    <p><strong>Rasgo Racial:</strong> {activeHero.raceTrait}</p>
-                    {activeHero.subclass && (
-                      <p><strong>Subclase ({activeHero.subclass.name}):</strong> {activeHero.subclass.desc}</p>
-                    )}
-                    {activeHero.professionName && (
-                      <p><strong>Profesión:</strong> {activeHero.professionName}</p>
-                    )}
-                    {activeHero.quirk && (
-                      <p>
-                        <strong>{activeHero.quirk.icon} Rasgo ({activeHero.quirk.name}):</strong>{' '}
-                        <span className="text-emerald-900">+ {activeHero.quirk.bonus}</span> ·{' '}
-                        <span className="text-red-900">- {activeHero.quirk.drawback}</span>
-                      </p>
-                    )}
+                {/* Barras de Vida, Mente, Combate y Oro (Interactivas para el DM) */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-center">
+                  <div className="p-3 rounded-2xl bg-rose-950/40 border border-rose-700/50 space-y-1.5">
+                    <div className="text-[10px] font-bold uppercase text-rose-300 flex items-center justify-center gap-1">
+                      <Heart className="w-3.5 h-3.5" /> Cuerpo (PC)
+                    </div>
+                    <div className="text-2xl font-black text-white">{curPC}/{activeHero.maxPC}</div>
+                    <div className="no-print flex justify-center gap-1">
+                      <button
+                        onClick={() => updateActiveHero((h) => ({ ...h, currentPC: Math.max(0, (h.currentPC ?? h.maxPC) - 1) }))}
+                        className="px-2 py-0.5 rounded bg-rose-900 hover:bg-rose-800 text-white text-xs font-black cursor-pointer"
+                      >
+                        -1
+                      </button>
+                      <button
+                        onClick={() => updateActiveHero((h) => ({ ...h, currentPC: Math.min(h.maxPC, (h.currentPC ?? h.maxPC) + 1) }))}
+                        className="px-2 py-0.5 rounded bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-black cursor-pointer"
+                      >
+                        +1
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Inventario con Espacios y Oro */}
-                  <div className="p-4 rounded-xl bg-white/60 border border-amber-900/30 space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h4 className="font-display font-bold text-sm uppercase text-amber-950">
-                        Inventario ({(activeHero.inventory || []).length}/10 Espacios)
+                  <div className="p-3 rounded-2xl bg-cyan-950/40 border border-cyan-700/50 space-y-1.5">
+                    <div className="text-[10px] font-bold uppercase text-cyan-300 flex items-center justify-center gap-1">
+                      <Brain className="w-3.5 h-3.5" /> Mente (PM)
+                    </div>
+                    <div className="text-2xl font-black text-white">{curPM}/{activeHero.maxPM}</div>
+                    <div className="no-print flex justify-center gap-1">
+                      <button
+                        onClick={() => updateActiveHero((h) => ({ ...h, currentPM: Math.max(0, (h.currentPM ?? h.maxPM) - 1) }))}
+                        className="px-2 py-0.5 rounded bg-cyan-900 hover:bg-cyan-800 text-white text-xs font-black cursor-pointer"
+                      >
+                        -1
+                      </button>
+                      <button
+                        onClick={() => updateActiveHero((h) => ({ ...h, currentPM: Math.min(h.maxPM, (h.currentPM ?? h.maxPM) + 1) }))}
+                        className="px-2 py-0.5 rounded bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-black cursor-pointer"
+                      >
+                        +1
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-700/80 flex flex-col justify-center">
+                    <div className="text-[10px] font-bold uppercase text-amber-300 flex items-center justify-center gap-1">
+                      <Swords className="w-3.5 h-3.5" /> Ataque
+                    </div>
+                    <div className="text-2xl font-black text-white mt-1">{activeHero.attackDice} DC</div>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-700/80 flex flex-col justify-center">
+                    <div className="text-[10px] font-bold uppercase text-sky-300 flex items-center justify-center gap-1">
+                      <Shield className="w-3.5 h-3.5" /> Defensa
+                    </div>
+                    <div className="text-2xl font-black text-white mt-1">{activeHero.defendDice} DC</div>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-700/80 flex flex-col justify-center">
+                    <div className="text-[10px] font-bold uppercase text-slate-400">Mov / Init</div>
+                    <div className="text-lg font-black text-slate-100 mt-1">
+                      {activeHero.speed} cas · {formatMod(heroPillars.AGI)}
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-amber-950/35 border border-amber-600/50 space-y-1.5">
+                    <div className="text-[10px] font-bold uppercase text-amber-300 flex items-center justify-center gap-1">
+                      <Coins className="w-3.5 h-3.5" /> Oro
+                    </div>
+                    <div className="text-xl font-black text-amber-200">{activeHero.gold} MO</div>
+                    <div className="no-print flex justify-center gap-1">
+                      <button
+                        onClick={() => updateActiveHero((h) => ({ ...h, gold: Math.max(0, (h.gold || 0) - 25) }))}
+                        className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-200 text-[10px] font-bold cursor-pointer"
+                      >
+                        -25
+                      </button>
+                      <button
+                        onClick={() => updateActiveHero((h) => ({ ...h, gold: (h.gold || 0) + 25 }))}
+                        className="px-1.5 py-0.5 rounded bg-amber-600 hover:bg-amber-500 text-slate-950 text-[10px] font-black cursor-pointer"
+                      >
+                        +25
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Los 4 Pilares + Estados Activos */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                  <div className="lg:col-span-5 space-y-4">
+                    {/* 4 Pilares */}
+                    <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3">
+                      <h4 className="font-display font-bold text-xs uppercase tracking-wider text-amber-300">
+                        ⚡ 4 Pilares del Héroe (Bono directo al d20)
                       </h4>
-                      <div className="no-print flex items-center gap-1.5">
-                        <button
-                          onClick={() => updateActiveHero((h) => ({ ...h, gold: Math.max(0, h.gold - 50) }))}
-                          className="px-2 py-0.5 rounded bg-amber-900/20 text-xs font-bold cursor-pointer"
-                        >
-                          -50 MO
-                        </button>
-                        <button
-                          onClick={() => updateActiveHero((h) => ({ ...h, gold: h.gold + 50 }))}
-                          className="px-2 py-0.5 rounded bg-amber-900/20 text-xs font-bold cursor-pointer"
-                        >
-                          +50 MO
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      {(activeHero.inventory || []).map((it) => {
-                        const rMeta = getRarityMeta(it.rarity || 'comun');
-                        return (
-                          <div
-                            key={it.id}
-                            className={`px-2.5 py-1 rounded-lg bg-white/80 border-2 ${rMeta.border} text-xs font-semibold text-stone-900 flex items-center gap-1.5`}
-                            title={`${rMeta.name}${it.special ? ` · ${it.special}` : ''}${it.flaw ? ` · Desventaja: ${it.flaw}` : ''}`}
-                          >
-                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${rMeta.badge}`}>
-                              {rMeta.name}
-                            </span>
-                            <span>{it.name} {it.dice ? `(${it.dice})` : ''}</span>
-                            <button
-                              onClick={() => removeItemFromHero(it.id)}
-                              className="no-print text-red-700 hover:text-red-900 cursor-pointer"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {ATTRIBUTES.map((a) => (
+                          <div key={a.id} className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                            <div>
+                              <div className={`text-xs font-black ${a.color || 'text-amber-300'}`}>
+                                {a.icon} {a.name}
+                              </div>
+                              <div className="text-[10px] text-slate-400">{a.short}</div>
+                            </div>
+                            <div className="text-xl font-black text-white">
+                              {formatMod(heroPillars[a.id] ?? 1)}
+                            </div>
                           </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Forja Digital de Botín por 6 Rarezas (Solo DM → Celular del Héroe) */}
-                    <div className="no-print pt-3 mt-2 border-t border-amber-900/25 space-y-3">
-                      <div className="text-[11px] font-bold uppercase text-amber-950 flex items-center gap-1">
-                        <Gift className="w-3.5 h-3.5 text-amber-800" /> Enviar Armas, Armaduras, Artefactos y Accesorios (6 Rarezas)
-                      </div>
-
-                      {/* Filtro de rareza + Catálogo Digital */}
-                      <div className="flex flex-wrap gap-1">
-                        <button
-                          onClick={() => setLootRarityFilter('all')}
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer ${
-                            lootRarityFilter === 'all' ? 'bg-stone-900 text-amber-300' : 'bg-amber-900/15 text-stone-800'
-                          }`}
-                        >
-                          Todas
-                        </button>
-                        {RARITIES.map((r) => (
-                          <button
-                            key={r.id}
-                            onClick={() => {
-                              setLootRarityFilter(r.id);
-                              const first = DIGITAL_LOOT_CATALOG.find((x) => x.rarity === r.id);
-                              if (first) setSelectedLootId(first.id);
-                            }}
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer ${
-                              lootRarityFilter === r.id ? r.badge : 'bg-amber-900/15 text-stone-800'
-                            }`}
-                          >
-                            {r.name}
-                          </button>
                         ))}
                       </div>
+                    </div>
 
-                      <div className="flex gap-1.5">
-                        <select
-                          value={selectedLootId}
-                          onChange={(e) => setSelectedLootId(e.target.value)}
-                          className="flex-1 px-2.5 py-1.5 rounded-lg bg-white border border-amber-900/40 text-xs text-stone-900"
-                        >
-                          {DIGITAL_LOOT_CATALOG.filter(
-                            (x) => lootRarityFilter === 'all' || x.rarity === lootRarityFilter
-                          ).map((eq) => (
-                            <option key={eq.id} value={eq.id}>
-                              [{getRarityMeta(eq.rarity).name.toUpperCase()} · {eq.type}] {eq.name} ({eq.dice})
-                            </option>
-                          ))}
-                        </select>
+                    {/* Estados Activos (Completo e Ilustrado con Selector DM) */}
+                    <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="font-display font-bold text-xs uppercase tracking-wider text-purple-300">
+                          Estados Activos ({activeEffects.length})
+                        </h4>
                         <button
-                          onClick={sendCatalogLootToHero}
-                          className="px-3 py-1.5 rounded-lg bg-amber-800 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1 cursor-pointer shrink-0"
+                          type="button"
+                          onClick={() => setShowStatusPicker((v) => !v)}
+                          className="no-print px-2.5 py-1 rounded-lg bg-purple-700 hover:bg-purple-600 text-white text-[11px] font-bold cursor-pointer"
                         >
-                          <Plus className="w-3.5 h-3.5" /> Enviar
+                          {showStatusPicker ? 'Ocultar Catálogo' : '+ Aplicar / Quitar Estado'}
                         </button>
                       </div>
 
-                      {/* Generador Procedural Infinito de Botín con Mejoras y Desventajas */}
-                      <div className="p-2.5 rounded-xl bg-amber-950/10 border border-amber-900/30 space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-[11px] font-bold text-stone-900">♾️ Forjar Botín Procedural:</span>
-                          <select
-                            value={procRarity}
-                            onChange={(e) => setProcRarity(e.target.value)}
-                            className="px-2 py-1 rounded bg-white border border-amber-900/40 text-xs text-stone-900"
-                          >
-                            <option value="auto">Auto según Nivel ({activeHero.level})</option>
-                            {RARITIES.map((r) => (
-                              <option key={r.id} value={r.id}>{r.name}</option>
-                            ))}
-                          </select>
-                          <button
-                            onClick={() => setProcPreview(generateProceduralLoot(procRarity, activeHero.level))}
-                            className="px-3 py-1 rounded-lg bg-purple-800 hover:bg-purple-700 text-white text-xs font-bold cursor-pointer"
-                          >
-                            Generar Objeto Único
-                          </button>
-                        </div>
-
-                        {procPreview && (
-                          <div className={`p-2.5 rounded-lg bg-white border-2 ${getRarityMeta(procPreview.rarity).border} text-xs space-y-1`}>
-                            <div className="flex items-center justify-between gap-2">
-                              <div>
-                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase mr-1.5 ${getRarityMeta(procPreview.rarity).badge}`}>
-                                  {getRarityMeta(procPreview.rarity).name}
-                                </span>
-                                <strong className="text-stone-950">{procPreview.name} ({procPreview.dice})</strong>
-                                <span className="text-stone-600 ml-1">[{procPreview.type} · {procPreview.restriction}]</span>
-                              </div>
-                              <button
-                                onClick={() => {
-                                  sendLootObjectToHero(procPreview);
-                                  setProcPreview(null);
-                                }}
-                                className="px-2.5 py-1 rounded bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-bold cursor-pointer shrink-0"
+                      {activeEffects.length === 0 ? (
+                        <p className="text-xs text-slate-400 italic">
+                          Sin estados activos en este momento.
+                        </p>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {activeEffects.map((ef) => {
+                            const meta = STATUS_CATALOG.find((s) => s.id === ef.id);
+                            return (
+                              <div
+                                key={ef.id}
+                                className={`p-2.5 rounded-xl border text-xs flex items-start justify-between gap-2 ${
+                                  meta?.color ||
+                                  (ef.type === 'debuff'
+                                    ? 'bg-rose-950/60 border-rose-600/70 text-rose-100'
+                                    : 'bg-emerald-950/60 border-emerald-600/70 text-emerald-100')
+                                }`}
                               >
-                                🎁 Enviar a {activeHero.name}
-                              </button>
-                            </div>
-                            <div className="text-emerald-900"><strong>✨ Mejora:</strong> {procPreview.upgrade}</div>
-                            {procPreview.flaw && (
-                              <div className="text-red-800"><strong>⚠️ Desventaja:</strong> {procPreview.flaw}</div>
-                            )}
+                                <div className="space-y-0.5">
+                                  <div className="font-black">{ef.label}</div>
+                                  <div className="text-[11px] opacity-90">{ef.note || meta?.effect}</div>
+                                  {meta?.cure && (
+                                    <div className="text-[10px] opacity-75">Cura: {meta.cure}</div>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() =>
+                                    updateActiveHero((h) => ({
+                                      ...h,
+                                      activeEffects: (h.activeEffects || []).filter((x) => x.id !== ef.id),
+                                    }))
+                                  }
+                                  className="no-print p-1 rounded bg-black/40 hover:bg-black/70 text-white cursor-pointer shrink-0"
+                                  title="Quitar estado"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {showStatusPicker && (
+                        <div className="no-print pt-2 border-t border-slate-800 space-y-2">
+                          <div className="text-[10px] font-bold uppercase text-rose-300">Estados Negativos</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {STATUS_CATALOG.filter((s) => s.type === 'debuff').map((s) => {
+                              const on = activeEffectIds.has(s.id);
+                              return (
+                                <button
+                                  key={s.id}
+                                  type="button"
+                                  onClick={() => toggleStatusOnHero(s)}
+                                  title={`${s.effect} · Cura: ${s.cure}`}
+                                  className={`px-2 py-1 rounded-lg border text-[11px] font-bold cursor-pointer transition ${
+                                    on ? `${s.color} ring-2 ring-white/50` : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-rose-400'
+                                  }`}
+                                >
+                                  {s.icon} {s.name}
+                                </button>
+                              );
+                            })}
                           </div>
-                        )}
+                          <div className="text-[10px] font-bold uppercase text-emerald-300 pt-1">Estados Positivos (Buffs)</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {STATUS_CATALOG.filter((s) => s.type === 'buff').map((s) => {
+                              const on = activeEffectIds.has(s.id);
+                              return (
+                                <button
+                                  key={s.id}
+                                  type="button"
+                                  onClick={() => toggleStatusOnHero(s)}
+                                  title={`${s.effect} · ${s.cure}`}
+                                  className={`px-2 py-1 rounded-lg border text-[11px] font-bold cursor-pointer transition ${
+                                    on ? `${s.color} ring-2 ring-white/50` : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-emerald-400'
+                                  }`}
+                                >
+                                  {s.icon} {s.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Columna Derecha: Rasgos, Profesión e Inventario Limpio (SIN panel feo de envío de loot) */}
+                  <div className="lg:col-span-7 space-y-4">
+                    <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-2 text-xs text-slate-200">
+                      <h4 className="font-display font-bold text-xs uppercase tracking-wider text-amber-300">
+                        🛡️ Identidad, Profesión y Rasgos
+                      </h4>
+                      <p><strong className="text-slate-400">Recurso:</strong> {activeHero.resourceName}</p>
+                      <p><strong className="text-slate-400">Habilidad de Clase:</strong> {activeHero.coreAbility}</p>
+                      <p><strong className="text-slate-400">Rasgo Racial:</strong> {activeHero.raceTrait}</p>
+                      {activeHero.subclass && (
+                        <p><strong className="text-amber-300">Subclase ({activeHero.subclass.name}):</strong> {activeHero.subclass.desc}</p>
+                      )}
+                      {activeHero.professionName && (
+                        <p><strong className="text-emerald-300">Profesión:</strong> {activeHero.professionName}</p>
+                      )}
+                      {activeHero.quirk && (
+                        <p>
+                          <strong className="text-purple-300">{activeHero.quirk.icon} Rasgo ({activeHero.quirk.name}):</strong>{' '}
+                          <span className="text-emerald-300">+ {activeHero.quirk.bonus}</span> ·{' '}
+                          <span className="text-rose-300">- {activeHero.quirk.drawback}</span>
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Inventario del Héroe (Vista limpia de inspección DM) */}
+                    <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="font-display font-bold text-xs uppercase tracking-wider text-amber-300">
+                          🎒 Equipo e Inventario ({(activeHero.inventory || []).length} objetos)
+                        </h4>
+                        <span className="text-[11px] text-slate-400">
+                          El botín se entrega desde Cofres, Cuerpos y Eventos del Tablero
+                        </span>
                       </div>
 
-                      {/* Tesoro / Reliquia 100% Personalizada */}
-                      <div className="space-y-1.5 pt-1">
-                        <div className="text-[10px] font-bold uppercase text-stone-700">
-                          O crea un objeto personalizado a mano:
+                      {(activeHero.inventory || []).length === 0 ? (
+                        <p className="text-xs text-slate-400 italic">Inventario vacío.</p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {(activeHero.inventory || []).map((it) => {
+                            const rMeta = getRarityMeta(it.rarity || 'comun');
+                            return (
+                              <div
+                                key={it.id}
+                                className={`p-2.5 rounded-xl bg-slate-900/90 border ${rMeta.border} text-xs flex items-start justify-between gap-2`}
+                              >
+                                <div className="min-w-0 space-y-0.5">
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${rMeta.badge}`}>
+                                      {rMeta.name}
+                                    </span>
+                                    {it.equipped && (
+                                      <span className="px-1.5 py-0.5 rounded bg-emerald-600/30 border border-emerald-500/50 text-emerald-200 text-[9px] font-black">
+                                        EQUIPADO
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="font-bold text-white truncate">
+                                    {it.name} {it.dice ? `(${it.dice})` : ''}
+                                  </div>
+                                  {(it.special || it.traits) && (
+                                    <div className="text-[11px] text-slate-400 leading-snug">
+                                      {it.special || it.traits}
+                                    </div>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => removeItemFromHero(it.id)}
+                                  className="no-print text-rose-400 hover:text-rose-200 p-1 cursor-pointer shrink-0"
+                                  title="Quitar objeto"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            );
+                          })}
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                          <input
-                            type="text"
-                            placeholder="Nombre (ej. Daga Lunar)"
-                            value={customItemName}
-                            onChange={(e) => setCustomItemName(e.target.value)}
-                            className="px-2 py-1.5 rounded-lg bg-white border border-amber-900/40 text-xs text-stone-900"
-                          />
-                          <select
-                            value={customItemRarity}
-                            onChange={(e) => setCustomItemRarity(e.target.value)}
-                            className="px-2 py-1.5 rounded-lg bg-white border border-amber-900/40 text-xs text-stone-900"
-                          >
-                            {RARITIES.map((r) => (
-                              <option key={r.id} value={r.id}>{r.name}</option>
+                      )}
+                    </div>
+
+                    {/* Referencia rápida de Hechizos si es lanzador */}
+                    {['mago', 'explorador', 'bardo', 'brujo', 'druida', 'clerigo', 'exorcista', 'chaman', 'nigromante', 'mago_batalla'].includes(activeHero.classId) && (
+                      <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-2">
+                        <h4 className="font-display font-bold text-xs uppercase tracking-wider text-purple-300">
+                          🔮 Grimorio de {activeHero.className}
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                          {SPELLS_CATALOG.filter((sp) =>
+                            activeHero.classId === 'bardo' || activeHero.classId === 'exorcista' || activeHero.classId === 'chaman'
+                              ? sp.school === 'Espíritu'
+                              : activeHero.classId === 'brujo' || activeHero.classId === 'nigromante'
+                              ? sp.school === 'Sombras'
+                              : ['Fuego', 'Agua', 'Tierra', 'Aire'].includes(sp.school)
+                          )
+                            .slice(0, 6)
+                            .map((sp) => (
+                              <div key={sp.id} className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                                <div className="font-bold text-purple-200">
+                                  [{sp.school}] {sp.name}
+                                </div>
+                                <div className="text-[11px] text-slate-400 mt-0.5 leading-snug">{sp.desc}</div>
+                              </div>
                             ))}
-                          </select>
-                          <select
-                            value={customItemType}
-                            onChange={(e) => setCustomItemType(e.target.value)}
-                            className="px-2 py-1.5 rounded-lg bg-white border border-amber-900/40 text-xs text-stone-900"
-                          >
-                            {['Arma', 'Armadura', 'Artefacto', 'Accesorio', 'Poción', 'Pergamino'].map((t) => (
-                              <option key={t} value={t}>{t}</option>
-                            ))}
-                          </select>
-                          <input
-                            type="text"
-                            placeholder="Dados (ej. 3 DC)"
-                            value={customItemDice}
-                            onChange={(e) => setCustomItemDice(e.target.value)}
-                            className="px-2 py-1.5 rounded-lg bg-white border border-amber-900/40 text-xs text-stone-900"
-                          />
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-1.5">
-                          <input
-                            type="text"
-                            placeholder="Efecto / Mejora especial..."
-                            value={customItemSpecial}
-                            onChange={(e) => setCustomItemSpecial(e.target.value)}
-                            className="sm:col-span-6 px-2 py-1.5 rounded-lg bg-white border border-amber-900/40 text-xs text-stone-900"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Desventaja opcional (balance)..."
-                            value={customItemFlaw}
-                            onChange={(e) => setCustomItemFlaw(e.target.value)}
-                            className="sm:col-span-4 px-2 py-1.5 rounded-lg bg-white border border-red-900/30 text-xs text-stone-900"
-                          />
-                          <button
-                            onClick={sendCustomItemToHero}
-                            className="sm:col-span-2 px-3 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer"
-                          >
-                            🎁 Enviar
-                          </button>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
-
-              {/* Referencia rápida de Hechizos si es lanzador */}
-              {['mago', 'explorador', 'bardo', 'brujo'].includes(activeHero.classId) && (
-                <div className="p-4 rounded-xl bg-white/60 border border-amber-900/30">
-                  <h4 className="font-display font-bold text-sm uppercase text-amber-950 mb-2">
-                    Grimorio Sugerido de {activeHero.className}
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                    {SPELLS_CATALOG.filter((sp) =>
-                      activeHero.classId === 'bardo'
-                        ? sp.school === 'Espíritu'
-                        : activeHero.classId === 'brujo'
-                        ? sp.school === 'Sombras'
-                        : ['Fuego', 'Agua', 'Tierra', 'Aire'].includes(sp.school)
-                    )
-                      .slice(0, 6)
-                      .map((sp) => (
-                        <div key={sp.id} className="p-2 rounded bg-amber-900/5 border border-amber-900/20">
-                          <div className="font-bold text-stone-950">
-                            [{sp.school}] {sp.name}
-                          </div>
-                          <div className="text-[11px] text-stone-700 mt-0.5">{sp.desc}</div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
     </div>

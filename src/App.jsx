@@ -36,6 +36,7 @@ import FeedbackModal from './components/FeedbackModal';
 import { getMaterialById } from './data/craftingSystem';
 import { generateProceduralQuest } from './data/proceduralEngine';
 import { CITY_MODES } from './data/citySystem';
+import { rollChaosCrisis } from './data/chaosSystem';
 
 const STORAGE_KEY = 'hq_cronicas_abismo_v1';
 
@@ -155,6 +156,7 @@ export default function App() {
   const [cityOpenToPhones, setCityOpenToPhones] = useState(false);
   const [travelModalOpen, setTravelModalOpen] = useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [chaosCrisisModal, setChaosCrisisModal] = useState(null);
   const [isCreator, setIsCreator] = useState(false);
 
   useEffect(() => {
@@ -678,7 +680,7 @@ export default function App() {
                 CRÓNICAS DEL ABISMO
               </div>
               <div className="text-[11px] text-slate-400 font-medium">
-                Estudio DM · HQ-D20 v2
+                Estudio DM · HQ-D20 v6
               </div>
             </div>
           </div>
@@ -715,25 +717,17 @@ export default function App() {
             ))}
           </div>
 
-          {/* Pie del Sidebar: Estado Rápido del Grupo */}
-          <div className="p-4 border-t border-slate-800/80 bg-slate-900/50 space-y-2.5 text-xs">
-            <div className="grid grid-cols-3 gap-1.5 text-center">
-              <div className="p-1.5 rounded-lg bg-slate-800/70 border border-slate-700/60">
-                <div className="text-[9px] text-slate-400 uppercase font-bold">Nivel</div>
-                <div className="font-black text-amber-300">Nv.{partyLevel}</div>
-              </div>
-              <div className="p-1.5 rounded-lg bg-slate-800/70 border border-slate-700/60">
-                <div className="text-[9px] text-slate-400 uppercase font-bold">Fama</div>
-                <div className="font-black text-amber-200">⭐ {fame}</div>
-              </div>
-              <div className="p-1.5 rounded-lg bg-slate-800/70 border border-slate-700/60">
-                <div className="text-[9px] text-slate-400 uppercase font-bold">Rep.</div>
-                <div className="font-black text-emerald-300">🏅 {reputation}</div>
-              </div>
+          {/* Pie del Sidebar: Estado Limpio de Sesión DM (Sin Nivel/Fama/Rep de aventureros) */}
+          <div className="p-4 border-t border-slate-800/80 bg-slate-950/60 space-y-2 text-xs">
+            <div className="flex items-center justify-between text-[11px] text-slate-300 font-semibold px-1">
+              <span>🛡️ {heroes.length} Héroes</span>
+              <span className="text-sky-300">🗺️ {completedQuests.length} Misiones</span>
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
-              <span>{heroes.length} Héroes activos</span>
-              <span className="text-sky-300 font-semibold">{completedQuests.length} Misiones</span>
+            <div className="px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between text-[11px]">
+              <span className="text-slate-400">Modo:</span>
+              <span className={cityMode === 'survival' ? 'font-bold text-rose-300' : 'font-bold text-emerald-300'}>
+                {cityMode === 'survival' ? '🔥 Supervivencia' : '🛡️ Relajado'}
+              </span>
             </div>
           </div>
         </aside>
@@ -741,7 +735,7 @@ export default function App() {
         {/* ==================== ÁREA PRINCIPAL DERECHA ==================== */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Topbar Limpia y Ordenada */}
-          <header className="no-print sticky top-0 z-30 backdrop-blur-xl bg-[#0f141e]/85 border-b border-slate-800/80">
+          <header className="no-print sticky top-0 z-30 backdrop-blur-xl bg-[#0f141e]/90 border-b border-slate-800/80">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h1 className="font-display text-base sm:text-lg font-black text-white leading-tight flex items-center gap-2">
@@ -752,8 +746,8 @@ export default function App() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 text-xs">
-                {/* Reloj del Caos */}
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-950/40 border border-purple-500/35">
+                {/* Reloj del Caos + Crisis del Caos (5/10 y 10/10) */}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-950/50 border border-purple-500/40">
                   <span className="font-bold text-purple-200">Caos</span>
                   <button
                     onClick={() => setChaosClock(Math.max(0, chaosClock - 1))}
@@ -762,30 +756,33 @@ export default function App() {
                   >
                     <Minus className="w-3.5 h-3.5" />
                   </button>
-                  <span className={`font-black min-w-[32px] text-center ${chaosClock >= 8 ? 'text-rose-400 animate-pulse' : 'text-amber-300'}`}>
+                  <span className={`font-black min-w-[32px] text-center ${chaosClock >= 8 ? 'text-rose-400 animate-pulse' : chaosClock >= 5 ? 'text-amber-300' : 'text-purple-200'}`}>
                     {chaosClock}/10
                   </span>
                   <button
                     onClick={() => {
                       const next = Math.min(10, chaosClock + 1);
                       setChaosClock(next);
-                      if (next >= 10) {
-                        showToast('⚡ ¡El Reloj del Caos llegó a 10! Roba un Evento en Mazos DM.');
+                      if (next === 5 || next === 10) {
+                        setChaosCrisisModal(rollChaosCrisis(next));
                       }
                     }}
                     className="p-0.5 hover:text-rose-400 cursor-pointer"
-                    title="Subir Reloj del Caos"
+                    title="Subir Reloj del Caos (dispara Crisis en 5 y 10)"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
-                  {chaosClock >= 10 && (
-                    <button
-                      onClick={() => setActiveTab('decks')}
-                      className="ml-1 px-2 py-0.5 rounded-md bg-rose-600 text-white font-bold text-[10px] cursor-pointer"
-                    >
-                      ¡EVENTO!
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setChaosCrisisModal(rollChaosCrisis(Math.max(5, chaosClock)))}
+                    className={`ml-1 px-2 py-0.5 rounded-md font-bold text-[10px] cursor-pointer transition ${
+                      chaosClock >= 5
+                        ? 'bg-rose-600 hover:bg-rose-500 text-white shadow'
+                        : 'bg-purple-900/80 hover:bg-purple-800 text-purple-200'
+                    }`}
+                    title="Disparar una Crisis del Caos de la tabla de 10 eventos"
+                  >
+                    ⚡ Crisis
+                  </button>
                 </div>
 
                 {/* Botón Toggle: Abrir / Cerrar Ciudad en los Celulares */}
@@ -1123,6 +1120,70 @@ export default function App() {
           </main>
         </div>
       </div>
+
+      {/* Modal de Crisis del Caos (Tabla de 10 Eventos de Tensión) */}
+      {chaosCrisisModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg rounded-3xl bg-gradient-to-b from-purple-950/95 via-slate-950 to-slate-950 border-2 border-rose-500/70 p-6 space-y-4 shadow-2xl">
+            <div className="flex items-start justify-between gap-3 border-b border-rose-900/60 pb-3">
+              <div>
+                <div className="text-[11px] font-black uppercase tracking-widest text-rose-400">
+                  ⚡ Crisis del Caos ({chaosCrisisModal.triggeredAt}/10) · {chaosCrisisModal.badge}
+                </div>
+                <h3 className="font-display text-xl font-black text-white mt-1 flex items-center gap-2">
+                  <span>{chaosCrisisModal.icon}</span>
+                  <span>{chaosCrisisModal.title}</span>
+                </h3>
+              </div>
+              <button
+                onClick={() => setChaosCrisisModal(null)}
+                className="p-1.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-amber-950/30 border-l-4 border-amber-400">
+              <div className="text-[10px] font-black uppercase tracking-wider text-amber-300 mb-1">
+                📢 Leer en Voz Alta
+              </div>
+              <p className="text-sm sm:text-[15px] italic text-amber-50 leading-relaxed">
+                “{chaosCrisisModal.narrative}”
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-700/60 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-black uppercase text-rose-300">🔒 Regla para el DM</span>
+                <span className="px-2 py-0.5 rounded-full bg-rose-600/30 border border-rose-500/50 text-rose-200 text-[10px] font-black">
+                  {chaosCrisisModal.mechanicalTag}
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                {chaosCrisisModal.dmRule}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button
+                onClick={() => setChaosCrisisModal(rollChaosCrisis(chaosCrisisModal.triggeredAt))}
+                className="flex-1 py-2.5 rounded-xl bg-purple-800 hover:bg-purple-700 text-white font-bold text-xs cursor-pointer"
+              >
+                🎲 Robar Otra Crisis
+              </button>
+              <button
+                onClick={() => {
+                  if (chaosClock >= 10) setChaosClock(0);
+                  setChaosCrisisModal(null);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer"
+              >
+                {chaosClock >= 10 ? '✓ Aplicar y Reiniciar Caos a 0' : '✓ Aplicar y Continuar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Sugerencias y Reportes de Bugs (con Panel Privado solo para el Creador) */}
       <FeedbackModal

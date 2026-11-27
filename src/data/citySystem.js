@@ -222,30 +222,34 @@ export function getHeroFameTier(heroFame = 0) {
   };
 }
 
+// ============================================================================
+// PROFESIONES ACTIVAS EN MAZMORRA Y CIUDAD (Inspirado en HQ Homebrew p.228)
+// Cada oficio brilla en habitaciones/muebles específicos y es fácil de recordar
+// ============================================================================
 export const PROFESSIONS = [
   {
     id: 'herrero',
     name: 'Herrero de Batalla',
     icon: '⚒️',
     districtId: 'herreria',
-    cityBonus: '-20% al Forjar Equipo y +1 Acero extra al Reciclar armas/armaduras.',
-    dungeonBonus: '1 vez por misión (acción gratuita): afila el arma de un aliado (+1 DC en su próximo combate) y repara escudos dañados.',
+    cityBonus: '-20% al Forjar Equipo y +1 Acero al reciclar.',
+    dungeonBonus: 'En Armerías o Forjas: reparas/afilas gratis (+1 DC al próximo combate de un aliado) y extraes +1 Acero extra.',
   },
   {
     id: 'alquimista',
     name: 'Herbolario Alquimista',
     icon: '🧪',
     districtId: 'alquimista',
-    cityBonus: '-20% en pociones/tónicos en Ciudad y +1 Hierba Lunar al visitar el Alquimista.',
-    dungeonBonus: '+3 a tiradas de Arcano en Mesas de Alquimia (más críticos ×2 y menos explosiones) y empiezas cada misión con 1 Venda de Campaña.',
+    cityBonus: '-20% en pociones/tónicos y +1 Hierba Lunar al visitar Ciudad.',
+    dungeonBonus: 'Ventaja permanente al destilar pociones en cualquier lugar (sin necesitar mesa) y empiezas cada misión con 1 Venda (+1 PC).',
   },
   {
     id: 'sacerdote',
-    name: 'Médico / Acólito del Templo',
+    name: 'Acólito del Templo',
     icon: '⛪',
     districtId: 'templo',
-    cityBonus: '-20% en curas, bendiciones y resurrección del Templo.',
-    dungeonBonus: 'Estabilizas aliados a 0 PC automáticamente (sin tirar Medicina) y cualquier venda o curación que apliques restaura +1 PC extra.',
+    cityBonus: '-20% en curas, bendiciones y resurrecciones del Templo.',
+    dungeonBonus: 'En Altares o Tumbas: consagras el lugar (+1 PM al grupo) y estabilizas aliados a 0 PC automáticamente.',
   },
   {
     id: 'explorador',
@@ -253,7 +257,7 @@ export const PROFESSIONS = [
     icon: '🧭',
     districtId: 'gremio',
     cityBonus: '-20% al contratar Seguidores o adoptar Familiares.',
-    dungeonBonus: 'En pasillos detectas trampas y emboscadas con Ventaja (Percepción) y revelas 1 Pista Sensorial gratis por misión.',
+    dungeonBonus: 'En Pasillos: Ventaja en AGI para detectar trampas/emboscadas y 1 vez por misión escuchas qué hay tras una puerta sin abrirla.',
   },
   {
     id: 'minero',
@@ -261,7 +265,7 @@ export const PROFESSIONS = [
     icon: '🗝️',
     districtId: 'herreria',
     cityBonus: '-20% en bombas, pólvora y forja de equipo.',
-    dungeonBonus: '+2 a Desarmar Trampas y abrir puertas cerradas; 1 vez por misión abres una puerta cerrada sin subir el Reloj del Caos y doblas Acero/Pólvora de trampas.',
+    dungeonBonus: 'En Puertas Cerradas y Cofres: +2 AGI para abrir/desarmar sin subir el Reloj del Caos y doblas Acero/Pólvora de trampas.',
   },
   {
     id: 'escriba',
@@ -269,15 +273,15 @@ export const PROFESSIONS = [
     icon: '📜',
     districtId: 'alquimista',
     cityBonus: '-20% en Pergaminos, Runas y Nivelación de Artefactos.',
-    dungeonBonus: 'Al examinar Bibliotecas o Altares ganas +1 Polvo Rúnico automático y puedes pedir 1 pista extra en Puzzles del celular.',
+    dungeonBonus: 'En Bibliotecas y Puertas con Puzzle: +1 Polvo Rúnico automático, Ventaja en MEN y 1 pista extra gratis en Puzzles.',
   },
   {
     id: 'mercader',
-    name: 'Mercader Negociante',
+    name: 'Tabernero / Mercader',
     icon: '💰',
     districtId: 'taberna',
-    cityBonus: 'Posada y Banquetes al 50% y vendes/reciclas botín con +25% de oro extra.',
-    dungeonBonus: 'Encuentras +20% más Monedas de Oro en cofres y tienes Ventaja (+2) en Persuasión al negociar en mazmorra.',
+    cityBonus: 'Posada y Banquetes al 50% y vendes botín con +25% oro extra.',
+    dungeonBonus: 'En Mesas o Chimeneas: hallas +1 Ración o +20% más MO en cofres y tienes Ventaja en SUE al negociar.',
   },
   {
     id: 'cazador',
@@ -285,7 +289,7 @@ export const PROFESSIONS = [
     icon: '🏹',
     districtId: 'gremio',
     cityBonus: '-20% en venenos de hoja y servicios del Gremio.',
-    dungeonBonus: 'Al caer un Jefe o Élite siempre extraes +1 Material raro extra (Ícor, Glándula o Gema) y conoces sus PC y debilidades.',
+    dungeonBonus: 'Al revisar cuerpos de Jefes o Élites: siempre extraes +1 Material raro extra y revelas sus PC y debilidades.',
   },
 ];
 
@@ -1186,65 +1190,159 @@ export function generatePersonalCityEvent(hero, cityMode = 'relaxed') {
     });
   }
 
-  // --- 5. EVENTOS GENERALES DIVERTIDOS ---
+  // --- 5. EVENTOS GENERALES DRAMÁTICOS Y EMOCIONANTES (SIN SPOILERS) ---
   const generalPool = [
     {
-      id: 'pe_gen_perro',
-      tag: '🐕 Encuentro Callejero',
-      title: 'El Perro Callejero con un Pañuelo',
-      story: 'Un perro simpático tira de tu capa y te guía hasta un callejón donde brilla una bolsa caída detrás de unos barriles.',
+      id: 'pe_gen_duelo_callejon',
+      tag: '⚔️ Tensión en El Bastión',
+      title: 'El Reto del Mercenario Borracho',
+      story:
+        'Un mercenario veterano con cicatrices cruza su espada frente a ti en la puerta de El Grifo Dorado: "¡Así que tú eres uno de los supuestos héroes! Si no eres capaz de desarmarme en tres segundos, me pagas la ronda de toda la mesa."',
       choices: [
         {
-          label: '🍖 Darle un bocado y revisar la bolsa (+25 MO)',
-          goldDelta: 25,
-          outcome: 'El perro mueve la cola feliz mientras recoges 25 MO perdidas.',
+          label: '⚔️ Aceptar el cruce de aceros ante la multitud',
+          riskyCheck: {
+            successChance: 0.62,
+            success: {
+              xpDelta: 30,
+              repDelta: 1,
+              goldDelta: 25,
+              outcome:
+                '¡Lo desarmas con un giro impecable! La taberna estalla en aplausos: el mercenario te lanza su bolsa de apuesta (+25 MO, +30 XP y +1 Reputación).',
+            },
+            fail: {
+              goldDelta: -15,
+              pcDelta: -1,
+              outcome:
+                'Su golpe de empuñadura te toma desprevenido (-1 PC). Entre risas de la posada cumples tu palabra y pagas la ronda (-15 MO).',
+            },
+          },
         },
         {
-          label: '🔎 Buscar al dueño en la plaza (+1 Fama y +15 XP)',
-          fameDelta: 1,
-          xpDelta: 15,
-          outcome: 'Devuelves la bolsa a una panadera agradecida; tu fama crece en el Bastión.',
-        },
-      ],
-    },
-    {
-      id: 'pe_gen_bardo',
-      tag: '🎵 Ambiente de El Bastión',
-      title: 'Un Bardo Canta tu Nombre',
-      story: 'En la esquina de la taberna un juglar improvisa una canción exagerada sobre tu última pelea.',
-      choices: [
-        {
-          label: '🪙 Tirarle unas monedas (-10 MO → +1 Fama y PM al máximo)',
+          label: '🍺 Invitarle una jarra y sacarle secretos de la mazmorra',
           goldDelta: -10,
-          fameDelta: 1,
-          healPM: 6,
-          outcome: 'La canción sube tu moral al cielo: recuperas PM y ganas +1 Fama.',
-        },
-        {
-          label: '😄 Reír y corregir los detalles (+20 XP)',
-          xpDelta: 20,
-          outcome: 'Todos ríen con tus anécdotas reales y ganas +20 XP.',
+          xpDelta: 25,
+          materialId: 'racion_mazmorra',
+          materialQty: 1,
+          outcome:
+            'El mercenario baja la guardia, te cuenta puntos ciegos de las patrullas de Zargon (+25 XP) y te comparte provisiones secas (-10 MO).',
         },
       ],
     },
     {
-      id: 'pe_gen_carro',
-      tag: '⚗️ Caos en el Mercado',
-      title: 'Carro de Suministros Volcado',
-      story: 'Una rueda se rompió en plena avenida y frascos, hierbas y piezas rodaron por los adoquines.',
+      id: 'pe_gen_caja_acertijo',
+      tag: '🔐 Misterio en el Mercado',
+      title: 'La Caja de Latón del Relojero',
+      story:
+        'Un anciano relojero apoya un cubo metálico con tres diales frente a ti: "Nadie en la plaza ha podido abrirlo sin activar la chispa. Si aciertas el truco, lo que hay dentro es tuyo... si fallas, pagarás la pólvora."',
       choices: [
         {
-          label: '🤝 Ayudar a recoger todo (+1 Hierba Lunar y +15 MO)',
-          goldDelta: 15,
-          materialId: 'hierba_lunar',
-          materialQty: 1,
-          outcome: 'El comerciante te agradece con 15 MO y 1 Hierba Lunar.',
+          label: '🧠 Analizar el clic de los engranajes y girar los diales',
+          riskyCheck: {
+            successChance: 0.58,
+            success: {
+              goldDelta: 30,
+              materialId: 'polvo_runico',
+              materialQty: 1,
+              outcome:
+                '¡Clic perfecto! La tapa salta revelando monedas antiguas y un frasco de Polvo Rúnico (+30 MO y +1 Polvo Rúnico).',
+            },
+            fail: {
+              pcDelta: -1,
+              goldDelta: -10,
+              outcome:
+                '¡BUM! Una chispa te chamusca los dedos (-1 PC) y el relojero cobra 10 MO por recargar el mecanismo.',
+            },
+          },
         },
         {
-          label: '⚙️ Reparar la rueda rota (+1 Acero Templado)',
-          materialId: 'chatarra_acero',
-          materialQty: 1,
-          outcome: 'Usas tu ingenio para fijar el eje y te regalan 1 Acero Templado.',
+          label: '🍀 Probar una combinación al azar confiando en tu instinto',
+          riskyCheck: {
+            successChance: 0.45,
+            success: {
+              goldDelta: 45,
+              xpDelta: 20,
+              outcome:
+                '¡Increíble golpe de suerte! El relojero queda boquiabierto mientras recoges 45 MO y +20 XP.',
+            },
+            fail: {
+              pcDelta: -1,
+              outcome:
+                'El cubo escupe humo verde a tu cara (-1 PC) y se bloquea hasta el día siguiente.',
+            },
+          },
+        },
+      ],
+    },
+    {
+      id: 'pe_gen_sospechoso_culto',
+      tag: '🕯️ Intriga en las Sombras',
+      title: 'El Encapuchado de la Fuente',
+      story:
+        'Al anochecer ves a un encapuchado deslizar un frasco oscuro hacia el pozo del barrio bajo. Al escuchar tus pasos gira bruscamente con una daga en la mano.',
+      choices: [
+        {
+          label: '⚡ Lanzarte a interceptarlo antes de que suelte el frasco',
+          riskyCheck: {
+            successChance: 0.65,
+            success: {
+              repDelta: 1,
+              materialId: 'glandula_veneno',
+              materialQty: 1,
+              goldDelta: 20,
+              outcome:
+                '¡Evitaste que envenenara el agua! El espía huye dejando el veneno sellado y la guardia te recompensa (+20 MO, +1 Glándula de Veneno y +1 Reputación).',
+            },
+            fail: {
+              pcDelta: -2,
+              outcome:
+                'Te lanza humo a los ojos y logra rozarte con su hoja al escapar (-2 PC), aunque al menos el frasco se rompió fuera del pozo.',
+            },
+          },
+        },
+        {
+          label: '🗣️ Gritar la alarma para que acuda la Guardia Imperial',
+          repDelta: 1,
+          xpDelta: 15,
+          outcome:
+            'El encapuchado salta la tapia al oír las botas de la guardia. El sargento te agradece la alerta (+1 Reputación y +15 XP).',
+        },
+      ],
+    },
+    {
+      id: 'pe_gen_incendio_taller',
+      tag: '🔥 Emergencia en la Avenida',
+      title: 'Chispas en el Carro de Pólvora',
+      story:
+        '¡Un eje roto hace saltar chispas sobre una carreta cargada de barriles de pólvora frente a la Herrería! La gente corre gritando en todas direcciones.',
+      choices: [
+        {
+          label: '💪 Empujar el barril ardiendo hacia la fuente antes de que estalle',
+          riskyCheck: {
+            successChance: 0.60,
+            success: {
+              goldDelta: 30,
+              materialId: 'polvora_negra',
+              materialQty: 1,
+              repDelta: 1,
+              outcome:
+                '¡Héroe del día! El barril cae al agua chisporroteando y el maestro herrero te regala 30 MO, +1 Pólvora Negra y +1 Reputación.',
+            },
+            fail: {
+              pcDelta: -2,
+              materialId: 'chatarra_acero',
+              materialQty: 1,
+              outcome:
+                'La explosión menor te lanza contra un muro (-2 PC), pero salvaste la calle y rescatas 1 Acero Templado entre los restos.',
+            },
+          },
+        },
+        {
+          label: '🛡️ Cubrir a los civiles cercanos y apartarlos del peligro',
+          repDelta: 1,
+          xpDelta: 20,
+          outcome:
+            'Un barril estalla dañando un toldo, pero nadie sale herido gracias a ti (+1 Reputación y +20 XP).',
         },
       ],
     },

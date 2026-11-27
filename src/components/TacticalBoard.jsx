@@ -1389,24 +1389,24 @@ export default function TacticalBoard({
           </div>
         )}
 
-        {/* Narrativa de Inicio de Misión (Para leer en voz alta antes de comenzar) */}
+        {/* Narrativa de Inicio de Misión (Visible y clara para leer en voz alta) */}
         {showIntro && missionIntroText && (
-          <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-600/45 text-xs space-y-1.5">
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-950/50 via-slate-900/90 to-slate-900/90 border border-amber-500/60 shadow-lg space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <span className="font-display font-bold text-amber-300 flex items-center gap-1.5">
-                <BookOpen className="w-3.5 h-3.5 text-amber-400" />
-                Leer en voz alta antes de iniciar — {currentMap.title}
+              <span className="font-display text-sm font-black text-amber-300 flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-amber-400" />
+                Leer en voz alta — {currentMap.title}
               </span>
               <button
                 onClick={() => setShowIntro(false)}
-                className="text-[11px] px-2 py-0.5 rounded bg-stone-900/80 hover:bg-stone-800 text-stone-300 font-bold cursor-pointer"
+                className="text-xs px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold cursor-pointer"
               >
                 Ocultar ✕
               </button>
             </div>
-            <p className="text-amber-50/95 italic leading-relaxed">“{missionIntroText}”</p>
+            <p className="text-sm sm:text-[15px] text-amber-50 italic leading-relaxed">“{missionIntroText}”</p>
             {missionObjectives.length > 0 && (
-              <div className="pt-1 border-t border-amber-800/40 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-amber-200/90">
+              <div className="pt-2 border-t border-amber-800/40 flex flex-wrap gap-x-4 gap-y-1 text-xs text-amber-200 font-medium">
                 {missionObjectives.map((obj, i) => (
                   <span key={i}>• {obj}</span>
                 ))}
@@ -1868,13 +1868,14 @@ export default function TacticalBoard({
                 <div className="text-[11px] text-amber-100 bg-black/40 p-2.5 rounded-xl border border-amber-900/50 leading-snug space-y-1">
                   <div className="flex items-center justify-between text-[10px] text-amber-300 font-black uppercase">
                     <span>⚡ Habilidades ({selectedMonsterObj.scaled.difficultyTag})</span>
-                    <span>CD {selectedMonsterObj.scaled.saveDC} · +{selectedMonsterObj.scaled.scaledXP} XP</span>
+                    <span>+{selectedMonsterObj.scaled.scaledXP} XP</span>
                   </div>
                   {selectedMonsterObj.scaled.activeAbilities.map((ab, abIdx) => (
                     <div key={abIdx} className="leading-snug">• {ab}</div>
                   ))}
                   <div className="mt-1.5 pt-1.5 border-t border-amber-900/40 text-[10px] text-purple-200 leading-snug">
-                    <strong className="text-purple-300">🎲 Salvación (CD {selectedMonsterObj.scaled.saveDC}):</strong> Si una habilidad de este monstruo pide salvación, el héroe tira <strong>1d20 + Mod</strong> vs <strong>CD {selectedMonsterObj.scaled.saveDC}</strong>. Si un héroe lanza un hechizo/control contra este monstruo, el monstruo intenta resistir tirando <strong>1d20 + {Math.max(0, Math.floor((selectedMonsterObj.scaled.pm || 1) / 2))}</strong> (o sacando 6 con {Math.max(1, selectedMonsterObj.scaled.pm || 1)} dado{selectedMonsterObj.scaled.pm > 1 ? 's' : ''} rojo{selectedMonsterObj.scaled.pm > 1 ? 's' : ''}).
+                    <strong className="text-purple-300">🛡️ Resistencias (HQ Nativo):</strong>{' '}
+                    {selectedMonsterObj.scaled.resistGuide}
                   </div>
                 </div>
               )}

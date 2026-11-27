@@ -719,47 +719,62 @@ export function generateEpicSceneTwist(currentMap, selectedRoomId, roomMonsters 
 
   const explorationTwists = [
     {
-      title: '🔮 Puerta Sellada por Runas (Puzzle Opcional)',
-      badge: 'Giro de Escena · Puzzle',
-      text: `La siguiente puerta en ${selectedRoomId} brilla con 3 runas de Zargon (Fuego, Piedra, Viento). Sin alterar el mapa oficial, deben resolverla antes de abrir: Arcano o Investigación CD ${cd} (o tocar las runas en orden correcto). Éxito = +1 PM a quien la resolvió y los enemigos tras la puerta pierden su sorpresa; Fallo = descarga arcana (1 PC) y +1 Reloj del Caos.`,
+      title: '🔮 Puerta Sellada por Runas (Puzzle al Celular)',
+      badge: 'Puerta Especial · Puzzle',
+      text: `La siguiente puerta desde ${selectedRoomId} brilla con 3 runas de Zargon. ¡Usa el botón "Puzzle al Celular" o resuélvanlo con Mente (MEN CD ${cd})! Éxito = +1 PM a quien la abrió y los enemigos tras la puerta pierden su sorpresa; Fallo = descarga arcana (-1 PC) y +1 Reloj del Caos.`,
+    },
+    {
+      title: '🚪 Puerta Entreabierta (Espiar o Emboscar)',
+      badge: 'Puerta Especial · Táctica',
+      text: `Una puerta contigua a ${selectedRoomId} está entreabierta unos centímetros y se filtran voces enemigas. Quien se asome con Agilidad (AGI CD ${cd}) descubre exactamente qué monstruos hay dentro y el grupo actúa primero si deciden entrar; si falla, cruje la bisagra y los enemigos se preparan (+1 DC Def en ronda 1).`,
+    },
+    {
+      title: '⛓️ Puerta Atrancada con Cuñas de Hierro',
+      badge: 'Puerta Especial · Riesgo',
+      text: `Los sirvientes de Zargon trabaron el siguiente acceso desde ${selectedRoomId}. Pueden forzarla a golpes (FUE CD ${cd}, pero el estruendo sube +1 Reloj del Caos) o desmontar las bisagras en silencio (AGI CD ${cd + 1} / Cerrajero con Ventaja).`,
+    },
+    {
+      title: '🗣️ La Puerta Parlante de Bronce',
+      badge: 'Puerta Especial · Rol',
+      text: `Un rostro metálico en la puerta de ${selectedRoomId} abre los ojos: "Dime qué pesa más que una montaña pero cabe en una mano vacía, o dame 15 monedas y te dejo pasar sin avisar a mis amos." (Suerte/Mente CD ${cd} o soborno de 15 MO; si la rompen a la fuerza, grita subiendo +2 el Reloj del Caos).`,
     },
     {
       title: '📦 Cofre Sospechoso (¿Mímico o Reliquia?)',
       badge: 'Giro de Escena · Sorpresa',
-      text: `En una esquina de ${selectedRoomId} hay un cofre extra sin candado que respira levemente. Percepción CD ${cd} para notar los dientes ocultos: si lo abren sin revisar, ¡es un Mímico de Cofre (ataca primero)! Si lo neutralizan o el cofre es real, obtienen +35 MO y 1 Material de Crafteo.`,
+      text: `En una esquina de ${selectedRoomId} hay un cofre extra sin candado que respira levemente. Mente/Agilidad CD ${cd} para notar los dientes ocultos: si lo abren sin revisar, ¡es un Mímico de Cofre (ataca primero)! Si lo neutralizan o el cofre es real, obtienen +35 MO y 1 Material de Crafteo.`,
       rewardGold: 35,
     },
     {
-      title: '🧭 NPC Atrapado — Mini-Misión Secundaria',
+      title: '🧭 Prisionero del Imperio — Dilema en Sala',
       badge: 'Giro de Escena · Narrativa',
-      text: `Un explorador herido del Imperio se esconde en ${selectedRoomId} y pide escolta o 1 curación (Medicina CD ${cd} o 1 PC de curación). Si lo ayudan, les revela dónde hay 1 trampa en los pasillos cercanos y otorga +1 Ficha de Reputación al completar la misión.`,
+      text: `Un explorador herido se oculta en ${selectedRoomId} y suplica que le den 1 poción o vendaje (MEN CD ${cd} o ceder 1 curación). Si lo salvan, revela 1 trampa del sector y suma +1 Reputación; si lo ignoran por prisa, sus lamentos delatan su posición (+1 Reloj del Caos).`,
     },
     {
-      title: '⚙️ Trampa Escondida de Bioma',
+      title: '⚙️ Trampa de Bioma Oculta',
       badge: 'Giro de Escena · Peligro',
-      text: `Una losa descolorida en ${selectedRoomId} oculta un mecanismo improvisado de ${missionShort}. Percepción o Desarmar Trampas CD ${cd}: si la desarman recuperan Chatarra de Acero y ganan +20 MO; si falla, el primero sufre 2 DC de daño y +1 Reloj del Caos.`,
+      text: `Una losa descolorida en ${selectedRoomId} oculta un mecanismo improvisado de ${missionShort}. Agilidad (AGI CD ${cd}): si la desarman recuperan Acero Templado y +20 MO; si falla, el primero sufre 2 DC de daño y +1 Reloj del Caos.`,
       rewardGold: 20,
     },
     {
       title: '⏳ Ventana de Emboscada Perfecta',
       badge: 'Giro de Escena · Sigilo',
-      text: `Antes de abrir la siguiente puerta desde ${selectedRoomId}, escuchan a los enemigos discutiendo. Si superan Sigilo grupal CD ${cd}, irrumpen con Sorpresa total: todos los héroes actúan ANTES que Zargon en la primera ronda.`,
+      text: `Antes de abrir la siguiente puerta desde ${selectedRoomId}, escuchan a los enemigos discutiendo. Si superan Agilidad grupal (AGI CD ${cd}), irrumpen con Sorpresa total: todos los héroes actúan ANTES que Zargon en la primera ronda.`,
     },
     {
-      title: '🧪 Alquimia de Campo Improvisada',
-      badge: 'Giro de Escena · Ingenio',
-      text: `Entre restos de ${missionShort} encuentran ingredientes aún frescos. Un héroe con Arcano o Medicina CD ${cd} puede preparar al vuelo un tónico de 1 uso (+2 PC o +1 DC en el próximo ataque). Si falla por 5+, exhala humo y sube +1 el Reloj del Caos.`,
+      title: '🧪 Suministros Alquímicos Frescos',
+      badge: 'Giro de Escena · Alquimia',
+      text: `Entre restos de ${missionShort} hallan frascos intactos: cualquier héroe puede intentar destilar una poción aquí mismo por Suerte o Maestría Alquímica (+1 Hierba Lunar encontrada).`,
     },
     {
       title: '🗝️ Apuesta del Explorador (Doble o Nada)',
       badge: 'Giro de Escena · Riesgo',
-      text: 'Un compartimento sellado brilla con runas de advertencia. Pueden ignorarlo o arriesgarse (Desarmar Trampas o Investigación CD 13): éxito = +45 MO o 1 Poción de Curación; fallo = trampa de dardo (-1 PC) y +1 Reloj del Caos.',
+      text: 'Un compartimento sellado brilla con runas de advertencia. Pueden ignorarlo o arriesgarse (AGI o SUE CD 13): éxito = +45 MO o 1 Poción de Curación; fallo = trampa de dardo (-1 PC) y +1 Reloj del Caos.',
       rewardGold: 45,
     },
     {
       title: '🕯️ Santuario Oculto de Mentor',
       badge: 'Giro de Escena · Bendición',
-      text: `Tras un tapiz rasgado en ${selectedRoomId} hallan un pequeño altar de Mentor. Quien rece o descifre la inscripción (Religión/SAB CD ${cd}) otorga +1 DC en el próximo ataque a todo el grupo o restaura +1 PM al héroe más agotado.`,
+      text: `Tras un tapiz rasgado en ${selectedRoomId} hallan un pequeño altar de Mentor. Quien rece o descifre la inscripción (MEN CD ${cd}) otorga +1 DC en el próximo ataque a todo el grupo o restaura +1 PM al héroe más agotado.`,
     },
   ];
 

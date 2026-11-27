@@ -3,33 +3,273 @@
 // Base de datos de Creación de Personajes, Niveles, Equipo y Magia
 // ============================================================================
 
+// ============================================================================
+// 4 PILARES SIMPLIFICADOS (HQ-D20 v6 — Sin matemáticas tediosas de D&D)
+// Cada héroe tiene bonos directos de +0 a +4 que se suman directo a 1d20
+// ============================================================================
 export const ATTRIBUTES = [
-  { id: 'FUE', name: 'Fuerza', short: 'FUE', desc: 'Potencia física, empujar, forzar puertas, armas pesadas y capacidad de carga.' },
-  { id: 'DES', name: 'Destreza', short: 'DES', desc: 'Agilidad, iniciativa (d20), esquivar trampas, sigilo, armas a distancia y movimiento extra.' },
-  { id: 'CON', name: 'Constitución', short: 'CON', desc: 'Resistencia física, Puntos de Cuerpo (PC) extra, aguantar venenos y fatiga.' },
-  { id: 'INT', name: 'Inteligencia', short: 'INT', desc: 'Investigación de puertas secretas, conocimiento arcano, alquimia y Puntos de Mente (PM).' },
-  { id: 'SAB', name: 'Sabiduría', short: 'SAB', desc: 'Percepción de trampas, resistencia al Shock mental, supervivencia y medicina.' },
-  { id: 'CAR', name: 'Carisma', short: 'CAR', desc: 'Liderazgo, negociación en ciudad, intimidación, persuasión y magia espiritual.' },
+  {
+    id: 'FUE',
+    name: 'Fuerza',
+    short: 'FUE',
+    icon: '💪',
+    color: 'text-rose-300',
+    desc: 'Potencia física, forzar puertas atrancadas, empujar enemigos, cargar cofres y resistir golpes o venenos.',
+  },
+  {
+    id: 'AGI',
+    name: 'Agilidad',
+    short: 'AGI',
+    icon: '⚡',
+    color: 'text-emerald-300',
+    desc: 'Iniciativa en combate, sigilo en pasillos, esquivar trampas, desarmar cerraduras y acrobacias.',
+  },
+  {
+    id: 'MEN',
+    name: 'Mente',
+    short: 'MEN',
+    icon: '🧠',
+    color: 'text-sky-300',
+    desc: 'Magia, alquimia, puzzles, detectar puertas secretas, medicina y resistir Shock o Miedo.',
+  },
+  {
+    id: 'SUE',
+    name: 'Suerte',
+    short: 'SUE',
+    icon: '🍀',
+    color: 'text-amber-300',
+    desc: 'Negociación en Ciudad, botín en eventos, destilar pociones por fortuna y salir vivo de situaciones imposibles.',
+  },
 ];
 
-export const getModifier = (score) => Math.floor((Number(score || 10) - 10) / 2);
+// Compatible tanto con los 4 Pilares directos (+0..+4) como con fichas antiguas (8..20)
+export const getModifier = (score) => {
+  const n = Number(score ?? 0);
+  if (n <= 5 && n >= -2) return Math.round(n);
+  return Math.floor((n - 10) / 2);
+};
 
 export const formatMod = (mod) => (mod >= 0 ? `+${mod}` : `${mod}`);
 
-export const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8];
+export const STANDARD_ARRAY = [3, 2, 1, 0];
 
+// Convierte cualquier héroe (nuevo de 4 Pilares o antiguo de 6 atributos D&D) a los 4 Pilares limpios
+export function getHeroPillars(hero) {
+  const raw = hero?.attributes || {};
+  if (raw.AGI !== undefined || raw.MEN !== undefined || raw.SUE !== undefined) {
+    return {
+      FUE: getModifier(raw.FUE ?? 1),
+      AGI: getModifier(raw.AGI ?? 1),
+      MEN: getModifier(raw.MEN ?? 1),
+      SUE: getModifier(raw.SUE ?? 1),
+    };
+  }
+  // Mapeo automático para héroes creados en v1–v5
+  const fue = getModifier(raw.FUE ?? 10);
+  const con = getModifier(raw.CON ?? 10);
+  const des = getModifier(raw.DES ?? 10);
+  const int = getModifier(raw.INT ?? 10);
+  const sab = getModifier(raw.SAB ?? 10);
+  const car = getModifier(raw.CAR ?? 10);
+  return {
+    FUE: Math.max(0, Math.min(4, Math.round((fue + con) / 2) + 1)),
+    AGI: Math.max(0, Math.min(4, des + 1)),
+    MEN: Math.max(0, Math.min(4, Math.round((int + sab) / 2) + 1)),
+    SUE: Math.max(0, Math.min(4, car + 1)),
+  };
+}
+
+// Calcula los 4 Pilares base recomendados según Clase y Raza (sin reparto manual tedioso)
+export function computeClassRacePillars(cls, race) {
+  const pillars = { FUE: 1, AGI: 1, MEN: 1, SUE: 1 };
+  const primaries = cls?.primaryAttrs || [];
+  const mapToPillar = (a) => {
+    if (a === 'FUE' || a === 'CON') return 'FUE';
+    if (a === 'DES' || a === 'AGI') return 'AGI';
+    if (a === 'INT' || a === 'SAB' || a === 'MEN') return 'MEN';
+    return 'SUE';
+  };
+  if (primaries[0]) pillars[mapToPillar(primaries[0])] += 2;
+  if (primaries[1]) pillars[mapToPillar(primaries[1])] += 1;
+  // Bono racial (+1 al pilar principal de la raza)
+  const rBonuses = race?.bonuses || {};
+  const topRaceAttr = Object.entries(rBonuses).sort((a, b) => b[1] - a[1])[0]?.[0];
+  if (topRaceAttr) {
+    const p = mapToPillar(topRaceAttr);
+    pillars[p] = Math.min(4, pillars[p] + 1);
+  }
+  return pillars;
+}
+
+// Habilidades resumidas y ligadas a los 4 Pilares (solo referencia clara, sin listas eternas)
 export const SKILLS = [
-  { id: 'atletismo', name: 'Atletismo', attr: 'FUE', desc: 'Saltar fosos, trepar muebles, forzar puertas o empujar enemigos.' },
-  { id: 'sigilo', name: 'Sigilo', attr: 'DES', desc: 'Moverse sin subir el Reloj del Caos, emboscar y pasar desapercibido.' },
-  { id: 'trampas', name: 'Desarmar Trampas', attr: 'DES', desc: 'Inutilizar trampas detectadas y abrir cofres con cerradura.' },
-  { id: 'percepcion', name: 'Percepción', attr: 'SAB', desc: 'Detectar trampas ocultas, emboscadas y ruidos tras las puertas.' },
-  { id: 'investigacion', name: 'Investigación', attr: 'INT', desc: 'Hallar puertas secretas, mecanismos ocultos y pistas en muebles.' },
-  { id: 'arcano', name: 'Arcano y Alquimia', attr: 'INT', desc: 'Identificar artefactos, destilar pociones y dominar los Vientos de la Magia.' },
-  { id: 'medicina', name: 'Medicina', attr: 'SAB', desc: 'Estabilizar aliados caídos, curar venenos y tratar el estado de Shock.' },
-  { id: 'supervivencia', name: 'Supervivencia', attr: 'SAB', desc: 'Navegar en viajes entre misiones, rastrear monstruos y evitar emboscadas.' },
-  { id: 'persuasion', name: 'Persuasión', attr: 'CAR', desc: 'Conseguir mejores precios en ciudad, reclutar mercenarios y negociar.' },
-  { id: 'intimidacion', name: 'Intimidación', attr: 'CAR', desc: 'Quebrar la moral de monstruos menores o forzar información.' },
+  { id: 'atletismo', name: 'Atletismo y Aguante', attr: 'FUE', desc: 'Forzar puertas, saltar fosos, empujar enemigos y resistir venenos o golpes.' },
+  { id: 'sigilo', name: 'Sigilo y Trampas', attr: 'AGI', desc: 'Moverse sin subir el Caos, iniciativa, esquivar y desarmar trampas/cofres.' },
+  { id: 'arcano', name: 'Mente, Magia y Secretos', attr: 'MEN', desc: 'Hallar puertas secretas, resolver puzzles, alquimia, curar y resistir Shock/Miedo.' },
+  { id: 'persuasion', name: 'Suerte y Negociación', attr: 'SUE', desc: 'Tratos en Ciudad, convencer monstruos, destilar pociones por fortuna y botín.' },
 ];
+
+// ============================================================================
+// CATÁLOGO COMPLETO DE ESTADOS ACTIVOS (Negativos y Positivos — Ilustrados)
+// ============================================================================
+export const STATUS_CATALOG = [
+  // --- ESTADOS NEGATIVOS (DEBUFFS) ---
+  {
+    id: 'sangrado',
+    name: 'Sangrado',
+    icon: '🩸',
+    type: 'debuff',
+    color: 'bg-red-950/80 border-red-600/80 text-red-200',
+    effect: 'Pierdes 1 PC al inicio de cada uno de tus turnos.',
+    cure: 'Se cura con cualquier Curación, Poción, Venda o al terminar el combate.',
+  },
+  {
+    id: 'quemadura',
+    name: 'Quemadura',
+    icon: '🔥',
+    type: 'debuff',
+    color: 'bg-orange-950/80 border-orange-500/80 text-orange-200',
+    effect: 'Pierdes 1 PC al final de tu turno y sufres -1 DC de Defensa por el dolor.',
+    cure: 'Gasta 1 acción en apagar las llamas o usa Agua/Curación.',
+  },
+  {
+    id: 'congelado',
+    name: 'Congelado',
+    icon: '❄️',
+    type: 'debuff',
+    color: 'bg-cyan-950/80 border-cyan-500/80 text-cyan-200',
+    effect: 'Tu movimiento se reduce a la mitad y no puedes atacar en diagonal.',
+    cure: 'Dura 2 turnos o se rompe al recibir calor/Fuego o superar FUE CD 12.',
+  },
+  {
+    id: 'envenenado',
+    name: 'Envenenado',
+    icon: '☠️',
+    type: 'debuff',
+    color: 'bg-lime-950/80 border-lime-600/80 text-lime-200',
+    effect: 'Tiras -1 Dado de Combate al atacar y sufres Desventaja en pruebas físicas.',
+    cure: 'Antídoto, Curación sagrada o superar FUE CD 12 al final de tu turno.',
+  },
+  {
+    id: 'aturdido',
+    name: 'Aturdido',
+    icon: '💫',
+    type: 'debuff',
+    color: 'bg-yellow-950/80 border-yellow-500/80 text-yellow-200',
+    effect: 'Pierdes tu acción principal este turno y defiendes con -1 DC.',
+    cure: 'Se pasa automáticamente al terminar tu turno afectado.',
+  },
+  {
+    id: 'shock',
+    name: 'Estado de Shock',
+    icon: '🧠',
+    type: 'debuff',
+    color: 'bg-purple-950/80 border-purple-500/80 text-purple-200',
+    effect: 'Al llegar a 0 PM: solo atacas con 1 DC, defiendes con 2 DC y mueves 1 dado rojo.',
+    cure: 'Recupera al menos 1 PM (Poción de Clarividencia, Bardo o Hechizo) o descansa en Ciudad.',
+  },
+  {
+    id: 'miedo',
+    name: 'Miedo',
+    icon: '😱',
+    type: 'debuff',
+    color: 'bg-indigo-950/80 border-indigo-500/80 text-indigo-200',
+    effect: 'Solo puedes atacar con 1 Dado de Combate contra el enemigo que te asustó.',
+    cure: 'Supera Mente (MEN CD 12) al inicio de tu turno o mata al enemigo.',
+  },
+  {
+    id: 'inmovilizado',
+    name: 'Inmovilizado',
+    icon: '🕸️',
+    type: 'debuff',
+    color: 'bg-stone-900/90 border-stone-500/80 text-stone-200',
+    effect: 'Tu movimiento es 0 (telaraña, cepo o raíces). Aún puedes atacar o lanzar magia.',
+    cure: 'Gasta tu acción en romperlo (FUE o AGI CD 12) o dura 1–2 turnos.',
+  },
+  {
+    id: 'maldicion',
+    name: 'Maldición',
+    icon: '💀',
+    type: 'debuff',
+    color: 'bg-fuchsia-950/80 border-fuchsia-600/80 text-fuchsia-200',
+    effect: 'Los Escudos Negros te perjudican y sufres -1 a todas tus tiradas d20.',
+    cure: 'Purificación en el Templo, Agua Bendita o hechizo de Curación/Luz.',
+  },
+
+  // --- ESTADOS POSITIVOS (BUFFS) ---
+  {
+    id: 'furia',
+    name: 'Furia',
+    icon: '💢',
+    type: 'buff',
+    color: 'bg-rose-900/70 border-rose-500/70 text-rose-100',
+    effect: '+1 Dado de Combate en ataques cuerpo a cuerpo y reduces 1 punto el daño físico.',
+    cure: 'Dura 3 turnos de combate.',
+  },
+  {
+    id: 'coraje',
+    name: 'Coraje',
+    icon: '⚔️',
+    type: 'buff',
+    color: 'bg-amber-900/70 border-amber-500/70 text-amber-100',
+    effect: '+2 Dados de Combate en ataques cuerpo a cuerpo mientras haya monstruos visibles.',
+    cure: 'Termina cuando no queden enemigos en Línea de Visión.',
+  },
+  {
+    id: 'piel_roca',
+    name: 'Piel de Roca',
+    icon: '🪨',
+    type: 'buff',
+    color: 'bg-emerald-900/70 border-emerald-500/70 text-emerald-100',
+    effect: '+1 Dado de Defensa adicional contra todos los golpes.',
+    cure: 'Se rompe cuando recibes 1 punto de daño real (o tras 3 turnos).',
+  },
+  {
+    id: 'viento_veloz',
+    name: 'Viento Veloz',
+    icon: '💨',
+    type: 'buff',
+    color: 'bg-sky-900/70 border-sky-500/70 text-sky-100',
+    effect: '+3 casillas de movimiento e ignoras Terreno Difícil.',
+    cure: 'Dura 2 turnos.',
+  },
+  {
+    id: 'niebla',
+    name: 'Forma de Niebla',
+    icon: '🌫️',
+    type: 'buff',
+    color: 'bg-teal-900/70 border-teal-500/70 text-teal-100',
+    effect: 'Puedes atravesar casillas ocupadas por monstruos sin provocar ataques.',
+    cure: 'Dura 1 turno.',
+  },
+  {
+    id: 'bendecido',
+    name: 'Bendecido',
+    icon: '✨',
+    type: 'buff',
+    color: 'bg-yellow-900/70 border-yellow-400/70 text-yellow-100',
+    effect: 'Ventaja en tu próxima tirada d20 y tus ataques dañan normalmente a Etéreos/No Muertos.',
+    cure: 'Dura hasta finalizar el combate actual.',
+  },
+  {
+    id: 'oculto',
+    name: 'Oculto (Sigilo)',
+    icon: '🌑',
+    type: 'buff',
+    color: 'bg-slate-800/90 border-slate-500/80 text-slate-100',
+    effect: 'Los enemigos no te ven: tu próximo ataque suma +1 DC y no subes el Caos al moverte.',
+    cure: 'Termina en cuanto atacas o abres una puerta ruidosa.',
+  },
+];
+
+export const getStatusInfo = (idOrLabel) => {
+  const key = `${idOrLabel || ''}`.toLowerCase();
+  return (
+    STATUS_CATALOG.find(
+      (s) => s.id === key || key.includes(s.id) || key.includes(s.name.toLowerCase())
+    ) || null
+  );
+};
 
 export const RACES = [
   {
@@ -2173,64 +2413,64 @@ export const CLASS_PERSONAL_GUIDES = {
 };
 
 // ============================================================================
-// RASGOS DE PERSONALIDAD (QUIRKS) — 1 Ventaja + 1 Manía Balanceada
+// RASGOS DE PERSONALIDAD (QUIRKS) — 8 Rasgos Claros e Interactivos en Sala
 // ============================================================================
 export const QUIRKS = [
   {
     id: 'piromano',
     name: 'Pirómano Fascinado',
     icon: '🔥',
-    bonus: '+1 DC cuando usas Fuego Griego, Bombas o hechizos de Fuego.',
-    drawback: 'Debes superar SAB CD 11 para no encender muebles o antorchas sospechosas.',
+    bonus: '+1 DC con Fuego Griego, Bombas o hechizos de Fuego. En salas con Chimenea o Brasero recuperas +1 PM.',
+    drawback: 'Si ves aceite, pólvora o un brasero encendido, debes superar Mente (MEN CD 11) para no prenderlo.',
   },
   {
     id: 'coleccionista_huesos',
-    name: 'Coleccionista de Trofeos',
+    name: 'Saqueador Obsesivo',
     icon: '🦴',
-    bonus: 'Al derrotar un Jefe o Élite siempre obtienes +1 Material de Crafteo extra.',
-    drawback: 'Nunca puedes dejar un cofre o cuerpo sin revisar aunque haya prisa.',
+    bonus: 'Al revisar cofres o cuerpos de Jefes/Élites siempre extraes +1 Material de Crafteo extra.',
+    drawback: 'No puedes salir de una sala sin revisar al menos un cofre o cuerpo si hay alguno intacto.',
   },
   {
     id: 'insomne',
-    name: 'Insomne Alerta',
+    name: 'Centinela Insomne',
     icon: '👁️',
-    bonus: 'Nunca eres sorprendido por Emboscadas ni Patrullas; +2 a Iniciativa.',
-    drawback: 'Descansar en la posada te cuesta +5 MO extra en café/tónicos.',
+    bonus: 'Nunca eres sorprendido por Emboscadas ni Patrullas del Caos; +2 a Iniciativa.',
+    drawback: 'Te cuesta conciliar el sueño: pagar posada en Ciudad te cuesta +5 MO extra en tónicos.',
   },
   {
     id: 'fanatico_acero',
-    name: 'Obsesionado con el Filo',
+    name: 'Maestro del Acero',
     icon: '⚔️',
-    bonus: 'Tu primer ataque en cada misión puede repetir 1 Dado de Combate fallido.',
-    drawback: 'Sufres -1 en Persuasión (solo hablas de armas y batallas).',
+    bonus: 'En tu primer ataque de cada combate puedes repetir 1 Dado de Combate fallido. En Armerías hallas +1 Acero.',
+    drawback: 'Sufres -1 en pruebas de Suerte (SUE) al negociar (solo sabes hablar de acero y duelos).',
   },
   {
     id: 'supersticioso',
-    name: 'Supersticioso de las Runas',
+    name: 'Ojo de las Runas',
     icon: '🔮',
-    bonus: '+2 a Tiradas de Salvación contra Magia y Maldiciones.',
-    drawback: 'Te niegas a beber Pociones Misteriosas sin identificarlas primero.',
+    bonus: '+2 a pruebas de Mente (MEN) contra Magia, Maldiciones y Puertas con Puzzle.',
+    drawback: 'Te niegas a beber Pociones de Destino Imprevisible sin que alguien más las pruebe primero.',
   },
   {
     id: 'gloton_heroico',
-    name: 'Glotón de Taberna',
+    name: 'Apetito Inagotable',
     icon: '🍖',
-    bonus: 'Los Banquetes de Taberna te dan +1 PC temporal adicional.',
-    drawback: 'Si inicias una misión sin comer Banquete ni llevar Ración, -1 a Iniciativa.',
+    bonus: 'Los Banquetes de Taberna te dan +1 PC temporal extra y en salas con Mesas hallas +1 Ración.',
+    drawback: 'Si empiezas una misión sin comer Banquete ni llevar Ración, -1 a Iniciativa.',
   },
   {
     id: 'temerario',
-    name: 'Rompe-Puertas Temerario',
+    name: 'Rompe-Puertas',
     icon: '🚪',
-    bonus: 'Ventaja en pruebas de FUE para derribar puertas cerradas o atrancadas.',
-    drawback: 'Si entras primero a una sala con trampa, sufres -1 a tu salvación de DES.',
+    bonus: 'Ventaja en Fuerza (FUE) para derribar puertas atrancadas o empujar muebles como barricada.',
+    drawback: 'Si entras primero a una sala con trampa, sufres -1 a tu prueba de Agilidad (AGI).',
   },
   {
     id: 'negociador_nato',
     name: 'Lengua de Plata',
     icon: '💬',
-    bonus: 'Ventaja al negociar con monstruos inteligentes y -10% extra en Ciudad.',
-    drawback: 'Enemigos en estado Venganza te eligen primero como objetivo.',
+    bonus: 'Ventaja en Suerte (SUE) al negociar con monstruos inteligentes y -10% extra en toda la Ciudad.',
+    drawback: 'Enemigos enfurecidos (Venganza) te odian por tus burlas y te eligen primero como objetivo.',
   },
 ];
 

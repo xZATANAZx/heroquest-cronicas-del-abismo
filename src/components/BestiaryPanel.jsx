@@ -254,8 +254,18 @@ export default function BestiaryPanel({
                     <div className="font-bold text-sm text-emerald-300">{m.scaledPC}</div>
                   </div>
                   <div className="p-1.5 rounded-lg bg-purple-950/40 border border-purple-900/50">
-                    <div className="text-[10px] text-stone-400">CD</div>
-                    <div className="font-bold text-sm text-purple-300">{m.saveDC}</div>
+                    <div className="text-[10px] text-stone-400">PM</div>
+                    <div className="font-bold text-sm text-purple-300">{m.pm}</div>
+                  </div>
+                </div>
+
+                {/* Resistencias Nativas HeroQuest (reemplaza CD confusa) */}
+                <div className="mb-3 px-2.5 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px] text-slate-300 space-y-0.5">
+                  <div>
+                    <strong className="text-purple-300">🧠 Res. Mental:</strong> {m.mindResistLabel}
+                  </div>
+                  <div>
+                    <strong className="text-amber-300">🛡️ Res. Física:</strong> {m.physResistLabel}
                   </div>
                 </div>
 

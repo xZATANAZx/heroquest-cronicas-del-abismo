@@ -182,7 +182,7 @@ export const CRAFTING_RECIPES = [
     type: 'Poción',
     rarity: 'comun',
     dice: '+2 PC',
-    station: 'Alquimista (Ciudad o Banco)',
+    station: 'Cualquier lugar (Alquimista = Ventaja · Otros = Suerte)',
     arcanaCD: 0,
     costGold: 10,
     ingredients: { hierba_lunar: 2 },
@@ -195,7 +195,7 @@ export const CRAFTING_RECIPES = [
     type: 'Poción',
     rarity: 'poco_comun',
     dice: '+4 PC',
-    station: 'Alquimista (Ciudad o Banco)',
+    station: 'Cualquier lugar (Alquimista = Ventaja · Otros = Suerte)',
     arcanaCD: 12,
     costGold: 25,
     ingredients: { hierba_lunar: 3, sangre_icor: 1 },
@@ -208,7 +208,7 @@ export const CRAFTING_RECIPES = [
     type: 'Poción',
     rarity: 'comun',
     dice: '+2 PM',
-    station: 'Alquimista (Ciudad o Banco)',
+    station: 'Cualquier lugar (Alquimista = Ventaja · Otros = Suerte)',
     arcanaCD: 0,
     costGold: 15,
     ingredients: { hierba_lunar: 1, polvo_runico: 1 },
@@ -234,7 +234,7 @@ export const CRAFTING_RECIPES = [
     type: 'Poción',
     rarity: 'raro',
     dice: '+2 DC Ataque (Riesgo)',
-    station: 'Alquimista (Ciudad o Banco)',
+    station: 'Cualquier lugar (Alquimista = Ventaja · Otros = Suerte)',
     arcanaCD: 13,
     costGold: 20,
     ingredients: { sangre_icor: 2, hierba_lunar: 1 },
@@ -247,7 +247,7 @@ export const CRAFTING_RECIPES = [
     type: 'Poción',
     rarity: 'raro',
     dice: '+2 DC Defensa (Riesgo)',
-    station: 'Alquimista (Ciudad o Banco)',
+    station: 'Cualquier lugar (Alquimista = Ventaja · Otros = Suerte)',
     arcanaCD: 13,
     costGold: 20,
     ingredients: { sangre_icor: 1, chatarra_acero: 1, hierba_lunar: 1 },
@@ -286,7 +286,7 @@ export const CRAFTING_RECIPES = [
     type: 'Consumible',
     rarity: 'raro',
     dice: '3 DC Fuego (Área 2×2)',
-    station: 'Alquimista (Ciudad o Banco)',
+    station: 'Cualquier lugar (Alquimista = Ventaja · Otros = Suerte)',
     arcanaCD: 12,
     costGold: 25,
     ingredients: { aceite_alquitran: 2, polvora_negra: 1 },
@@ -676,7 +676,128 @@ export function rollMaterialDrop(sourceKey = 'mueble_general', partyLevel = 1) {
 }
 
 // ============================================================================
-// MEZCLA EXPERIMENTAL (Combina 2–3 ingredientes + Tirada Arcano d20)
+// ALQUIMIA POR SUERTE Y CALIFICACIÓN (Sin requerir Mesa de Alquimia)
+// Cualquier héroe puede intentar preparar pociones, pero los más calificados
+// (Alquimista, Mago, Druida, Clérigo, Gnomo o Prof. Alquimista/Escriba) tiran
+// con VENTAJA. Los no calificados dependen de su Suerte (SUE): pueden lograrlo,
+// crear una Poción de Destino Imprevisible o sufrir un contratiempo.
+// ============================================================================
+const QUALIFIED_ALCHEMY_CLASSES = ['alquimista', 'mago', 'druida', 'clerigo', 'exorcista', 'chaman', 'brujo'];
+
+export function isQualifiedAlchemist(hero) {
+  if (!hero) return false;
+  return (
+    QUALIFIED_ALCHEMY_CLASSES.includes(hero.classId) ||
+    hero.professionId === 'alquimista' ||
+    hero.professionId === 'escriba' ||
+    hero.raceId === 'gnomo'
+  );
+}
+
+export function rollPotionCraftAttempt(hero, recipe) {
+  const qualified = isQualifiedAlchemist(hero);
+  const rawAttrs = hero?.attributes || {};
+  const sueBonus =
+    rawAttrs.SUE !== undefined
+      ? Number(rawAttrs.SUE || 0)
+      : Math.max(0, Math.floor((Number(rawAttrs.INT ?? rawAttrs.CAR ?? 10) - 10) / 2) + 1);
+  const menBonus =
+    rawAttrs.MEN !== undefined
+      ? Number(rawAttrs.MEN || 0)
+      : Math.max(0, Math.floor((Number(rawAttrs.INT ?? 10) - 10) / 2) + 1);
+
+  const d1 = Math.floor(Math.random() * 20) + 1;
+  const d2 = Math.floor(Math.random() * 20) + 1;
+  const roll = qualified ? Math.max(d1, d2) : d1;
+  const bonus = qualified ? Math.max(menBonus, sueBonus) + 2 : sueBonus;
+  const total = roll + bonus;
+  const targetCD = recipe?.arcanaCD ? Math.max(10, recipe.arcanaCD) : 11;
+
+  // Éxito Crítico (18+ o 20 natural)
+  if (roll === 20 || total >= targetCD + 6) {
+    return {
+      outcome: 'critico',
+      qualified,
+      roll,
+      bonus,
+      total,
+      targetCD,
+      qtyBonus: 1,
+      item: {
+        name: recipe.name,
+        type: recipe.type || 'Poción',
+        rarity: recipe.rarity || 'poco_comun',
+        dice: recipe.dice,
+        special: recipe.effect,
+      },
+      title: '✨ ¡Destilación Perfecta (×2)!',
+      text: `${qualified ? 'Tu maestría alquímica' : 'Un golpe de pura suerte'} logró una pureza increíble (Tirada ${roll} + ${bonus} = ${total}). ¡Obtienes 2 unidades de ${recipe.name}!`,
+    };
+  }
+
+  // Éxito Normal
+  if (total >= targetCD) {
+    return {
+      outcome: 'exito',
+      qualified,
+      roll,
+      bonus,
+      total,
+      targetCD,
+      qtyBonus: 0,
+      item: {
+        name: recipe.name,
+        type: recipe.type || 'Poción',
+        rarity: recipe.rarity || 'comun',
+        dice: recipe.dice,
+        special: recipe.effect,
+      },
+      title: `✅ ¡${recipe.name} lista!`,
+      text: `Tirada ${roll} + ${bonus} = ${total} (CD ${targetCD}). ${qualified ? 'Mezcla estable y precisa.' : '¡Contra todo pronóstico salió perfecta!'}`,
+    };
+  }
+
+  // Éxito Parcial / Poción de Destino Imprevisible (PDF p.183)
+  if (total >= targetCD - 4) {
+    return {
+      outcome: 'imprevisible',
+      qualified,
+      roll,
+      bonus,
+      total,
+      targetCD,
+      qtyBonus: 0,
+      item: {
+        name: 'Poción de Destino Imprevisible',
+        type: 'Poción',
+        rarity: 'poco_comun',
+        dice: 'Efecto Sorpresa',
+        special:
+          'Brebaje sin identificar: al beberla en combate tira 1d6 — (1-2) -1 PC y humo; (3-4) +2 PC; (5) +2 DC próximo ataque; (6) +3 PC y +2 PM.',
+      },
+      title: '🟣 ¡Poción de Destino Imprevisible!',
+      text: `Tirada ${roll} + ${bonus} = ${total} (CD ${targetCD}). Cambió de color y burbujea violeta: nadie sabe exactamente qué hará hasta beberla...`,
+    };
+  }
+
+  // Fallo / Contratiempo (los ingredientes se pierden)
+  const side = rollTonicSideEffect();
+  return {
+    outcome: 'fallo',
+    qualified,
+    roll,
+    bonus,
+    total,
+    targetCD,
+    item: null,
+    pcLoss: 1,
+    title: '💥 ¡Mezcla Arruinada!',
+    text: `Tirada ${roll} + ${bonus} = ${total} (CD ${targetCD}). El frasco chisporrotea y se pierde el brebaje (-1 PC por vapores · ${side.title}).`,
+  };
+}
+
+// ============================================================================
+// MEZCLA EXPERIMENTAL (Combina 2–3 ingredientes + Tirada Mente/Suerte)
 // ============================================================================
 export function resolveExperimentalMix(materialIds = [], arcanaTotal = 12) {
   if (!materialIds || materialIds.length < 2) {

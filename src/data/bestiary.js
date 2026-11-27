@@ -438,7 +438,23 @@ export function scaleMonster(
   const scaledPC = Math.max(1, monster.pc + pcBonusFromLevel + survivalPC + elitePC);
   const scaledAt = Math.min(9, monster.at + atBonusFromLevel + eliteAt);
   const scaledDef = Math.min(8, monster.def + defBonusFromLevel + eliteDef);
-  const saveDC = 11 + Math.floor(lvl / 2) + (effectiveElite ? 1 : 0) + survivalDC;
+
+  // Resistencias nativas HeroQuest (reemplaza la confusa "CD" en monstruos):
+  // - Resistencia Mental: tira 1 dado rojo por cada PM (si saca al menos un 6, resiste el hechizo). 0 PM = Inmune a magia mental.
+  // - Resistencia Física: tira 1 dado rojo por cada PC actual (o 1d6: 5-6 resiste empujes/venenos/aturdir).
+  const isMindImmune = (monster.pm || 0) <= 0;
+  const mindResistLabel = isMindImmune
+    ? 'Inmune (0 PM)'
+    : `${monster.pm}d6 (6 resiste)`;
+  const physResistLabel =
+    scaledPC >= 5
+      ? 'Fuerte (5–6 en 1d6)'
+      : scaledPC >= 3
+      ? 'Media (6 en 1d6)'
+      : 'Débil (sin resistencia)';
+  const resistGuide = isMindImmune
+    ? `Mente: Inmune a Miedo/Sueño/Control (0 PM). Físico: ${physResistLabel} contra empujes, aturdir o venenos.`
+    : `Mente: tira ${monster.pm} dado(s) rojo(s) — si sale al menos un 6, resiste el hechizo mental. Físico: ${physResistLabel} contra empujes o aturdir.`;
 
   // XP rebalanceada para evitar subida explosiva de nivel (+25% en Modo Supervivencia)
   const scaledXP = Math.round(
@@ -450,7 +466,7 @@ export function scaleMonster(
     activeAbilities.push(`⭐ ${monster.eliteAbility}`);
   }
   if (isSurvivalMode) {
-    activeAbilities.push('💀 MODO SUPERVIVENCIA: +1 PC y salvaciones CD +1.');
+    activeAbilities.push('💀 MODO SUPERVIVENCIA: +1 PC y mayor tenacidad en combate.');
   }
   if (isSpiritMode && monster.id !== 'espiritu_guerrero') {
     activeAbilities.unshift('👻 MODO ESPÍRITU (Reina de los Espíritus): Sus ataques dañan Puntos de Mente (PM) en lugar de PC.');
@@ -461,7 +477,9 @@ export function scaleMonster(
     scaledPC,
     scaledAt,
     scaledDef,
-    saveDC,
+    mindResistLabel,
+    physResistLabel,
+    resistGuide,
     scaledXP,
     isElite: effectiveElite,
     isSpiritMode,

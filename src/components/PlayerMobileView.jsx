@@ -19,13 +19,14 @@ import {
 } from 'lucide-react';
 import {
   ATTRIBUTES,
-  SKILLS,
   CLASSES,
   RACES,
   LEVEL_TABLE,
   EQUIPMENT_CATALOG,
   SPELLS_CATALOG,
   SPELL_UPGRADE_TIERS,
+  STATUS_CATALOG,
+  getHeroPillars,
   getHeroUnlockedSpells,
   getUpgradedSpellView,
   CLASS_ACTIVE_POWERS,
@@ -40,7 +41,13 @@ import {
 import CharacterForge from './CharacterForge';
 import PuzzleModal from './PuzzleModal';
 import { getRarityMeta } from '../data/lootCatalog';
-import { MATERIALS_CATALOG, CRAFTING_RECIPES, getMaterialById } from '../data/craftingSystem';
+import {
+  MATERIALS_CATALOG,
+  CRAFTING_RECIPES,
+  getMaterialById,
+  isQualifiedAlchemist,
+  rollPotionCraftAttempt,
+} from '../data/craftingSystem';
 import {
   PROFESSIONS,
   TAVERN_FEASTS,
@@ -1418,106 +1425,179 @@ export default function PlayerMobileView({ initialPlayerParam }) {
               </div>
             )}
 
-            {/* Estados Activos (Buffs y Debuffs) en la Hoja */}
-            <div className="grimoire-panel rounded-2xl p-3.5 space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300">
-                  ⚡ Estados Activos (Beneficios / Debilidades)
-                </span>
-                <button
-                  onClick={advanceMyTurn}
-                  className="px-2 py-0.5 rounded-lg bg-sky-900/70 border border-sky-700 text-sky-200 text-[10px] font-bold cursor-pointer"
-                >
-                  +1 Turno
-                </button>
-              </div>
-              {activeEffects.length === 0 ? (
-                <p className="text-[11px] text-stone-500">
-                  Sin beneficios ni estados negativos activos. Al usar habilidades, hechizos o pociones aparecerán aquí automáticamente.
-                </p>
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {activeEffects.map((ef) => (
-                    <span
-                      key={ef.id}
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold border ${
-                        ef.type === 'debuff'
-                          ? 'bg-red-950/60 border-red-600/70 text-red-200'
-                          : 'bg-emerald-950/60 border-emerald-600/70 text-emerald-200'
-                      }`}
-                    >
-                      {ef.label}
-                      {ef.duration ? <span className="opacity-75">({ef.duration}t)</span> : null}
-                      <button
-                        onClick={() => removeEffect(ef.id)}
-                        className="ml-0.5 text-stone-300 hover:text-white cursor-pointer"
-                        title="Quitar estado"
-                      >
-                        ✕
-                      </button>
+            {/* Estados Activos (Completo, Ilustrado e Informado) */}
+            {(() => {
+              const activeIds = new Set(activeEffects.map((e) => e.id));
+              return (
+                <div className="grimoire-panel rounded-2xl p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-black uppercase tracking-wider text-amber-300">
+                      Estados Activos
                     </span>
-                  ))}
+                    <button
+                      onClick={advanceMyTurn}
+                      className="px-2.5 py-1 rounded-lg bg-sky-900/70 border border-sky-700 text-sky-200 text-[10px] font-bold cursor-pointer"
+                    >
+                      +1 Turno
+                    </button>
+                  </div>
+
+                  {activeEffects.length === 0 ? (
+                    <p className="text-[11px] text-slate-400">
+                      Sin estados activos ahora mismo. Toca cualquier estado del catálogo para activarlo o ver su regla y cura.
+                    </p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {activeEffects.map((ef) => {
+                        const meta = STATUS_CATALOG.find((s) => s.id === ef.id);
+                        return (
+                          <div
+                            key={ef.id}
+                            className={`p-2.5 rounded-xl border text-xs flex items-start justify-between gap-2 ${
+                              meta?.color ||
+                              (ef.type === 'debuff'
+                                ? 'bg-red-950/60 border-red-600/70 text-red-100'
+                                : 'bg-emerald-950/60 border-emerald-600/70 text-emerald-100')
+                            }`}
+                          >
+                            <div className="space-y-0.5">
+                              <div className="font-black">
+                                {ef.label} {ef.duration && ef.duration < 90 ? `(${ef.duration}t)` : ''}
+                              </div>
+                              <div className="text-[11px] opacity-90 leading-snug">
+                                {ef.note || meta?.effect}
+                              </div>
+                              {meta?.cure && (
+                                <div className="text-[10px] opacity-80">
+                                  <strong>Cura:</strong> {meta.cure}
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => removeEffect(ef.id)}
+                              className="px-1.5 py-0.5 rounded bg-black/40 text-white text-xs cursor-pointer shrink-0"
+                              title="Quitar estado"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <details className="pt-1 border-t border-slate-800/80">
+                    <summary className="text-[11px] font-bold text-purple-300 cursor-pointer select-none">
+                      📋 Ver / Marcar todos los Estados ({STATUS_CATALOG.length})
+                    </summary>
+                    <div className="mt-2.5 space-y-2.5">
+                      <div className="space-y-1">
+                        <div className="text-[10px] font-black uppercase text-rose-300">Estados Negativos</div>
+                        <div className="grid grid-cols-1 gap-1.5">
+                          {STATUS_CATALOG.filter((s) => s.type === 'debuff').map((s) => {
+                            const isOn = activeIds.has(s.id);
+                            return (
+                              <button
+                                key={s.id}
+                                type="button"
+                                onClick={() =>
+                                  isOn
+                                    ? removeEffect(s.id)
+                                    : addQuickDebuff({
+                                        id: s.id,
+                                        label: `${s.icon} ${s.name}`,
+                                        type: 'debuff',
+                                        duration: 99,
+                                        note: s.effect,
+                                      })
+                                }
+                                className={`p-2 rounded-xl border text-left transition cursor-pointer ${
+                                  isOn ? `${s.color} ring-2 ring-white/50` : 'bg-slate-950/80 border-slate-800 text-slate-200 hover:border-rose-500/60'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-2 text-xs font-black">
+                                  <span>{s.icon} {s.name}</span>
+                                  <span className="text-[10px]">{isOn ? '✓ ACTIVO' : '+ Marcar'}</span>
+                                </div>
+                                <div className="text-[10px] text-slate-300 mt-0.5 leading-snug">{s.effect}</div>
+                                <div className="text-[10px] text-slate-400 leading-snug">Cura: {s.cure}</div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="text-[10px] font-black uppercase text-emerald-300">Estados Positivos (Buffs)</div>
+                        <div className="grid grid-cols-1 gap-1.5">
+                          {STATUS_CATALOG.filter((s) => s.type === 'buff').map((s) => {
+                            const isOn = activeIds.has(s.id);
+                            return (
+                              <button
+                                key={s.id}
+                                type="button"
+                                onClick={() =>
+                                  isOn
+                                    ? removeEffect(s.id)
+                                    : addQuickDebuff({
+                                        id: s.id,
+                                        label: `${s.icon} ${s.name}`,
+                                        type: 'buff',
+                                        duration: 3,
+                                        note: s.effect,
+                                      })
+                                }
+                                className={`p-2 rounded-xl border text-left transition cursor-pointer ${
+                                  isOn ? `${s.color} ring-2 ring-white/50` : 'bg-slate-950/80 border-slate-800 text-slate-200 hover:border-emerald-500/60'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-2 text-xs font-black">
+                                  <span>{s.icon} {s.name}</span>
+                                  <span className="text-[10px]">{isOn ? '✓ ACTIVO' : '+ Marcar'}</span>
+                                </div>
+                                <div className="text-[10px] text-slate-300 mt-0.5 leading-snug">{s.effect}</div>
+                                <div className="text-[10px] text-slate-400 leading-snug">{s.cure}</div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </details>
                 </div>
-              )}
-              <div className="flex flex-wrap gap-1 pt-1 border-t border-stone-800/70">
-                <span className="text-[10px] text-stone-400 self-center mr-1">Marcar debilidad:</span>
-                {[
-                  { id: 'deb_veneno', label: '☠️ Envenenado (-1 DC At)', type: 'debuff', duration: 2, attackMod: -1 },
-                  { id: 'deb_vulnerable', label: '💔 Vulnerable (-1 DC Def)', type: 'debuff', duration: 2, defendMod: -1 },
-                  { id: 'deb_lento', label: '🕸️ Ralentizado (-3 Mov)', type: 'debuff', duration: 1, speedMod: -3 },
-                ].map((preset) => (
-                  <button
-                    key={preset.id}
-                    onClick={() => addQuickDebuff(preset)}
-                    className="px-2 py-0.5 rounded-lg bg-stone-900 hover:bg-red-950/60 border border-stone-700 text-[10px] text-stone-300 cursor-pointer"
-                  >
-                    + {preset.label.split(' ')[1]}
-                  </button>
-                ))}
-              </div>
-            </div>
+              );
+            })()}
 
-            {/* 6 Atributos D&D */}
-            <div className="grimoire-panel rounded-2xl p-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3">
-                Tus 6 Atributos Base (D&D)
-              </h3>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                {ATTRIBUTES.map((a) => {
-                  const val = hero.attributes?.[a.id] ?? 10;
-                  const mod = getModifier(val);
-                  return (
-                    <div key={a.id} className="p-2 rounded-xl bg-stone-950 border border-stone-800">
-                      <div className="text-[10px] font-bold text-amber-400">{a.name}</div>
-                      <div className="text-xl font-black text-white">{formatMod(mod)}</div>
-                      <div className="text-[10px] text-stone-400">({val})</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Competencias */}
-            <div className="grimoire-panel rounded-2xl p-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-2">
-                Tus Habilidades d20 (Bono Comp. +{hero.profBonus})
-              </h3>
-              <div className="grid grid-cols-2 gap-1.5 text-xs">
-                {SKILLS.map((sk) => {
-                  const prof = hero.proficientSkills?.includes(sk.id);
-                  const bonus = getModifier(hero.attributes?.[sk.attr] ?? 10) + (prof ? hero.profBonus : 0);
-                  return (
-                    <div key={sk.id} className="flex justify-between px-2.5 py-1.5 rounded-lg bg-stone-950/80 border border-stone-800">
-                      <span className={prof ? 'font-bold text-amber-200' : 'text-stone-400'}>
-                        {prof ? '● ' : '○ '}
-                        {sk.name}
-                      </span>
-                      <span className="font-bold text-emerald-300">{formatMod(bonus)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            {/* Los 4 Pilares Simplificados (Sin confusión de 6 atributos + 10 habilidades) */}
+            {(() => {
+              const pillars = getHeroPillars(hero);
+              return (
+                <div className="grimoire-panel rounded-2xl p-4 space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-amber-400">
+                      ⚡ Tus 4 Pilares (Suma directo a 1d20)
+                    </h3>
+                    <span className="text-[10px] text-slate-400">Fácil 10 · Media 12 · Difícil 15</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {ATTRIBUTES.map((a) => {
+                      const val = pillars[a.id] ?? 1;
+                      return (
+                        <div key={a.id} className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className={`text-xs font-black ${a.color || 'text-amber-300'}`}>
+                              {a.icon} {a.name}
+                            </span>
+                            <span className="text-lg font-black text-white">{formatMod(val)}</span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 leading-snug">{a.desc}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Identidad, Motivación, Alineamiento, Ventajas (Activables / Pasivas) y Desventajas */}
             <div className="grimoire-panel rounded-2xl p-4 space-y-2.5 text-xs">
@@ -1892,40 +1972,29 @@ export default function PlayerMobileView({ initialPlayerParam }) {
 
                       <div className="grimoire-panel rounded-2xl p-3.5 space-y-2.5">
                         {(() => {
-                          const arcMod =
-                            getModifier(hero.attributes?.INT) +
-                            (hero.proficientSkills?.includes('arcano') ? hero.profBonus || 2 : 0);
+                          const qualified = isQualifiedAlchemist(hero);
+                          const pillars = getHeroPillars(hero);
                           return (
                             <>
                               <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div className="text-xs font-bold text-amber-300">
-                                  ⚗️ Mesa de Alquimia (Requiere Tirada d20 de Arcano)
+                                  🧪 Preparar Pociones y Consumibles (Sin Mesa)
                                 </div>
-                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-950/70 border border-purple-500/40 text-purple-200 font-bold">
-                                  Tu Arcano: {formatMod(arcMod)}
+                                <span
+                                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+                                    qualified
+                                      ? 'bg-emerald-950/70 border-emerald-500/60 text-emerald-200'
+                                      : 'bg-amber-950/70 border-amber-500/60 text-amber-200'
+                                  }`}
+                                >
+                                  {qualified
+                                    ? `✨ Calificado (Ventaja · +${Math.max(pillars.MEN, pillars.SUE) + 2})`
+                                    : `🍀 Por Suerte (SUE ${formatMod(pillars.SUE)})`}
                                 </span>
                               </div>
                               <p className="text-[11px] text-slate-300 leading-snug">
-                                Tira tu <strong>d20 físico</strong> en la mesa y anota el número del dado (tu bono {formatMod(arcMod)} se suma solo). <strong>Crítico (20 o +5 sobre CD):</strong> creas ×2 · <strong>Fallo por 1–3:</strong> sale Inestable · <strong>Fallo grave (o 1):</strong> ¡explota (-1 PC)!
+                                Cualquiera puede intentar destilar en cualquier momento: los <strong>Calificados</strong> (Alquimista, Mago, Druida, Clérigo, Gnomo o Prof. Alquimista/Escriba) tiran con <strong>Ventaja</strong>. Sin formación depende de tu <strong>Suerte</strong> (puede salir perfecto, volverse <em>Poción de Destino Imprevisible</em> o fallar).
                               </p>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number"
-                                  min={1}
-                                  max={20}
-                                  placeholder="Resultado d20 físico (1-20)"
-                                  value={craftRollInput}
-                                  onChange={(e) => setCraftRollInput(e.target.value)}
-                                  className="flex-1 px-2.5 py-2 rounded-xl bg-slate-950 border border-amber-600/60 text-xs text-white font-bold"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => setCraftRollInput(String(Math.floor(Math.random() * 20) + 1))}
-                                  className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 text-xs font-bold cursor-pointer shrink-0"
-                                >
-                                  🎲 d20
-                                </button>
-                              </div>
 
                               {craftOutcome && (
                                 <div
@@ -1935,7 +2004,7 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                                       : craftOutcome.kind === 'ok'
                                       ? 'bg-emerald-950/45 border-emerald-500 text-emerald-100'
                                       : craftOutcome.kind === 'unstable'
-                                      ? 'bg-orange-950/45 border-orange-500 text-orange-100'
+                                      ? 'bg-purple-950/50 border-purple-500 text-purple-100'
                                       : 'bg-rose-950/55 border-rose-500 text-rose-100'
                                   }`}
                                 >
@@ -1948,9 +2017,6 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                                 const canCraft = Object.entries(r.ingredients).every(
                                   ([mId, q]) => Number(hero.materials?.[mId] || 0) >= q
                                 );
-                                const cd =
-                                  r.arcanaCD ||
-                                  (r.rarity === 'raro' ? 14 : r.rarity === 'poco_comun' ? 12 : 10);
                                 return (
                                   <div
                                     key={r.id}
@@ -1962,12 +2028,7 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                                   >
                                     <div className="flex items-center justify-between gap-2">
                                       <strong className="text-amber-200">{r.name}</strong>
-                                      <div className="flex items-center gap-1.5 shrink-0">
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-950 text-purple-200 border border-purple-700/60 font-bold">
-                                          Arcano CD {cd}
-                                        </span>
-                                        <span className="text-[10px] text-emerald-300 font-bold">{r.dice}</span>
-                                      </div>
+                                      <span className="text-[10px] text-emerald-300 font-bold shrink-0">{r.dice}</span>
                                     </div>
                                     <p className="text-[11px] text-stone-300">{r.effect}</p>
                                     <div className="flex flex-wrap gap-1">
@@ -1989,83 +2050,37 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                                     {canCraft && (
                                       <button
                                         onClick={async () => {
-                                          const rawD20 =
-                                            craftRollInput !== ''
-                                              ? Math.max(1, Math.min(20, Number(craftRollInput) || 1))
-                                              : Math.floor(Math.random() * 20) + 1;
-                                          const total = rawD20 + arcMod;
-
+                                          const res = rollPotionCraftAttempt(hero, r);
                                           const nextMats = { ...(hero.materials || {}) };
                                           Object.entries(r.ingredients).forEach(([mId, q]) => {
                                             nextMats[mId] = Math.max(0, Number(nextMats[mId] || 0) - q);
                                           });
-
                                           const nextInv = [...(hero.inventory || [])];
                                           let nextPC = hero.currentPC ?? hero.maxPC;
-                                          let outcomeObj;
-
-                                          if (rawD20 === 1 || total < cd - 3) {
-                                            nextPC = Math.max(0, nextPC - 1);
-                                            outcomeObj = {
-                                              kind: 'fail',
-                                              title: `💥 ¡Explosión en el Alambique! (d20=${rawD20} ${formatMod(arcMod)} = ${total} vs CD ${cd})`,
-                                              text: `Los ingredientes se perdieron en humo tóxico y sufriste 1 PC de daño.`,
-                                            };
-                                          } else if (rawD20 === 20 || total >= cd + 5) {
-                                            [1, 2].forEach((n) => {
+                                          if (res.pcLoss) nextPC = Math.max(0, nextPC - res.pcLoss);
+                                          if (res.item) {
+                                            const copies = 1 + (res.qtyBonus || 0);
+                                            for (let n = 0; n < copies; n++) {
                                               nextInv.push({
                                                 id: `mob-craft-${Date.now()}-${n}`,
-                                                name: r.name,
-                                                type: r.type,
-                                                rarity: r.rarity,
-                                                dice: r.dice,
-                                                special: r.effect,
-                                                traits: r.effect,
+                                                ...res.item,
+                                                traits: res.item.special,
                                                 equipped: false,
                                                 qty: 1,
                                               });
-                                            });
-                                            outcomeObj = {
-                                              kind: 'crit',
-                                              title: `🌟 ¡Destilación Maestra ×2! (d20=${rawD20} ${formatMod(arcMod)} = ${total} vs CD ${cd})`,
-                                              text: `¡Éxito crítico! Fabricaste DOS unidades de ${r.name}.`,
-                                            };
-                                          } else if (total >= cd) {
-                                            nextInv.push({
-                                              id: `mob-craft-${Date.now()}`,
-                                              name: r.name,
-                                              type: r.type,
-                                              rarity: r.rarity,
-                                              dice: r.dice,
-                                              special: r.effect,
-                                              traits: r.effect,
-                                              equipped: false,
-                                              qty: 1,
-                                            });
-                                            outcomeObj = {
-                                              kind: 'ok',
-                                              title: `✅ ¡Fabricación Exitosa! (d20=${rawD20} ${formatMod(arcMod)} = ${total} vs CD ${cd})`,
-                                              text: `${r.name} añadida a tu mochila.`,
-                                            };
-                                          } else {
-                                            nextInv.push({
-                                              id: `mob-craft-${Date.now()}`,
-                                              name: `${r.name} (Inestable)`,
-                                              type: r.type,
-                                              rarity: r.rarity,
-                                              dice: r.dice,
-                                              special: `${r.effect} ⚠️ Inestable: al usarla tira 1d6 en la Tabla de Tónicos.`,
-                                              traits: `${r.effect} ⚠️ Inestable.`,
-                                              equipped: false,
-                                              qty: 1,
-                                            });
-                                            outcomeObj = {
-                                              kind: 'unstable',
-                                              title: `⚠️ Brebaje Inestable (d20=${rawD20} ${formatMod(arcMod)} = ${total} vs CD ${cd})`,
-                                              text: `Fallaste por poco: obtienes ${r.name} (Inestable), pero con riesgo de efecto secundario al usarla.`,
-                                            };
+                                            }
                                           }
-
+                                          const kindMap = {
+                                            critico: 'crit',
+                                            exito: 'ok',
+                                            imprevisible: 'unstable',
+                                            fallo: 'fail',
+                                          };
+                                          const outcomeObj = {
+                                            kind: kindMap[res.outcome] || 'ok',
+                                            title: res.title,
+                                            text: res.text,
+                                          };
                                           await pushHeroUpdate({
                                             ...hero,
                                             currentPC: nextPC,
@@ -2073,17 +2088,16 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                                             inventory: nextInv,
                                           });
                                           setCraftOutcome(outcomeObj);
-                                          setCraftRollInput('');
                                           await notifyDMAction({
-                                            abilityName: `⚗️ Mesa de Alquimia: ${r.name}`,
+                                            abilityName: `🧪 Alquimia: ${r.name}`,
                                             attackDice: 0,
                                             damageType: 'Alquimia',
                                             description: `${outcomeObj.title} — ${outcomeObj.text}`,
                                           });
                                         }}
-                                        className="w-full py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-black text-[11px] cursor-pointer"
+                                        className="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-black text-[11px] cursor-pointer"
                                       >
-                                        ⚗️ Intentar Fabricar (Arcano CD {cd})
+                                        {qualified ? '✨ Destilar con Ventaja' : '🍀 Intentar por Suerte'}
                                       </button>
                                     )}
                                   </div>
