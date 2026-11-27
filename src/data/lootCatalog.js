@@ -191,7 +191,7 @@ export const DIGITAL_LOOT_CATALOG = [
     dice: '+1 Def / +2 Init',
     price: 1350,
     special: 'Aumentan reflejos en combate cercano.',
-    upgrade: '+1 Def sin armadura pesada, +2 a Iniciativa y 1 vez/combate esquivas 1 impacto.',
+    upgrade: '+1 Def sin armadura pesada, +1 casilla de movimiento y 1 vez/combate esquivas 1 impacto.',
     flaw: 'Se desactivan si vistes Cota de Malla o Placas.',
     restriction: 'Todas las clases',
   },
@@ -424,7 +424,7 @@ const LOOT_EPITHETS = [
 
 const UPGRADES_POOL = {
   comun: ['Acero bien equilibrado, sin penalizaciones.', 'Fácil de empuñar y mantener.'],
-  poco_comun: ['Ataque diagonal o +1 a Iniciativa.', '+1 a pruebas de Percepción o Sigilo.', 'Daña normalmente a Espectros Etéreos.'],
+  poco_comun: ['Ataque diagonal o +1 DC en el primer ataque.', '+1 a pruebas de Mente (MEN) o Agilidad (AGI).', 'Daña normalmente a Espectros Etéreos.'],
   raro: ['+1 DC adicional contra No Muertos o Pieles Verdes.', '1 vez por combate permite repetir 1 Dado de Combate fallido.', 'Al sacar 19–20 en d20, inflige +1 daño extra.'],
   epico: ['Ignora 1 escudo enemigo al atacar (o reduce 1 daño mágico recibido).', 'Cada vez que derrotas un enemigo recuperas 1 PC o 1 PM.', 'Permite realizar un empuje de 2 casillas o teletransporte corto (3 casillas) 1/combate.'],
   legendario: ['+1 DC permanente + crítico natural en 19–20 + cuenta como Artefacto Sagrado.', '1 vez por misión anula por completo un ataque o hechizo de Jefe.', 'Otorga Ventaja en todas tus tiradas contra Jefes y Élites.'],

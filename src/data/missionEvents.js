@@ -11,7 +11,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Eco Pétreo de Verag (desde R11)',
         badge: 'Tensión de Jefe',
-        text: 'Un temblor recorre las catacumbas y las antorchas parpadean: el rugido de piedra de Verag resuena desde el Salón Central (R11). MEN CD 12: anticipan sus pasos y el grupo gana +2 a Iniciativa en su próximo combate.',
+        text: 'Un temblor recorre las catacumbas y las antorchas parpadean: el rugido de piedra de Verag resuena desde el Salón Central (R11). MEN CD 12: anticipan sus pasos y el grupo gana +1 DC en su primer ataque del próximo combate.',
       },
       {
         title: 'Escudo de un Aprendiz de Mentor',
@@ -86,7 +86,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Tambores de Guerra de Ulag (desde R15)',
         badge: 'Tensión de Combate',
-        text: 'Los tambores de guerra retumban desde el salón sur de Ulag (R15). Todos tiran Mente MEN CD : quienes superen ganan +1 al próximo ataque por adrenalina; quienes fallen sufren -1 a su próxima iniciativa.',
+        text: 'Los tambores de guerra retumban desde el salón sur de Ulag (R15). Todos tiran Mente (MEN CD 12): quienes superen ganan +1 al próximo ataque por adrenalina; quienes fallen sufren -1 a su próxima tirada d20.',
       },
       {
         title: 'Estandarte del Clan de Ulag',
@@ -166,7 +166,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Crujido de Piedra Viva',
         badge: 'Advertencia',
-        text: 'Un sonido seco de roca raspando resuena desde el ala oeste (R12): una estatua vigila las puertas. MEN CD 12: ganan Ventaja en iniciativa si despierta una Gárgola.',
+        text: 'Un sonido seco de roca raspando resuena desde el ala oeste (R12): una estatua vigila las puertas. MEN CD 12: ganan Ventaja en el primer ataque si despierta una Gárgola.',
       },
     ],
   },
@@ -220,7 +220,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Ojos de Piedra que Siguen al Grupo',
         badge: 'Tensión de Pasillo',
-        text: 'Las estatuas del corredor central crujen levemente al pasar. MEN CD 12: detectan qué Guerrero de Piedra está listo para moverse y ganan +2 a Iniciativa.',
+        text: 'Las estatuas del corredor central crujen levemente al pasar. MEN CD 12: detectan qué Guerrero de Piedra está listo para moverse y ganan +1 DC en el primer ataque.',
       },
     ],
   },
@@ -427,7 +427,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Corriente Espiritual Helada',
         badge: 'Ambiente Espectral',
-        text: 'Una neblina azulada cruza el pasillo. Mente MEN CD : quien falle siente un escalofrío (-1 a su próxima iniciativa); quien supere distingue si hay enemigos tras la siguiente puerta.',
+        text: 'Una neblina azulada cruza el pasillo. Mente (MEN CD 12): quien falle siente un escalofrío (-1 a su próxima tirada d20); quien supere distingue si hay enemigos tras la siguiente puerta.',
       },
     ],
   },
@@ -479,7 +479,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Patrulla de Guardias Magos bajo la Lluvia',
         badge: 'Sigilo / Disfraz',
-        text: 'Antorchas azules doblan la esquina. Con Disfraz activo o AGI CD 12 pasan desapercibidos y escuchan la contraseña del sector (+2 a Iniciativa en la próxima sala).',
+        text: 'Antorchas azules doblan la esquina. Con Disfraz activo o AGI CD 12 pasan desapercibidos y escuchan la contraseña del sector (+1 DC en el primer ataque de la próxima sala).',
       },
     ],
   },
@@ -509,7 +509,7 @@ export const GENERIC_DUNGEON_EVENTS = {
     {
       title: 'Bramido en la Oscuridad',
       badge: 'Tensión',
-      text: 'Un aullido helado retumba por los muros. Todos los héroes en la sala tiran Mente MEN CD : quien falle sufre -1 a su próxima tirada d20; quien supere gana Ventaja en su próxima tirada de iniciativa o ataque.',
+      text: 'Un aullido helado retumba por los muros. Todos los héroes en la sala tiran Mente (MEN CD 12): quien falle sufre -1 a su próxima tirada d20; quien supere gana Ventaja en su próximo ataque.',
     },
     {
       title: 'Brasero aún Encendido',
@@ -576,7 +576,7 @@ export const GENERIC_DUNGEON_EVENTS = {
     {
       title: 'Huellas Frescas en el Polvo',
       badge: 'Rastreo',
-      text: 'Marcas recientes cruzan el suelo. MEN CD 11: determinan el tipo de enemigos que patrullan el sector siguiente (ganan +2 a Iniciativa en el próximo combate).',
+      text: 'Marcas recientes cruzan el suelo. MEN CD 11: determinan el tipo de enemigos que patrullan el sector siguiente (ganan +1 DC en el primer ataque del próximo combate).',
     },
     {
       title: 'Reja Semicaída',
@@ -644,7 +644,7 @@ export function generateDynamicMissionEvent(currentMap, isCorridor, partyLevel =
     {
       title: `Mensaje de un Explorador Caído`,
       badge: 'Moral y Tensión',
-      text: `Un aviso tallado en la pared advierte sobre los peligros de ${missionShort}. Quien lo estudie con MEN o SUE CD ${cd} prepara al grupo (+2 a Iniciativa en la próxima pelea).`,
+      text: `Un aviso tallado en la pared advierte sobre los peligros de ${missionShort}. Quien lo estudie con MEN o SUE CD ${cd} prepara al grupo (+1 DC en el primer ataque de la próxima pelea).`,
     },
   ];
 

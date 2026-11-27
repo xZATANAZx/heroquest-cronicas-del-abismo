@@ -26,10 +26,10 @@ export function evaluateHeroLootBonuses(hero, context = 'body', isEliteOrBoss = 
   const prof = hero.professionId || '';
   const quirkId = hero.quirk?.id || '';
 
-  // 1. Quirk: Coleccionista de Trofeos (+1 Material al derrotar Jefe/Élite)
-  if (quirkId === 'coleccionista_huesos' && isEliteOrBoss) {
-    bonuses.extraMaterials += 1;
-    bonuses.notes.push('🦴 Coleccionista de Trofeos (+1 Material extra de Jefe/Élite)');
+  // 1. Rasgo: Manos de Fortuna (+25% Monedas de Oro en cofres y cuerpos)
+  if (quirkId === 'manos_de_oro' && (context === 'body' || context === 'chest')) {
+    bonuses.goldMultiplier = Math.max(bonuses.goldMultiplier, 1.25);
+    bonuses.notes.push('🪙 Manos de Fortuna (+25% Monedas de Oro)');
   }
 
   // 2. Profesión: Cazador de Trofeos (+1 Material raro de Jefes/Élites)

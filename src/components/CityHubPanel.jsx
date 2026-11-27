@@ -131,7 +131,7 @@ export default function CityHubPanel({
   const getDiscountMult = (districtId) => {
     if (!activeHero?.professionId) return 1;
     const prof = PROFESSIONS.find((p) => p.id === activeHero.professionId);
-    const hasQuirkDiscount = activeHero.quirk?.id === 'negociador_nato' ? 0.1 : 0;
+    const hasQuirkDiscount = activeHero.quirk?.id === 'manos_de_oro' ? 0.1 : 0;
     const profDisc = prof?.districtId === districtId ? 0.2 : 0;
     return Math.max(0.6, 1 - profDisc - hasQuirkDiscount);
   };
@@ -260,8 +260,7 @@ export default function CityHubPanel({
     onUpdateHeroes((prev) =>
       prev.map((h) => {
         const profDisc = h.professionId === 'mercader' ? 0.8 : 1;
-        const quirkExtra = h.quirk?.id === 'insomne' ? 5 : 0;
-        const finalCost = Math.round(costPerHero * profDisc) + quirkExtra;
+        const finalCost = Math.round(costPerHero * profDisc);
         return {
           ...h,
           gold: Math.max(0, (h.gold || 0) - finalCost),

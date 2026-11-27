@@ -102,8 +102,8 @@ export const TAVERN_FEASTS = [
     name: 'Asado de Caza Élfico',
     rationsCost: 1,
     goldCost: 15,
-    buffLabel: '🍖 Banquete: +2 Mov en la 1ª Sala',
-    effect: 'Empiezas la misión bien descansado: +2 a Iniciativa y +2 casillas de movimiento en tu primer combate.',
+    buffLabel: '🍖 Banquete: +2 Mov y +1 DC 1er ataque',
+    effect: 'Empiezas la misión bien descansado: +2 casillas de movimiento y +1 DC en tu primer combate.',
   },
   {
     id: 'feast_sabio',
@@ -795,161 +795,95 @@ export function generatePersonalCityEvent(hero, cityMode = 'relaxed') {
 
   const personalPool = [];
 
-  // --- 1. EVENTOS POR RASGO DE PERSONALIDAD (QUIRK) ---
-  if (quirkId === 'piromano') {
+  // --- 1. EVENTOS POR RASGO DEL HÉROE (8 Rasgos v6.1) ---
+  if (quirkId === 'corazon_de_hierro' || quirkId === 'vanguardia_implacable') {
     personalPool.push({
-      id: 'pe_quirk_piromano',
-      tag: '🔥 Tu Rasgo: Pirómano Fascinado',
-      title: 'La Fragua Desbocada del Callejón',
-      story: 'Un aprendiz de herrero perdió el control de su crisol y las chispas amenazan un carro de heno. ¡El fuego te hipnotiza, pero también sabes exactamente cómo domarlo!',
+      id: 'pe_quirk_vanguardia',
+      tag: '🛡️ Tu Rasgo en Acción',
+      title: 'Desafío en el Patio de Armas',
+      story: 'El capitán de la Guardia Imperial busca a alguien capaz de aguantar un intercambio real con escudo y acero frente a los reclutas.',
       choices: [
         {
-          label: '🔥 Domar las llamas con estilo (+1 Polvo Rúnico, +15 MO)',
-          goldDelta: 15,
-          materialId: 'polvo_runico',
-          materialQty: 1,
-          outcome: 'Controlas la llamarada con una sonrisa fascinante; el herrero agradecido te regala 15 MO y ceniza rúnica.',
-        },
-        {
-          label: '💥 Aprovechar las brasas para un truco (+1 Aceite, +1 Fama)',
-          fameDelta: 1,
-          materialId: 'aceite_alquitran',
-          materialQty: 1,
-          outcome: 'La multitud aplaude tu espectáculo ígneo. Ganas +1 Fama y 1 Aceite de Alquitrán.',
-        },
-      ],
-    });
-  }
-  if (quirkId === 'gloton_heroico') {
-    personalPool.push({
-      id: 'pe_quirk_gloton',
-      tag: '🍖 Tu Rasgo: Glotón de Taberna',
-      title: 'Reto del Estofado de Dragón',
-      story: 'El tabernero de El Grifo Dorado te reta a terminar un caldero picante ante toda la posada.',
-      choices: [
-        {
-          label: '🍲 ¡Aceptar el reto! (+1 Ración y +2 PC temporales)',
-          materialId: 'racion_mazmorra',
-          materialQty: 1,
-          buff: { id: 'city_estofado', label: '🍲 Estofado Heroico (+2 PC temp)', type: 'buff', duration: 99 },
-          outcome: '¡Lo devoras sin pestañear! Te llevas +1 Ración gratis y empiezas la próxima misión con vigor (+2 PC temp).',
-        },
-        {
-          label: '🍺 Invitar una ronda rápida (-10 MO, +1 Fama)',
-          goldDelta: -10,
-          fameDelta: 1,
-          outcome: 'Brindas con los parroquianos y todos corean tu nombre (+1 Fama).',
-        },
-      ],
-    });
-  }
-  if (quirkId === 'coleccionista_huesos') {
-    personalPool.push({
-      id: 'pe_quirk_coleccionista',
-      tag: '🦴 Tu Rasgo: Coleccionista de Trofeos',
-      title: 'El Anticuario de Curiosidades',
-      story: 'Un coleccionista excéntrico te detiene en el mercado y señala tu mochila buscando piezas raras de mazmorra.',
-      choices: [
-        {
-          label: '🦴 Intercambiar historias y piezas (+1 Huesos y Colmillos, +20 MO)',
-          goldDelta: 20,
-          materialId: 'colmillos_hueso',
-          materialQty: 1,
-          outcome: 'Te compra un relato detallado y te entrega 20 MO + 1 Huesos y Colmillos.',
-        },
-        {
-          label: '💎 Comprar su caja misteriosa (-25 MO → +1 Esencia Espectral)',
-          goldDelta: -25,
-          materialId: 'esencia_espectral',
-          materialQty: 1,
-          outcome: '¡Dentro de la caja había ectoplasma sellado! Consigues +1 Esencia Espectral.',
-        },
-      ],
-    });
-  }
-  if (quirkId === 'negociador_nato') {
-    personalPool.push({
-      id: 'pe_quirk_negociador',
-      tag: '💬 Tu Rasgo: Lengua de Plata',
-      title: 'Disputa en la Subasta del Puerto',
-      story: 'Dos mercaderes discuten acaloradamente por un cargamento sellado. Tu labia puede resolverlo a tu favor.',
-      choices: [
-        {
-          label: '🤝 Mediar el trato por comisión (+35 MO)',
-          goldDelta: 35,
-          outcome: 'Ambos quedan satisfechos y te pagan 35 MO por cerrar el acuerdo.',
-        },
-        {
-          label: '🏅 Ceder la ganancia al Gremio (+1 Reputación)',
-          repDelta: 1,
-          outcome: 'El Gremio reconoce tu honorabilidad y te otorga +1 Ficha de Reputación.',
-        },
-      ],
-    });
-  }
-  if (quirkId === 'insomne') {
-    personalPool.push({
-      id: 'pe_quirk_insomne',
-      tag: '👁️ Tu Rasgo: Insomne Alerta',
-      title: 'Sombras en el Tejado de la Plaza',
-      story: 'Mientras todos descansan, tus ojos atentos descubren a un espía dejando un paquete tras una gárgola.',
-      choices: [
-        {
-          label: '👁️ Interceptar el paquete (+25 MO y +1 Pólvora Negra)',
+          label: '⚔️ Subir al círculo y demostrar tu temple',
           goldDelta: 25,
-          materialId: 'polvora_negra',
-          materialQty: 1,
-          outcome: 'El espía huye dejando 25 MO y 1 carga de Pólvora Negra.',
-        },
-        {
-          label: '🛡️ Avisar a la Guardia Imperial (+1 Reputación)',
-          repDelta: 1,
-          outcome: 'El capitán de la guardia agradece tu vigilancia nocturna (+1 Reputación).',
-        },
-      ],
-    });
-  }
-  if (quirkId === 'fanatico_acero') {
-    personalPool.push({
-      id: 'pe_quirk_acero',
-      tag: '⚔️ Tu Rasgo: Obsesionado con el Filo',
-      title: 'Duelo Amistoso en el Patio de Armas',
-      story: 'Un veterano de la Guardia del Rey te reta a un intercambio con espadas romas frente a los reclutas.',
-      choices: [
-        {
-          label: '⚔️ Aceptar el duelo (+1 Acero Templado y +25 XP)',
           xpDelta: 25,
           materialId: 'chatarra_acero',
           materialQty: 1,
-          outcome: 'Tu técnica impresiona al instructor: ganas +25 XP y un lingote de Acero Templado.',
+          outcome: 'Tu firmeza deja sin palabras al instructor: recibes 25 MO, +25 XP y 1 Acero Templado.',
         },
         {
-          label: '✨ Pedirle que afile tu hoja (+1 DC en tu primer combate)',
-          buff: { id: 'city_filo_maestro', label: '⚔️ Filo Afilado (+1 DC 1er combate)', type: 'buff', duration: 99, attackMod: 1 },
-          outcome: 'Tu arma brilla con un filo impecable para la próxima misión.',
+          label: '🛡️ Entrenar tu postura defensiva con los veteranos',
+          buff: { id: 'city_postura', label: '🛡️ Postura Férrea (+1 DC Def 1er combate)', type: 'buff', duration: 99, defendMod: 1 },
+          outcome: 'Afianzaste tu guardia: entras a la próxima misión con +1 DC de Defensa en el primer combate.',
         },
       ],
     });
   }
-  if (quirkId === 'supersticioso' || quirkId === 'temerario') {
+  if (quirkId === 'instinto_cazador' || quirkId === 'paso_fantasma') {
     personalPool.push({
-      id: 'pe_quirk_runa_puerta',
-      tag: quirkId === 'supersticioso' ? '🔮 Tu Rasgo: Supersticioso' : '🚪 Tu Rasgo: Rompe-Puertas',
-      title: 'El Reloj Antiguo de la Torre',
-      story: 'Un mecanismo rúnico en la entrada del mercado se atascó y bloquea el paso de una carreta llena de suministros.',
+      id: 'pe_quirk_caza',
+      tag: '🏹 Tu Rasgo en Acción',
+      title: 'Rastro Nocturno en los Tejados',
+      story: 'Al caer la tarde notas huellas frescas de un espía enemigo cruzando los tejados cerca de la armería del Bastión.',
       choices: [
         {
-          label: '⚙️ Desatascarlo a tu manera (+20 MO y +1 Hierba Lunar)',
-          goldDelta: 20,
-          materialId: 'hierba_lunar',
+          label: '🌑 Seguir el rastro en silencio y emboscarlo',
+          goldDelta: 30,
+          materialId: 'glandula_veneno',
           materialQty: 1,
-          outcome: 'Logras abrir el paso y el cochero te recompensa con 20 MO y 1 Hierba Lunar.',
+          outcome: 'Lo interceptas antes de que escape: recuperas 30 MO y 1 Glándula de Veneno.',
         },
         {
-          label: '🙏 Pedir una bendición rápida (+1 PM y +15 XP)',
-          xpDelta: 15,
-          healPM: 2,
-          outcome: 'Un acólito cercano bendice tu camino: recuperas mente y ganas +15 XP.',
+          label: '🏅 Entregar su mapa de vigilancia a la Guardia',
+          repDelta: 1,
+          xpDelta: 25,
+          outcome: 'El capitán asegura las murallas gracias a ti (+1 Reputación y +25 XP).',
+        },
+      ],
+    });
+  }
+  if (quirkId === 'sangre_arcana' || quirkId === 'alma_inquebrantable') {
+    personalPool.push({
+      id: 'pe_quirk_arcano',
+      tag: '✨ Tu Rasgo en Acción',
+      title: 'La Grieta de Éter en la Plaza',
+      story: 'Una reliquia maldita incautada por los clérigos empieza a vibrar con energía oscura en medio del mercado.',
+      choices: [
+        {
+          label: '🔮 Contener el pulso arcano con tu voluntad',
+          materialId: 'polvo_runico',
+          materialQty: 1,
+          healPM: 4,
+          repDelta: 1,
+          outcome: 'Estabilizas la reliquia sin que nadie salga herido: obtienes 1 Polvo Rúnico, PM al máximo y +1 Reputación.',
+        },
+        {
+          label: '📖 Estudiar sus runas antes de sellarla',
+          xpDelta: 35,
+          outcome: 'Descifras un patrón antiguo de Zargon (+35 XP).',
+        },
+      ],
+    });
+  }
+  if (quirkId === 'manos_de_oro' || quirkId === 'tactico_de_campo') {
+    personalPool.push({
+      id: 'pe_quirk_fortuna',
+      tag: '🪙 Tu Rasgo en Acción',
+      title: 'La Subasta Cerrada del Puerto',
+      story: 'Un mercader nervioso subasta un lote sellado de suministros imperiales antes de que cierre el puerto.',
+      choices: [
+        {
+          label: '🤝 Negociar el lote con astucia',
+          goldDelta: 35,
+          materialId: 'racion_mazmorra',
+          materialQty: 1,
+          outcome: 'Cierras un trato brillante: ganas 35 MO de ganancia neta y 1 Ración de Mazmorra.',
+        },
+        {
+          label: '🧭 Organizar el reparto para el Gremio',
+          repDelta: 1,
+          xpDelta: 20,
+          outcome: 'El Gremio valora tu liderazgo (+1 Reputación y +20 XP).',
         },
       ],
     });

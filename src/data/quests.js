@@ -12,7 +12,7 @@ export const CAMPAIGNS = [
     expansionId: 'base',
     levelRange: '1 – 6',
     specialRule:
-      'Reloj del Caos activo (0–10), Salas de Peligro, Iniciativa Sorpresa y Reputación individual desde la Misión 1. Desde la Misión 5 los enemigos clave activan habilidades de Élite.',
+      'Reloj del Caos activo (0–10), Salas de Peligro, Crisis del Caos y Reputación individual desde la Misión 1. Desde la Misión 5 los enemigos clave activan habilidades de Élite.',
   },
   {
     id: 'reina_espiritus',

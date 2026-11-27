@@ -54,7 +54,7 @@ export default function CharacterForge({
   const level = 1; // Todos los héroes nuevos inician en Nivel 1; solo el DM los sube de nivel
   const [activeKeyword, setActiveKeyword] = useState(null);
   const [professionId, setProfessionId] = useState('herrero');
-  const [quirkId, setQuirkId] = useState('fanatico_acero');
+  const [quirkId, setQuirkId] = useState('corazon_de_hierro');
   const [showStatusPicker, setShowStatusPicker] = useState(false);
 
   const race = RACES.find((r) => r.id === raceId) || RACES[0];
@@ -64,13 +64,15 @@ export default function CharacterForge({
   const calcMaxPC = () => {
     const fueBonus = Math.max(0, Math.floor((finalAttrs.FUE || 0) / 2));
     const raceBonus = raceId === 'enano' ? 1 : 0;
-    return cls.basePC + fueBonus + raceBonus + (level - 1) * cls.pcPerLevel;
+    const quirkBonus = quirkId === 'corazon_de_hierro' ? 1 : 0;
+    return cls.basePC + fueBonus + raceBonus + quirkBonus + (level - 1) * cls.pcPerLevel;
   };
 
   const calcMaxPM = () => {
     const menBonus = Math.max(0, Math.floor((finalAttrs.MEN || 0) / 2));
     const raceBonus = raceId === 'alto_elfo' ? 1 : 0;
-    return cls.basePM + menBonus + raceBonus + (level - 1) * cls.pmPerLevel;
+    const quirkBonus = quirkId === 'sangre_arcana' ? 1 : 0;
+    return cls.basePM + menBonus + raceBonus + quirkBonus + (level - 1) * cls.pmPerLevel;
   };
 
   const randomizeHero = () => {
@@ -297,7 +299,7 @@ export default function CharacterForge({
               💡 ¿Eres nuevo? Toca cualquier palabra resaltada en azul para ver qué significa y para qué sirve:
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {['PC', 'PM', 'DC', 'CD', 'Competencia', 'Ventaja', 'Shock', 'Iniciativa', 'Modificador'].map((kw) => (
+              {['PC', 'PM', 'DC', 'CD', 'Ventaja', 'Shock'].map((kw) => (
                 <KeywordChip key={kw} word={kw} onSelect={setActiveKeyword} />
               ))}
             </div>
@@ -548,7 +550,7 @@ export default function CharacterForge({
               <div><span className="text-stone-400">PM Máx:</span> <strong className="text-cyan-300 text-lg">{calcMaxPM()}</strong></div>
               <div><span className="text-stone-400">Ataque:</span> <strong className="text-red-300 text-lg">{cls.baseAttackDice} DC</strong></div>
               <div><span className="text-stone-400">Defensa:</span> <strong className="text-amber-300 text-lg">{cls.baseDefendDice} DC</strong></div>
-              <div><span className="text-stone-400">Iniciativa:</span> <strong className="text-purple-300 text-lg">{formatMod(finalAttrs.AGI || 1)}</strong></div>
+              <div><span className="text-stone-400">Movimiento:</span> <strong className="text-purple-300 text-lg">{8 + (race.speedMod || 0)} cas</strong></div>
             </div>
             <button
               onClick={createHero}
@@ -712,9 +714,9 @@ export default function CharacterForge({
                   </div>
 
                   <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-700/80 flex flex-col justify-center">
-                    <div className="text-[10px] font-bold uppercase text-slate-400">Mov / Init</div>
-                    <div className="text-lg font-black text-slate-100 mt-1">
-                      {activeHero.speed} cas · {formatMod(heroPillars.AGI)}
+                    <div className="text-[10px] font-bold uppercase text-slate-400">Movimiento</div>
+                    <div className="text-xl font-black text-slate-100 mt-1">
+                      {activeHero.speed} cas
                     </div>
                   </div>
 

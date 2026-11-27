@@ -350,122 +350,113 @@ function buildRoomTriggers(currentMap, selectedRoomId, roomItems) {
   return triggers;
 }
 
-// Evalúa qué Rasgos de Personalidad (Quirks) de los héroes se disparan en la sala actual para avisar al DM
-function evaluateRoomQuirks(heroes = [], roomItems = [], roomMonstersScaled = [], isCorridor = false) {
+// Evalúa qué Rasgos de Héroe (v6.1) se disparan en la sala actual para avisar al DM
+function evaluateRoomQuirks(heroes = [], roomItems = [], roomMonstersScaled = []) {
   if (!Array.isArray(heroes) || heroes.length === 0) return [];
   const types = new Set(roomItems.map((it) => it.type));
-  const hasFlammable = [
-    'table', 'bookcase', 'fireplace', 'cupboard', 'sorcerer_table', 'rack', 'weapon_rack', 'throne',
-  ].some((t) => types.has(t));
   const hasChestOrTomb = types.has('chest') || types.has('tomb');
   const hasTrap = types.has('trap_pit') || types.has('trap_spear') || types.has('trap_falling_rock');
   const hasDoor = types.has('door') || types.has('secret_door');
-  const hasMagicFurniture = types.has('alchemy_bench') || types.has('sorcerer_table');
+  const hasMagic = types.has('sorcerer_table') || roomMonstersScaled.some((m) => m.item?.info?.monsterId === 'sorcerer');
   const hasMonsters = roomMonstersScaled.length > 0;
-  const hasBossOrElite = roomMonstersScaled.some((m) => m.item?.info?.isBoss || m.scaled?.isElite);
-  const hasIntelligent = roomMonstersScaled.some((m) =>
-    ['goblin', 'orc', 'dread_warrior', 'sorcerer', 'assassin'].includes(m.item?.info?.monsterId)
-  );
 
   const alerts = [];
   heroes.forEach((h) => {
     const q = h?.quirk;
     if (!q?.id) return;
-    if (q.id === 'piromano' && (hasFlammable || hasMonsters)) {
+    if (q.id === 'corazon_de_hierro' && hasMonsters) {
       alerts.push({
         key: `${h.id}-${q.id}`,
         heroName: h.name,
-        icon: q.icon || '🔥',
+        icon: q.icon || '🛡️',
         quirkName: q.name,
-        trigger: hasFlammable
-          ? '¡Hay muebles/antorchas en esta sala! Pide Mente (MEN CD 11) o intentará prenderlos.'
-          : 'En combate: recuerda que gana +1 DC con Fuego/Bombas.',
+        trigger: 'Ventaja en FUE contra Sangrado/Veneno; recuerda -1 en sigilo (AGI) aquí.',
         bonus: q.bonus,
         drawback: q.drawback,
-        urgent: hasFlammable,
+        urgent: false,
       });
-    } else if (q.id === 'coleccionista_huesos' && (hasChestOrTomb || hasBossOrElite)) {
+    } else if (q.id === 'instinto_cazador' && hasMonsters) {
       alerts.push({
         key: `${h.id}-${q.id}`,
         heroName: h.name,
-        icon: q.icon || '🦴',
+        icon: q.icon || '🏹',
+        quirkName: q.name,
+        trigger: '+1 DC al atacar enemigos ya heridos; si saca 0 calaveras queda -1 DC Defensa 1 turno.',
+        bonus: q.bonus,
+        drawback: q.drawback,
+        urgent: false,
+      });
+    } else if (q.id === 'sangre_arcana' && (hasMagic || hasMonsters)) {
+      alerts.push({
+        key: `${h.id}-${q.id}`,
+        heroName: h.name,
+        icon: q.icon || '✨',
+        quirkName: q.name,
+        trigger: hasMagic
+          ? 'Ventaja en Mente (MEN) contra hechizos/puzzles aquí; sufre +1 daño ante golpes de 3+ calaveras.'
+          : 'Sufre +1 daño extra si un enemigo saca 3+ calaveras contra él.',
+        bonus: q.bonus,
+        drawback: q.drawback,
+        urgent: hasMagic,
+      });
+    } else if (q.id === 'manos_de_oro' && (hasChestOrTomb || hasMonsters)) {
+      alerts.push({
+        key: `${h.id}-${q.id}`,
+        heroName: h.name,
+        icon: q.icon || '🪙',
         quirkName: q.name,
         trigger: hasChestOrTomb
-          ? '¡Hay cofre/tumba aquí! No puede irse sin revisarlo aunque haya prisa.'
-          : '¡Jefe/Élite presente! Si lo derrotan, dale +1 Material de Crafteo extra.',
+          ? '+25% más oro automático si revisa el cofre/cuerpos de esta sala.'
+          : 'Enemigos en estado Venganza lo eligen primero como objetivo.',
         bonus: q.bonus,
         drawback: q.drawback,
         urgent: hasChestOrTomb,
       });
-    } else if (q.id === 'temerario' && (hasTrap || hasDoor)) {
+    } else if (q.id === 'paso_fantasma' && (hasTrap || hasDoor || hasMonsters)) {
       alerts.push({
         key: `${h.id}-${q.id}`,
         heroName: h.name,
-        icon: q.icon || '🚪',
+        icon: q.icon || '🌑',
         quirkName: q.name,
         trigger: hasTrap
-          ? '¡Hay trampa en esta sala! Si entra primero, sufre -1 a su prueba de Agilidad (AGI).'
-          : 'Si intenta derribar una puerta cerrada/atrancada, tiene Ventaja en FUE.',
+          ? '¡Trampa en sala! Tiene Ventaja en Agilidad (AGI) para evitarla.'
+          : 'Ignora Zona de Control al retirarse; -1 en FUE si intenta forzar puertas.',
         bonus: q.bonus,
         drawback: q.drawback,
         urgent: hasTrap,
       });
-    } else if (q.id === 'supersticioso' && (hasMagicFurniture || hasMonsters)) {
-      alerts.push({
-        key: `${h.id}-${q.id}`,
-        heroName: h.name,
-        icon: q.icon || '🔮',
-        quirkName: q.name,
-        trigger: hasMagicFurniture
-          ? '¡Altar/Banco alquímico! Se niega a beber pociones misteriosas sin identificar (+2 vs Magia).'
-          : 'Gana +2 a Salvaciones contra Hechizos del Terror en esta sala.',
-        bonus: q.bonus,
-        drawback: q.drawback,
-        urgent: hasMagicFurniture,
-      });
-    } else if (q.id === 'fanatico_acero' && hasMonsters) {
+    } else if (q.id === 'vanguardia_implacable' && hasMonsters) {
       alerts.push({
         key: `${h.id}-${q.id}`,
         heroName: h.name,
         icon: q.icon || '⚔️',
         quirkName: q.name,
-        trigger: 'Si intentan negociar con los enemigos aquí, sufre -1 en Persuasión (puede repetir 1 DC en su 1er ataque).',
-        bonus: q.bonus,
-        drawback: q.drawback,
-        urgent: false,
-      });
-    } else if (q.id === 'insomne' && (isCorridor || hasMonsters)) {
-      alerts.push({
-        key: `${h.id}-${q.id}`,
-        heroName: h.name,
-        icon: q.icon || '👁️',
-        quirkName: q.name,
-        trigger: 'Nunca es sorprendido por emboscadas/patrullas aquí (+2 Iniciativa).',
-        bonus: q.bonus,
-        drawback: q.drawback,
-        urgent: false,
-      });
-    } else if (q.id === 'negociador_nato' && hasIntelligent) {
-      alerts.push({
-        key: `${h.id}-${q.id}`,
-        heroName: h.name,
-        icon: q.icon || '💬',
-        quirkName: q.name,
-        trigger: 'Monstruos inteligentes presentes: Ventaja al negociar, pero enemigos en Venganza lo eligen primero.',
+        trigger: 'Si entra primero a esta sala: +1 DC en su primer ataque, pero -1 DC Defensa en ronda 1.',
         bonus: q.bonus,
         drawback: q.drawback,
         urgent: true,
       });
-    } else if (q.id === 'gloton_heroico' && hasMonsters && Number(h.materials?.racion_mazmorra || 0) <= 0) {
+    } else if (q.id === 'alma_inquebrantable' && hasMonsters) {
       alerts.push({
         key: `${h.id}-${q.id}`,
         heroName: h.name,
-        icon: q.icon || '🍖',
+        icon: q.icon || '🕯️',
         quirkName: q.name,
-        trigger: 'No lleva Ración en mochila: recuerda aplicar -1 a Iniciativa si no comió Banquete.',
+        trigger: 'Inmune a Miedo y evita caer en Shock 1 vez por misión (se queda en 1 PM).',
         bonus: q.bonus,
         drawback: q.drawback,
-        urgent: true,
+        urgent: false,
+      });
+    } else if (q.id === 'tactico_de_campo' && hasMonsters) {
+      alerts.push({
+        key: `${h.id}-${q.id}`,
+        heroName: h.name,
+        icon: q.icon || '🧭',
+        quirkName: q.name,
+        trigger: 'Puede ceder +1 DC de Ataque o Defensa a un aliado visible (1 vez/combate).',
+        bonus: q.bonus,
+        drawback: q.drawback,
+        urgent: false,
       });
     }
   });
@@ -557,63 +548,9 @@ export default function TacticalBoard({
   const [selectedPuzzleId, setSelectedPuzzleId] = useState('random');
   const [puzzleSentToast, setPuzzleSentToast] = useState(null);
 
-  // Rastreador de Iniciativa Sorpresa / Física en Mesa (Héroes + Monstruos de la Sala)
-  const [initOpen, setInitOpen] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
-  const [initList, setInitList] = useState([]);
-  const [initTurnIdx, setInitTurnIdx] = useState(0);
-  const [initRound, setInitRound] = useState(1);
   // Oleada actual si la misión es de Defensa por Oleadas
   const [currentWave, setCurrentWave] = useState(1);
-
-  const loadInitiativeForRoom = (shuffleSurprise = false) => {
-    const heroEntries = (heroes || []).map((h) => ({
-      id: `h-${h.id}`,
-      name: h.name,
-      sub: h.className,
-      kind: 'hero',
-      roll: shuffleSurprise ? Math.floor(Math.random() * 20) + 1 : 10 + (h.initMod || 0),
-    }));
-    const monsterEntries = roomItems
-      .filter((it) => it.info?.monsterId)
-      .filter((it) => {
-        const k = getMonsterKey(it);
-        return quickHP[k] === undefined || quickHP[k] > 0;
-      })
-      .map((it, idx) => ({
-        id: `m-${getMonsterKey(it)}-${idx}`,
-        name: `${it.label || it.info?.label} (${it.coord})`,
-        sub: 'Zargon',
-        kind: 'monster',
-        roll: Math.floor(Math.random() * 20) + 1,
-      }));
-    let combined = [...heroEntries, ...monsterEntries];
-    if (combined.length === 0) {
-      combined = [
-        { id: 'def-h1', name: 'Héroe 1', sub: 'Jugador', kind: 'hero', roll: 14 },
-        { id: 'def-z', name: 'Turno de Zargon', sub: 'Monstruos', kind: 'monster', roll: 11 },
-      ];
-    }
-    if (shuffleSurprise) {
-      combined.sort(() => Math.random() - 0.5);
-    } else {
-      combined.sort((a, b) => b.roll - a.roll);
-    }
-    setInitList(combined);
-    setInitTurnIdx(0);
-    setInitRound(1);
-    setInitOpen(true);
-  };
-
-  const nextInitiativeTurn = () => {
-    if (initList.length === 0) return;
-    if (initTurnIdx + 1 >= initList.length) {
-      setInitTurnIdx(0);
-      setInitRound((r) => r + 1);
-    } else {
-      setInitTurnIdx((i) => i + 1);
-    }
-  };
 
   const effectiveHeroId = targetHeroId || heroes[0]?.id || '';
 
@@ -1260,16 +1197,6 @@ export default function TacticalBoard({
                 <BookOpen className="w-3.5 h-3.5" /> Narrativa
               </button>
             )}
-            <button
-              onClick={() => (initOpen ? setInitOpen(false) : loadInitiativeForRoom(true))}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 cursor-pointer ${
-                initOpen
-                  ? 'bg-amber-500 text-slate-950 border-amber-300'
-                  : 'bg-purple-950/60 border-purple-500/60 hover:bg-purple-800 text-purple-100'
-              }`}
-            >
-              <Zap className="w-3.5 h-3.5" /> Iniciativa {initOpen ? `(R${initRound})` : ''}
-            </button>
             {onStartTravelToCity && (
               <button
                 onClick={onStartTravelToCity}
@@ -1310,81 +1237,6 @@ export default function TacticalBoard({
               >
                 Siguiente Oleada →
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* Barra Compacta de Iniciativa Sorpresa / Física (Héroes + Monstruos de la Sala) */}
-        {initOpen && (
-          <div className="p-2.5 rounded-xl bg-slate-900/90 border border-purple-500/45 space-y-2 text-xs">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="font-display font-black text-amber-300">
-                  ⚡ Orden de Iniciativa — Ronda {initRound}
-                </span>
-                <span className="text-[11px] text-slate-400">
-                  (Edita el d20 físico o mezcla al azar para sorpresa)
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <button
-                  onClick={() => loadInitiativeForRoom(true)}
-                  className="px-2.5 py-1 rounded-lg bg-purple-700 hover:bg-purple-600 text-white font-bold text-[11px] cursor-pointer"
-                >
-                  🎲 Mezclar Sorpresa
-                </button>
-                <button
-                  onClick={() => {
-                    const sorted = [...initList].sort((a, b) => Number(b.roll) - Number(a.roll));
-                    setInitList(sorted);
-                    setInitTurnIdx(0);
-                  }}
-                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold text-[11px] cursor-pointer"
-                >
-                  ↕️ Ordenar por d20
-                </button>
-                <button
-                  onClick={nextInitiativeTurn}
-                  className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[11px] cursor-pointer"
-                >
-                  Siguiente Turno →
-                </button>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-1.5">
-              {initList.map((entry, idx) => {
-                const isTurn = idx === initTurnIdx;
-                return (
-                  <div
-                    key={entry.id}
-                    onClick={() => setInitTurnIdx(idx)}
-                    className={`px-2.5 py-1 rounded-xl border flex items-center gap-2 cursor-pointer transition ${
-                      isTurn
-                        ? 'bg-amber-500/25 border-amber-400 text-white ring-2 ring-amber-400/60 scale-[1.02]'
-                        : entry.kind === 'monster'
-                        ? 'bg-rose-950/40 border-rose-800/60 text-rose-200'
-                        : 'bg-slate-950/70 border-slate-700 text-slate-200'
-                    }`}
-                  >
-                    <span className="text-[10px] font-black">{isTurn ? '▶' : `${idx + 1}.`}</span>
-                    <span className="font-bold">{entry.kind === 'monster' ? '👹' : '🛡️'} {entry.name}</span>
-                    <input
-                      type="number"
-                      value={entry.roll}
-                      onClick={(e) => e.stopPropagation()}
-                      onChange={(e) => {
-                        const val = Number(e.target.value) || 0;
-                        setInitList((prev) =>
-                          prev.map((it) => (it.id === entry.id ? { ...it, roll: val } : it))
-                        );
-                      }}
-                      className="w-10 px-1 py-0.5 rounded bg-black/50 border border-slate-600 text-center text-[11px] font-mono text-amber-300"
-                      title="Resultado físico del d20"
-                    />
-                  </div>
-                );
-              })}
             </div>
           </div>
         )}

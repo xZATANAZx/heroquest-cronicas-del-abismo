@@ -1370,9 +1370,9 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                 )}
               </div>
               <div className="p-2.5 rounded-xl bg-sky-950/30 border border-sky-900/50">
-                <div className="text-[10px] text-stone-400">MOV / INIT</div>
-                <div className="font-black text-sm text-sky-200 mt-0.5">
-                  {effectiveSpeed} · {formatMod(hero.initMod)}
+                <div className="text-[10px] text-stone-400">MOVIMIENTO</div>
+                <div className="font-black text-base text-sky-200 mt-0.5">
+                  {effectiveSpeed} cas
                 </div>
                 {spdMod !== 0 && (
                   <div className={`text-[10px] font-bold ${spdMod > 0 ? 'text-emerald-400' : 'text-red-400'}`}>

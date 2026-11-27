@@ -241,7 +241,7 @@ const ROOM_HINT_TEMPLATES = [
   {
     title: 'Huellas Recientes junto a la Puerta',
     clue: 'Marcas frescas de botas y garras cruzan el polvo de esta cámara hacia el siguiente acceso.',
-    reward: 'MEN CD 11: sorprenden a la siguiente sala (ganan +2 a Iniciativa y Ventaja en el primer ataque).',
+    reward: 'MEN CD 11: sorprenden a la siguiente sala (ganan Ventaja en el primer ataque y +1 DC).',
     consequence: 'Si avanzan haciendo ruido, los guardias pasan a estado ALERTA.',
   },
   {

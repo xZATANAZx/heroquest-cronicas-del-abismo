@@ -32,7 +32,7 @@ const GLOSSARY = [
   { term: 'Alquimia por Suerte (Sin Mesa)', cat: 'Crafteo', def: 'Ya no se requiere Mesa de Alquimia: cualquiera puede intentar destilar pociones por Suerte (SUE), mientras los Calificados (Alquimista, Mago, Druida, Clérigo, Gnomo) tiran con Ventaja.' },
   { term: 'Estados Activos (Catálogo Completo)', cat: 'Estados', def: 'Sangrado, Quemadura, Congelado, Envenenado, Aturdido, Shock, Miedo, Inmovilizado, Maldición + Buffs (Furia, Coraje, Piel de Roca, Viento Veloz, Niebla, Bendecido, Oculto) sincronizados entre DM y celular.' },
   { term: 'Ventaja / Desventaja', cat: 'Combate', def: 'Con Ventaja tiras 2d20 y tomas el mayor (o repites 1 DC fallido). Con Desventaja tomas el menor (o repites tu mejor DC).' },
-  { term: 'Iniciativa', cat: 'Combate', def: 'Al iniciar un combate, todos lanzan 1d20 + Mod. DES. Quien saque más alto actúa primero en cada ronda.' },
+  { term: 'Orden de Turno (Clásico)', cat: 'Combate', def: 'Sin listas de iniciativa: primero actúan todos los Héroes en el orden que el grupo prefiera en mesa, y después actúa Zargon con todos los monstruos visibles.' },
   { term: 'LdV (Línea de Visión)', cat: 'Combate', def: 'Puedes ver a un objetivo si trazas una línea recta desde tu casilla a la suya sin atravesar muros, puertas cerradas ni miniaturas.' },
   { term: 'Empujar / Romper Filas', cat: 'Combate', def: 'Si infliges ≥1 PC cuerpo a cuerpo puedes empujar al enemigo 1 casilla y avanzar. En puertas, los monstruos Veteranos/Jefes pueden usar Romper Filas para evitar que los héroes bloqueen la puerta eternamente.' },
   { term: 'Zona de Control', cat: 'Movimiento', def: 'Salir de las casillas adyacentes a un enemigo armado cuesta +1 movimiento extra (salvo Pícaro, Monje o Bomba de Humo).' },
