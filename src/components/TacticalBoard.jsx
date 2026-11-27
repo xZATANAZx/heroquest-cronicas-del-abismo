@@ -45,6 +45,7 @@ import {
 import { MONSTERS, scaleMonster } from '../data/bestiary';
 import { OFFICIAL_DREAD_SPELLS } from '../data/officialCards';
 import { rollBodyLoot, rollTreasureProbability } from '../data/lootProbabilities';
+import { rollRandomSpellScroll } from '../data/magicWinds';
 import { QUESTS } from '../data/quests';
 import { FURNITURE_DECK, TREASURE_TRAP_DECK } from '../data/decks';
 import {
@@ -318,7 +319,7 @@ function buildRoomTriggers(currentMap, selectedRoomId, roomItems) {
     });
   }
 
-  // 5. Puerta Secreta en esta sala
+  // 5. Puerta Secreta en esta sala (con botón conectado para entregar materiales al héroe que la descubra)
   if (hasSecretDoor) {
     triggers.push({
       id: 'secret_door',
@@ -328,22 +329,8 @@ function buildRoomTriggers(currentMap, selectedRoomId, roomItems) {
       color: 'bg-amber-950/30 border-amber-500/45 text-amber-100',
       badgeColor: 'bg-amber-600 text-slate-950',
       when: 'SOLO si un héroe gasta su acción en Buscar Puertas Secretas (MEN CD 12) sin monstruos.',
-      purpose: 'Revela un atajo o almacén secreto con botín y +2 Materiales de Crafteo del bioma.',
-    });
-  }
-
-  // 5B. Reserva de Ingredientes Alquímicos (Ya no requiere mesa para destilar)
-  if (typesInRoom.has('alchemy_bench')) {
-    triggers.push({
-      id: 'alchemy_stash',
-      icon: '🧪',
-      badge: 'RESERVA DE INGREDIENTES',
-      title: 'Estantes de Ingredientes Frescos',
-      color: 'bg-teal-950/40 border-teal-500/55 text-teal-100',
-      badgeColor: 'bg-teal-600 text-white',
-      when: 'Al examinar este mueble sin enemigos en la sala.',
-      purpose:
-        'Suelta materiales alquímicos frescos (+Hierba Lunar, Veneno o Polvo Rúnico). Recuerda: cualquier héroe puede intentar preparar pociones desde su celular en cualquier momento (Calificados con Ventaja · Otros por Suerte).',
+      purpose: 'Revela un atajo o almacén secreto con +2 Materiales de Crafteo para quien la descubra.',
+      rewardMaterial: { id: 'polvo_runico', qty: 2, label: '✨ Entregar +2 Polvo Rúnico' },
     });
   }
 
@@ -698,13 +685,37 @@ export default function TacticalBoard({
       }
     }
 
+    // Conexión coherente por tipo de mueble: garantiza materiales y pergaminos reales entregables al héroe
+    let materialId = null;
+    let materialQty = 0;
+    const fKeyLow = `${furnitureKey || ''}`.toLowerCase();
+    if (fKeyLow.includes('alquim') || fKeyLow.includes('alchemy')) {
+      const alqPool = ['hierba_lunar', 'glandula_veneno', 'polvo_runico', 'aceite_alquitran'];
+      materialId = alqPool[Math.floor(Math.random() * alqPool.length)];
+      materialQty = Math.random() < 0.35 ? 2 : 1;
+    } else if (fKeyLow.includes('librer') || fKeyLow.includes('book') || fKeyLow.includes('brujo') || fKeyLow.includes('sorcerer')) {
+      materialId = 'polvo_runico';
+      materialQty = 1;
+      if (!rewardLoot && Math.random() < 0.45) {
+        rewardLoot = rollRandomSpellScroll();
+      }
+    } else if (fKeyLow.includes('armer') || fKeyLow.includes('weapon')) {
+      materialId = 'chatarra_acero';
+      materialQty = 1;
+    } else if (fKeyLow.includes('mesa') || fKeyLow.includes('chimenea') || fKeyLow.includes('armario')) {
+      materialId = 'racion_mazmorra';
+      materialQty = 1;
+    }
+
     setRoomDiscovery({
       source: `Mueble: ${furnitureKey}`,
-      title: card.title,
+      title: rewardLoot?.type === 'Pergamino' ? `📜 ${rewardLoot.name}` : card.title,
       badge: card.type || 'Mobiliario',
-      text: card.text,
+      text: rewardLoot?.type === 'Pergamino' ? `${card.text} — Hallas: ${rewardLoot.name} (${rewardLoot.special})` : card.text,
       rewardLoot,
       rewardGold,
+      materialId,
+      materialQty,
     });
   };
 
@@ -2292,6 +2303,27 @@ export default function TacticalBoard({
                               className="px-2.5 py-1.5 rounded-lg bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-bold text-[11px] cursor-pointer"
                             >
                               {tr.actionLabel}
+                            </button>
+                          </div>
+                        )}
+                        {tr.rewardMaterial && onSendMaterialToHero && heroes.length > 0 && (
+                          <div className="pt-1.5 flex flex-wrap items-center gap-1.5 border-t border-white/10">
+                            <select
+                              value={effectiveHeroId}
+                              onChange={(e) => setTargetHeroId(e.target.value)}
+                              className="flex-1 px-2 py-1 rounded-lg bg-slate-950 border border-amber-700/60 text-[11px] text-slate-100"
+                            >
+                              {heroes.map((h) => (
+                                <option key={h.id} value={h.id}>
+                                  Para: {h.name}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() => onSendMaterialToHero(effectiveHeroId, tr.rewardMaterial.id, tr.rewardMaterial.qty)}
+                              className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[11px] cursor-pointer shrink-0"
+                            >
+                              {tr.rewardMaterial.label}
                             </button>
                           </div>
                         )}

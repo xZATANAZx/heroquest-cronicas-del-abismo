@@ -534,10 +534,10 @@ export function scaleMonster(
   const mindResistLabel = isMindImmune
     ? 'Inmune a magia mental (0 PM)'
     : `${monster.pm}d6 (con un 6 resiste)`;
-  const physResistLabel =
-    scaledPC >= 5
-      ? 'Grande (no puede ser empujado)'
-      : 'Normal (puede ser empujado al recibir daño)';
+  const isUnpushable =
+    scaledPC >= 5 ||
+    ['guerrero_terror', 'gargola', 'troll', 'minotauro', 'basilisco', 'sir_ragnar_traidor'].includes(monster.id);
+  const physResistLabel = isUnpushable ? 'Inmune a Empuje (Grande/Pesado)' : null;
   const resistGuide = isMindImmune
     ? 'No Muerto (0 PM): Inmune a hechizos mentales, sueño y miedo.'
     : `Resistencia a hechizos: tira ${monster.pm} dado(s) rojo(s) (1 por PM). Si sale al menos un 6, resiste el hechizo.`;

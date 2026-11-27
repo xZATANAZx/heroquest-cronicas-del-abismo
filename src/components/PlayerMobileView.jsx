@@ -2187,61 +2187,81 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                 );
               };
 
+              const activeSummaryLabels = isSchools
+                ? currentSelected
+                : COMBAT_TECHNIQUES.filter((t) => currentSelected.includes(t.id)).map((t) => `${t.icon} ${t.name.split(' ')[0]}`);
+
               return (
-                <details className="grimoire-panel rounded-2xl p-3.5 border-purple-600/50 space-y-2.5">
-                  <summary className="text-xs font-black uppercase tracking-wider text-purple-300 cursor-pointer flex items-center justify-between">
-                    <span>
-                      🎯 Preparar para esta Misión ({currentSelected.length}/{loadout.maxPicks}{' '}
-                      {isSchools ? 'Escuelas' : 'Técnicas'})
-                    </span>
-                    <span className="text-[10px] font-bold text-amber-300">Cambiar ▾</span>
+                <details className="grimoire-panel rounded-2xl p-3 border-purple-600/50 space-y-2">
+                  <summary className="cursor-pointer list-none flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[11px] font-black uppercase text-purple-300 shrink-0">
+                        🎯 Preparado ({currentSelected.length}/{loadout.maxPicks}):
+                      </span>
+                      {activeSummaryLabels.map((lbl, idx) => (
+                        <span
+                          key={idx}
+                          className="text-[10px] px-2 py-0.5 rounded-full bg-purple-950/80 border border-purple-500/50 text-purple-100 font-bold"
+                        >
+                          {lbl}
+                        </span>
+                      ))}
+                    </div>
+                    <span className="text-[10px] font-black text-amber-300 shrink-0">Cambiar ▾</span>
                   </summary>
-                  <p className="text-[11px] text-slate-300 leading-snug pt-1">
-                    {isSchools
-                      ? `Antes de iniciar una misión puedes intercambiar qué ${loadout.maxPicks} escuela(s) de magia llevarás preparadas:`
-                      : `Antes de iniciar una misión puedes elegir qué ${loadout.maxPicks} Técnicas de Combate llevarás equipadas:`}
-                  </p>
-                  <div className={isSchools ? 'grid grid-cols-2 gap-1.5' : 'space-y-1.5'}>
-                    {isSchools
-                      ? loadout.options.map((sch) => {
-                          const on = currentSelected.includes(sch);
-                          return (
-                            <button
-                              key={sch}
-                              type="button"
-                              onClick={() => togglePick(sch)}
-                              className={`p-2 rounded-xl border text-xs font-bold text-left cursor-pointer transition flex items-center justify-between ${
-                                on
-                                  ? 'bg-purple-700/80 border-purple-400 text-white'
-                                  : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-purple-500/60'
-                              }`}
-                            >
-                              <span>🔮 {sch}</span>
-                              <span className="text-[10px]">{on ? '✓' : '+'}</span>
-                            </button>
-                          );
-                        })
-                      : COMBAT_TECHNIQUES.map((tech) => {
-                          const on = currentSelected.includes(tech.id);
-                          return (
-                            <button
-                              key={tech.id}
-                              type="button"
-                              onClick={() => togglePick(tech.id)}
-                              className={`w-full p-2.5 rounded-xl border text-left cursor-pointer transition space-y-0.5 ${
-                                on
-                                  ? 'bg-amber-950/50 border-amber-400 text-amber-100'
-                                  : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-amber-500/50'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between gap-2 text-xs font-black">
-                                <span>{tech.icon} {tech.name}</span>
-                                <span className="text-[10px]">{on ? '✓ EQUIPADA' : '+ Elegir'}</span>
-                              </div>
-                              <div className="text-[10px] text-slate-300 leading-snug">{tech.desc}</div>
-                            </button>
-                          );
-                        })}
+
+                  <div className="pt-2 border-t border-slate-800 space-y-2">
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {isSchools
+                        ? loadout.options.map((sch) => {
+                            const on = currentSelected.includes(sch);
+                            return (
+                              <button
+                                key={sch}
+                                type="button"
+                                onClick={() => togglePick(sch)}
+                                className={`px-2.5 py-2 rounded-xl border text-xs font-bold text-left cursor-pointer transition flex items-center justify-between ${
+                                  on
+                                    ? 'bg-purple-700/80 border-purple-400 text-white'
+                                    : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-purple-500/60'
+                                }`}
+                              >
+                                <span>🔮 {sch}</span>
+                                <span className="text-[10px]">{on ? '✓' : '+'}</span>
+                              </button>
+                            );
+                          })
+                        : COMBAT_TECHNIQUES.map((tech) => {
+                            const on = currentSelected.includes(tech.id);
+                            return (
+                              <button
+                                key={tech.id}
+                                type="button"
+                                onClick={() => togglePick(tech.id)}
+                                className={`px-2.5 py-2 rounded-xl border text-left cursor-pointer transition flex items-center justify-between gap-1 ${
+                                  on
+                                    ? 'bg-amber-600/25 border-amber-400 text-amber-100'
+                                    : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-amber-500/50'
+                                }`}
+                              >
+                                <span className="text-[11px] font-bold truncate">
+                                  {tech.icon} {tech.name.replace(/\s*\([^)]+\)/g, '')}
+                                </span>
+                                <span className="text-[10px] shrink-0">{on ? '✓' : '+'}</span>
+                              </button>
+                            );
+                          })}
+                    </div>
+
+                    {!isSchools && (
+                      <div className="p-2 rounded-xl bg-slate-950/90 border border-slate-800 space-y-1 text-[10px] text-slate-300">
+                        {COMBAT_TECHNIQUES.filter((t) => currentSelected.includes(t.id)).map((t) => (
+                          <div key={t.id} className="leading-snug">
+                            <strong className="text-amber-300">{t.icon} {t.name}:</strong> {t.desc}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </details>
               );

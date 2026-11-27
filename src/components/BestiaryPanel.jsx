@@ -259,14 +259,16 @@ export default function BestiaryPanel({
                   </div>
                 </div>
 
-                {/* Resistencia a hechizos y empuje */}
+                {/* Resistencia a hechizos (y aviso de Empuje SOLO si el monstruo es inmune a empuje) */}
                 <div className="mb-3 px-2.5 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px] text-slate-300 space-y-0.5">
                   <div>
                     <strong className="text-purple-300">🧠 Resistencia a Hechizos:</strong> {m.mindResistLabel}
                   </div>
-                  <div>
-                    <strong className="text-amber-300">🛡️ Empuje:</strong> {m.physResistLabel}
-                  </div>
+                  {m.physResistLabel && (
+                    <div>
+                      <strong className="text-amber-300">🗿 Especial:</strong> {m.physResistLabel}
+                    </div>
+                  )}
                 </div>
 
                 <ul className="space-y-1.5 text-xs text-stone-300">
