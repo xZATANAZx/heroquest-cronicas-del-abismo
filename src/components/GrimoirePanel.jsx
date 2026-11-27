@@ -53,7 +53,7 @@ const GLOSSARY = [
   { term: 'Némesis Recurrente', cat: 'Campaña', def: 'Un Jefe que escapó usando un Contador de Escape: reaparece en futuras misiones con mayor Rango y recompensa.' },
   { term: 'Materiales de Crafteo', cat: 'Crafteo', def: '12 ingredientes digitales divididos en Alquimia, Forja y Arcano que recoges de monstruos, muebles y trampas para fabricar sin cartas físicas.' },
   { term: 'Mezcla Experimental', cat: 'Crafteo', def: 'Combina 2–3 materiales cualquiera + una tirada de Arcano (d20) para descubrir pociones raras, bombas o efectos sorpresa.' },
-  { term: 'Tónicos (Alto Riesgo)', cat: 'Crafteo', def: 'Brebajes muy poderosos (+2 DC por 2 turnos) que al terminar piden CON CD 13 o tirar 1d6 en la Tabla de Efectos Secundarios.' },
+  { term: 'Tónicos (Alto Riesgo)', cat: 'Crafteo', def: 'Brebajes muy poderosos (+2 DC por 2 turnos) que al terminar piden Fuerza (FUE CD 13) o tirar 1d6 en la Tabla de Efectos Secundarios.' },
   { term: 'Nivelación de Artefactos (Nv.1–5)', cat: 'Crafteo', def: 'Mejora tus armas/armaduras en la Herrería con Gemas Abismales: Nv.2 repite 1 DC; Nv.3 +1 DC; Nv.4 daña Etéreos; Nv.5 Crítico en 19–20.' },
   { term: 'Fama y Fichas de Reputación', cat: 'Ciudad', def: 'La Fama desbloquea Distritos y Seguidores Únicos. Las Fichas de Reputación (por Objetivos Secundarios) se canjean por Resurrección gratis, Decretos de Oro o Planos Secretos.' },
   { term: 'Profesión del Héroe', cat: 'Ciudad', def: 'Cada héroe elige 1 profesión (Herrero, Alquimista, Sacerdote, Explorador, Minero, Escriba, Mercader, Cazador) que da -20% en su edificio de Ciudad + un poder único dentro de la mazmorra.' },
@@ -140,7 +140,7 @@ export default function GrimoirePanel() {
                 <ul className="list-disc list-inside space-y-1.5">
                   <li><strong>Movimiento sin enemigos:</strong> <strong>8 casillas fijas</strong> (+ bonos) sin tirar dados.</li>
                   <li><strong>Movimiento en combate:</strong> <strong>2d6 + Mod. DES</strong> (mínimo 4 casillas).</li>
-                  <li><strong>Acciones Principales (1):</strong> Atacar, Lanzar Hechizo, Buscar Tesoros/Trampas/Secretos, Desarmar Trampa, Examinar Mueble, Usar Banco de Alquimista o Negociar.</li>
+                  <li><strong>Acciones Principales (1):</strong> Atacar, Lanzar Hechizo, Buscar Tesoros/Trampas/Secretos, Desarmar Trampa, Examinar Mueble o Negociar.</li>
                   <li><strong>Acciones Gratuitas:</strong> Beber poción/tónico, abrir puerta normal, volcar mesa (FUE CD 11 → +1 Def cobertura), aplicar veneno a hoja o pasar objeto a un aliado adyacente.</li>
                   <li><strong>Ventaja Táctica:</strong> Flanqueo, altura (sobre mesa) o sorprender enemigos Distraídos permite <strong>repetir 1 DC fallido</strong>.</li>
                   <li><strong>Empujar y Anti-Campeo:</strong> Al herir cuerpo a cuerpo puedes empujar 1 casilla. Los monstruos Veteranos/Jefes pueden usar <em>Romper Filas</em> para impedir que los héroes tapen una puerta eternamente.</li>
@@ -170,9 +170,9 @@ export default function GrimoirePanel() {
               <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside leading-relaxed">
                 <li><strong>Movimiento:</strong> <strong>8 casillas fijas</strong> sin enemigos visibles; <strong>2d6 + Mod. DES</strong> en combate (mín. 4). No se mueve en diagonal; sí puedes cruzar casillas de aliados.</li>
                 <li><strong>Buscar Tesoros:</strong> 1 vez por sala por héroe (solo sin monstruos visibles).</li>
-                <li><strong>Buscar Trampas / Secretos:</strong> Solo sin monstruos visibles. Desarmar pide <strong>DES CD 12–14</strong> (al desarmar trampas mecánicas rescatas Acero o Pólvora).</li>
+                <li><strong>Buscar Trampas / Secretos:</strong> Solo sin monstruos visibles. Desarmar pide <strong>AGI CD 12–14</strong> (al desarmar trampas mecánicas rescatas Acero o Pólvora).</li>
                 <li><strong>Examinar Muebles:</strong> 1 vez por mueble; sueltan <strong>Vendas, Objetos, Oro y Materiales de Crafteo</strong> enviados al celular.</li>
-                <li><strong>Puertas Tácticas:</strong> <em>Normal</em> (gratis), <em>Cerrada</em> (DES CD 13 / Llave), <em>Atrancada</em> (FUE CD 15), <em>Entreabierta</em> (espiar gratis), <em>Sello Puzzle</em> (minijuego al celular).</li>
+                <li><strong>Puertas Tácticas:</strong> <em>Normal</em> (gratis), <em>Cerrada</em> (AGI CD 13 / Llave), <em>Atrancada</em> (FUE CD 15), <em>Entreabierta</em> (espiar gratis), <em>Sello Puzzle</em> (minijuego al celular).</li>
               </ul>
             </div>
 

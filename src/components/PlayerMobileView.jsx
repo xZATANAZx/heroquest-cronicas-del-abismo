@@ -176,7 +176,7 @@ function enrichGearItem(raw) {
         effect = 'Otorga Ventaja y +2 en pruebas para detectar y desarmar trampas mecánicas.';
       } else if (low.includes('estuche') || low.includes('reactivo')) {
         dice = dice || 'Alquimia';
-        effect = 'Sirve para destilar pociones gratis en cualquier Banco de Alquimista.';
+        effect = 'Ingrediente alquímico: úsalo desde Crafteo en cualquier momento (Calificados con Ventaja · Otros por Suerte).';
       } else if (low.includes('cuerda')) {
         dice = dice || 'Utilidad';
         effect = 'Ayuda a cruzar fosos o rescatar aliados caídos con Ventaja en Atletismo.';

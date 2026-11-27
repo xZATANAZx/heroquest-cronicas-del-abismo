@@ -360,7 +360,7 @@ export const RACES = [
     size: 'Mediano (Escamoso)',
     vision: 'Normal',
     traitName: 'Aliento de Dragón (1 vez por misión)',
-    traitDesc: 'Al crear tu héroe eliges tu linaje: Fuego o Hielo. Una vez por misión, gastas tu acción principal para exhalar tu aliento en línea recta hasta 3 casillas frente a ti: golpea a todos los enemigos en esa línea con 2 DC de daño mágico (si el enemigo supera Salvación DES CD 12 recibe solo la mitad). Si es Fuego, además corta la regeneración de Momias y Trolls.',
+    traitDesc: 'Al crear tu héroe eliges tu linaje: Fuego o Hielo. Una vez por misión, gastas tu acción principal para exhalar tu aliento en línea recta hasta 3 casillas frente a ti: golpea a todos los enemigos en esa línea con 2 DC de daño mágico (si el enemigo supera Agilidad AGI CD 12 recibe solo la mitad). Si es Fuego, además corta la regeneración de Momias y Trolls.',
     lore: 'Descendientes de antiguos dragones con escamas resistentes; imponen respeto y desatan furia elemental en momentos críticos.',
   },
   {
@@ -613,7 +613,7 @@ export const CLASSES = [
       4: 'Mejora de Atributo (+2 puntos)',
       5: 'Ataque Furtivo (+2 DC) + Esfumarse (1 Astucia para volver a Sigilo)',
       6: 'Manos Rápidas (examinar un mueble es acción gratuita 1 vez/turno)',
-      7: 'Golpe Paralizante (1 Astucia: objetivo salva CON CD 13 o queda Aturdido)',
+      7: 'Golpe Paralizante (1 Astucia: objetivo supera Resistencia Física (6 en 1d6) o queda Aturdido)',
       8: 'Mejora de Atributo (+2 puntos)',
       9: 'Ataque Furtivo (+3 DC)',
       10: 'Maestro de las Sombras (1 vez/misión realizas un turno completo extra antes de que actúe Zargon)',
@@ -849,7 +849,7 @@ export const CLASSES = [
       2: 'Desviar Proyectiles (reacción: reduces 2 daños de flechas o magia)',
       3: 'Elección de Subclase',
       4: 'Mejora de Atributo (+2 puntos)',
-      5: 'Golpe Aturdidor (1 Ki: objetivo salva CON CD 13 o queda Aturdido 1 turno)',
+      5: 'Golpe Aturdidor (1 Ki: objetivo supera Resistencia Física (6 en 1d6) o queda Aturdido 1 turno)',
       6: 'Puños de Ki (tus golpes desarmados dañan Etéreos e ignoran Piel de Piedra)',
       7: 'Mente Serena (1 Ki para salir inmediatamente de Shock o Miedo)',
       8: 'Mejora de Atributo (+2 puntos)',
@@ -914,12 +914,12 @@ export const CLASSES = [
     ],
     progression: {
       1: 'Farol de Almas + Sello del Exorcista (3 Esencias)',
-      2: 'Expulsar No Muertos (1/combate: No Muertos en 4 casillas salvan SAB CD 13 o pierden su turno)',
+      2: 'Expulsar No Muertos (1/combate: No Muertos en 4 casillas resisten con 1 dado rojo por PM (6 resiste) o pierden su turno)',
       3: 'Elección de Subclase',
       4: 'Mejora de Atributo (+2 puntos)',
       5: 'Vínculo de Cordura (ningún aliado a 3 casillas puede caer en Shock mientras tú tengas PM)',
       6: 'Esencia Espiritual sube a 5/misión',
-      7: 'Cadenas de Luz (inmoviliza a un Jefe o Espectro 1 turno, SAB CD 14)',
+      7: 'Cadenas de Luz (inmoviliza a un Jefe o Espectro 1 turno, Resistencia Mental (1 dado por PM, 6 resiste))',
       8: 'Mejora de Atributo (+2 puntos)',
       9: 'Cosecha Sagrada (recuperas 1 hechizo cada vez que exorcizas un Élite)',
       10: 'Guardia de Silvana (1/misión invocas 2 Guerreros Espirituales aliados por toda la sala)',
@@ -982,7 +982,7 @@ export const CLASSES = [
     ],
     progression: {
       1: 'Curación Radiante (-1 PM → +3 PC) + Escudo de Fe',
-      2: 'Expulsar No Muertos (1/combate: No Muertos en 4 casillas salvan SAB CD 13 o huyen)',
+      2: 'Expulsar No Muertos (1/combate: No Muertos en 4 casillas resisten con 1 dado rojo por PM (6 resiste) o huyen)',
       3: 'Elección de Subclase',
       4: 'Mejora de Atributo (+2 puntos)',
       5: 'Plegaria de Grupo (1/misión: todos los aliados en la sala recuperan 2 PC y 1 PM)',
@@ -1055,7 +1055,7 @@ export const CLASSES = [
       4: 'Mejora de Atributo (+2 puntos)',
       5: 'Golpe y Conjuro (1/combate atacas con espada y lanzas un hechizo en el mismo turno)',
       6: 'Filo Elemental sube a 5 usos/misión',
-      7: 'Contrahechizo Menor (1/misión anulas un hechizo enemigo con Arcano CD 13)',
+      7: 'Contrahechizo Menor (1/misión anulas un hechizo enemigo con Mente MEN CD 13)',
       8: 'Mejora de Atributo (+2 puntos)',
       9: 'Espada Resonante (tus golpes con Filo Elemental ignoran 1 escudo enemigo)',
       10: 'Tormenta de Acero y Éter (1/misión golpeas a todos los enemigos a 2 casillas con 3 DC mágicos)',
@@ -1113,7 +1113,7 @@ export const CLASSES = [
     startingGear: ['Espada Larga (3 DC, Diagonal)', 'Escudo de Hierro (+1 Def)', 'Poción de Curación Menor (+2 PC)'],
     coreAbility: 'Sello Rúnico: Acción gratuita (3/misión): grabas una runa en tu hoja o escudo (+1 DC mágico contra Etéreos o +2 DC Defensa contra el próximo Hechizo del Terror).',
     subclasses: [
-      { id: 'rompehechizos', name: 'Rompehechizos', desc: '1 vez/combate puedes anular un Hechizo del Terror dirigido a ti o un aliado en 3 casillas (Arcano CD 13).' },
+      { id: 'rompehechizos', name: 'Rompehechizos', desc: '1 vez/combate puedes anular un Hechizo del Terror dirigido a ti o un aliado en 3 casillas (Mente MEN CD 13).' },
       { id: 'hoja_runa', name: 'Hoja de Escarcha y Fuego', desc: 'Tus golpes con Sello Rúnico añaden +1 daño elemental y cortan regeneración.' },
     ],
     progression: {
@@ -1343,7 +1343,7 @@ export const SPELLS_CATALOG = [
   {
     id: 'bola_fuego', school: 'Fuego', name: 'Bola de Fuego', level: 1, unlockLevel: 1, costPM: 0,
     dice: 2, isMagic: true, isFire: true,
-    desc: 'Hechizo oficial: lanza 2 DC de daño de fuego a un objetivo en LdV (salvación DES CD 12 para mitad). Quema regeneración.',
+    desc: 'Hechizo oficial: lanza 2 DC de daño de fuego a un objetivo en LdV (Resistencia Física (6 en 1d6) para mitad). Quema regeneración.',
   },
   {
     id: 'coraje', school: 'Fuego', name: 'Coraje', level: 1, unlockLevel: 1, costPM: 0,
@@ -1354,7 +1354,7 @@ export const SPELLS_CATALOG = [
   {
     id: 'ira_fuego', school: 'Fuego', name: 'Fuego de la Ira', level: 1, unlockLevel: 1, costPM: 0,
     dice: 2, isMagic: true, isFire: true,
-    desc: 'Hechizo oficial: inflige 2 puntos de daño de fuego a cualquier monstruo en la mazmorra (salvación CON CD 13 reduce a 1). Quema regeneración.',
+    desc: 'Hechizo oficial: inflige 2 puntos de daño de fuego a cualquier monstruo en la mazmorra (Resistencia Física (5-6 en 1d6) reduce a 1). Quema regeneración.',
   },
   {
     id: 'llamarada_ceniza', school: 'Fuego', name: 'Muro de Brasas', level: 2, unlockLevel: 3, costPM: 1,
@@ -1376,7 +1376,7 @@ export const SPELLS_CATALOG = [
   {
     id: 'sueno', school: 'Agua', name: 'Dormir', level: 1, unlockLevel: 1, costPM: 0,
     dice: 0, isMagic: true,
-    desc: 'Hechizo oficial: un enemigo vivo salva SAB CD 13 (o 1 dado por PM) o queda dormido hasta recibir daño o despertar al inicio de su turno.',
+    desc: 'Hechizo oficial: un enemigo vivo resiste con 1 dado rojo por PM (6 resiste) (o 1 dado por PM) o queda dormido hasta recibir daño o despertar al inicio de su turno.',
   },
   {
     id: 'velo_niebla', school: 'Agua', name: 'Niebla', level: 1, unlockLevel: 1, costPM: 0,
@@ -1847,7 +1847,7 @@ export const RACIAL_ACTIONS = {
     isMagic: true,
     isAttack: true,
     chooseElement: true,
-    desc: 'Exhalas tu aliento elemental en línea recta (3 casillas frente a ti): 2 DC de daño mágico a todos los enemigos en la línea (Salvación DES CD 12 mitad).',
+    desc: 'Exhalas tu aliento elemental en línea recta (3 casillas frente a ti): 2 DC de daño mágico a todos los enemigos en la línea (Agilidad AGI CD 12 mitad).',
   },
   alto_elfo: {
     active: true,
@@ -2174,7 +2174,7 @@ export const UNLOCKABLE_CLASS_ABILITIES = {
       id: 'monje_aturdir',
       minLevel: 5,
       name: 'Golpe Aturdidor',
-      desc: 'Gastas 1 PM (Ki): golpe de 2 DC que obliga Salvación CON CD 13 o deja Aturdido 1 turno.',
+      desc: 'Gastas 1 PM (Ki): golpe de 2 DC que obliga Resistencia Física (6 en 1d6) o deja Aturdido 1 turno.',
       costPM: 1,
       maxUses: null,
       cooldownTurns: 1,
@@ -2203,7 +2203,7 @@ export const UNLOCKABLE_CLASS_ABILITIES = {
       id: 'exo_expulsar',
       minLevel: 2,
       name: 'Expulsar No Muertos',
-      desc: 'Todos los No Muertos a 4 casillas salvan SAB CD 13 o pierden su próximo turno.',
+      desc: 'Todos los No Muertos a 4 casillas resisten con 1 dado rojo por PM (6 resiste) o pierden su próximo turno.',
       costPM: 0,
       maxUses: 2,
       cooldownTurns: 2,

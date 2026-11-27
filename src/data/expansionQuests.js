@@ -44,7 +44,7 @@ export const SPIRIT_QUEEN_QUESTS = [
     tacticalSetup: {
       doors: 'Puertas reforzadas y 1 Puerta Secreta en la cámara del tesoro (E).',
       alertness: 'Esqueletos dormidos entre los escombros; bandidos en vigilancia cerca de la salida.',
-      negotiation: 'Silvana puede responder una duda táctica por telepatía (SAB CD 12).',
+      negotiation: 'Silvana puede responder una duda táctica por telepatía (Mente MEN CD 12).',
       hazardRoom: 'Cámara de Gas Venenoso (C): al entrar sin detectar la trampa, todos pierden 1 PC.',
       hintClue: 'Un estante oxidado esconde huesos que se alzan al tocarlo (A).',
     },
@@ -74,7 +74,7 @@ export const SPIRIT_QUEEN_QUESTS = [
     tacticalSetup: {
       doors: 'Puerta pesada sellada (A) y puerta con barrotes hacia la biblioteca (B).',
       alertness: 'Goblins patrullando; el Guerrero del Terror aguarda en el cuarto de mando (D).',
-      negotiation: 'Un Goblin capturado puede revelar la ubicación del falso tesoro (Intimidación CD 13).',
+      negotiation: 'Un Goblin capturado puede revelar la ubicación del falso tesoro (FUE/SUE CD 13).',
       hazardRoom: 'Cámara del Falso Tesoro (C): Trampa de Foso + hechizo Bola en Llamas.',
       hintClue: 'Los informes en (D) mencionan por primera vez a la hechicera Kavra.',
     },
@@ -134,7 +134,7 @@ export const SPIRIT_QUEEN_QUESTS = [
     tacticalSetup: {
       doors: 'Múltiples puertas interconectadas que los goblins abren para flanquear (A).',
       alertness: 'Goblins en emboscada gritando refuerzos al ver héroes.',
-      negotiation: 'Un héroe con Sigilo CD 13 puede silenciar al primer vigía goblin.',
+      negotiation: 'Un héroe con Agilidad AGI CD 13 puede silenciar al primer vigía goblin.',
       hazardRoom: 'Sala de Cofres con Aguja Venenosa (C: -1 PC, 80 MO c/u) y Cofre Dormir (D).',
       hintClue: 'Un pergamino de Valentía acompaña a las Botas de Conejo en el cofre (D).',
     },

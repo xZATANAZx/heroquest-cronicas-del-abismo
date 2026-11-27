@@ -11,12 +11,12 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Eco Pétreo de Verag (desde R11)',
         badge: 'Tensión de Jefe',
-        text: 'Un temblor recorre las catacumbas y las antorchas parpadean: el rugido de piedra de Verag resuena desde el Salón Central (R11). Percepción CD 12: anticipan sus pasos y el grupo gana +2 a Iniciativa en su próximo combate.',
+        text: 'Un temblor recorre las catacumbas y las antorchas parpadean: el rugido de piedra de Verag resuena desde el Salón Central (R11). MEN CD 12: anticipan sus pasos y el grupo gana +2 a Iniciativa en su próximo combate.',
       },
       {
         title: 'Escudo de un Aprendiz de Mentor',
         badge: 'Hallazgo de Misión',
-        text: 'Junto a la pared yace el morral de un antiguo recluta de Mentor. Investigación CD 11: rescatan una Poción de Curación Menor (+2 PC) intacta.',
+        text: 'Junto a la pared yace el morral de un antiguo recluta de Mentor. MEN CD 11: rescatan una Poción de Curación Menor (+2 PC) intacta.',
         rewardLoot: {
           name: 'Poción de Curación Menor',
           type: 'Poción',
@@ -30,14 +30,14 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Inscripción de Fellmarg (Pista R2)',
         badge: 'Pista Táctica',
-        text: 'Un epitafio tallado advierte sobre la Momia Guardián de Fellmarg (R2): "El fuego quiebra la venda ancestral". Quien lo lea con Arcano o Historia CD 11 otorga +1 daño de Fuego en el próximo ataque contra No Muertos.',
+        text: 'Un epitafio tallado advierte sobre la Momia Guardián de Fellmarg (R2): "El fuego quiebra la venda ancestral". Quien lo lea con MEN CD 11 otorga +1 daño de Fuego en el próximo ataque contra No Muertos.',
       },
     ],
     corridor: [
       {
         title: 'Patrulla Orca Distraída',
         badge: 'Encuentro de Pasillo',
-        text: 'Se oyen gruñidos tras la esquina. Sigilo grupal CD 11: si lo superan sorprenden a 1 Orco rezagado (Ventaja en el primer ataque); si fallan, el Orco alerta la sala más cercana.',
+        text: 'Se oyen gruñidos tras la esquina. AGI grupal CD 11: si lo superan sorprenden a 1 Orco rezagado (Ventaja en el primer ataque); si fallan, el Orco alerta la sala más cercana.',
       },
       {
         title: 'Antorcha que se Apaga',
@@ -52,12 +52,12 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Código Metálico de Sir Ragnar (desde R13)',
         badge: 'Pista de Rescate',
-        text: 'Golpes rítmicos de hierro contra barrotes resuenan desde el cuadrante suroeste (R13): ¡es el código de los Caballeros del Rey! Quien supere Percepción CD 11 confirma que Sir Ragnar está vivo y gana Ventaja en su próxima prueba de Atletismo o Sigilo.',
+        text: 'Golpes rítmicos de hierro contra barrotes resuenan desde el cuadrante suroeste (R13): ¡es el código de los Caballeros del Rey! Quien supere MEN CD 11 confirma que Sir Ragnar está vivo y gana Ventaja en su próxima prueba de Atletismo o Sigilo.',
       },
       {
         title: 'Llavero del Carcelero',
         badge: 'Ventaja Táctica',
-        text: 'Colgado en un clavo oxidado hay un manojo de llaves de hierro. Percepción CD 12: el héroe que las tome desarma trampas de cofres y abre cerraduras con Ventaja el resto de la misión.',
+        text: 'Colgado en un clavo oxidado hay un manojo de llaves de hierro. MEN CD 12: el héroe que las tome desarma trampas de cofres y abre cerraduras con Ventaja el resto de la misión.',
       },
       {
         title: 'Raciones y Botiquín de Guardia',
@@ -70,12 +70,12 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Campana de Alerta Orca',
         badge: 'Trampa de Pasillo',
-        text: 'Un hilo tenso cruza el corredor conectado a una campana oxidada. Percepción o Desarmar Trampas CD 12: si fallan, suena la alerta y el Reloj del Caos sube +1.',
+        text: 'Un hilo tenso cruza el corredor conectado a una campana oxidada. AGI o MEN CD 12: si fallan, suena la alerta y el Reloj del Caos sube +1.',
       },
       {
         title: 'Goblin Mensajero a la Carrera',
         badge: 'Decisión Rápida',
-        text: 'Un Goblin corre por el pasillo con una antorcha. Si lo interceptan (Ataque a distancia o Atletismo CD 12) suelta 20 MO; si escapa, avisa a los guardias de la sala siguiente.',
+        text: 'Un Goblin corre por el pasillo con una antorcha. Si lo interceptan (Ataque a distancia o FUE CD 12) suelta 20 MO; si escapa, avisa a los guardias de la sala siguiente.',
         rewardGold: 20,
       },
     ],
@@ -86,12 +86,12 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Tambores de Guerra de Ulag (desde R15)',
         badge: 'Tensión de Combate',
-        text: 'Los tambores de guerra retumban desde el salón sur de Ulag (R15). Todos tiran Salvación de SAB CD 11: quienes superen ganan +1 al próximo ataque por adrenalina; quienes fallen sufren -1 a su próxima iniciativa.',
+        text: 'Los tambores de guerra retumban desde el salón sur de Ulag (R15). Todos tiran Mente MEN CD : quienes superen ganan +1 al próximo ataque por adrenalina; quienes fallen sufren -1 a su próxima iniciativa.',
       },
       {
         title: 'Estandarte del Clan de Ulag',
         badge: 'Oportunidad Táctica',
-        text: 'Un estandarte orco cuelga manchado de ceniza. Si un héroe lo derriba o quema (Atletismo CD 12), los Goblins de esta sala o la siguiente sufren -1 DC Defensa durante 1 ronda por pánico.',
+        text: 'Un estandarte orco cuelga manchado de ceniza. Si un héroe lo derriba o quema (FUE CD 12), los Goblins de esta sala o la siguiente sufren -1 DC Defensa durante 1 ronda por pánico.',
       },
       {
         title: 'Botín Robado de Caravana',
@@ -112,7 +112,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Charco de Aceite Orco',
         badge: 'Terreno Táctico',
-        text: 'Grasa de antorcha cubre el pasillo. Correr aquí pide DES CD 11 o resbalar; pero si prenden el charco con fuego, arde 2 rondas infligiendo 1 PC a cualquier orco que cruce.',
+        text: 'Grasa de antorcha cubre el pasillo. Correr aquí pide AGI CD 11 o resbalar; pero si prenden el charco con fuego, arde 2 rondas infligiendo 1 PC a cualquier orco que cruce.',
       },
     ],
   },
@@ -128,7 +128,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Mercenario Orco Descontento',
         badge: 'Negociación Táctica',
-        text: 'Un orco herido maldice a Gulthor por no repartir el botín. Persuasión o Intimidación CD 12 (o 25 MO): revela la ubicación de 1 trampa en los pasillos centrales y se marcha sin pelear.',
+        text: 'Un orco herido maldice a Gulthor por no repartir el botín. SUE o FUE CD 12 (o 25 MO): revela la ubicación de 1 trampa en los pasillos centrales y se marcha sin pelear.',
       },
     ],
     corridor: [
@@ -145,12 +145,12 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Susurro Arcano de Melar',
         badge: 'Pista de Secreto',
-        text: 'Una voz espectral susurra desde las runas: "Las puertas secretas no siempre se buscan en las paredes… a veces la llave descansa junto al trono (R4)". Arcano CD 12: un lanzador recupera +1 PM.',
+        text: 'Una voz espectral susurra desde las runas: "Las puertas secretas no siempre se buscan en las paredes… a veces la llave descansa junto al trono (R4)". MEN CD 12: un lanzador recupera +1 PM.',
       },
       {
         title: 'Frasco Alquímico del Laboratorio',
         badge: 'Hallazgo Arcano',
-        text: 'Entre retortas rotas hallan una Hierba Lunar pura y 1 Polvo Rúnico utilizables en la Ciudad o en un Banco de Alquimista.',
+        text: 'Entre retortas rotas hallan una Hierba Lunar pura y 1 Polvo Rúnico utilizables en la Ciudad o desde Crafteo en tu celular.',
         rewardLoot: {
           name: 'Polvo Rúnico de Melar',
           type: 'Accesorio',
@@ -166,7 +166,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Crujido de Piedra Viva',
         badge: 'Advertencia',
-        text: 'Un sonido seco de roca raspando resuena desde el ala oeste (R12): una estatua vigila las puertas. Percepción CD 12: ganan Ventaja en iniciativa si despierta una Gárgola.',
+        text: 'Un sonido seco de roca raspando resuena desde el ala oeste (R12): una estatua vigila las puertas. MEN CD 12: ganan Ventaja en iniciativa si despierta una Gárgola.',
       },
     ],
   },
@@ -181,7 +181,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Guardia Orco Cabeceando',
         badge: 'Oportunidad de Sigilo',
-        text: 'Un guardia ronca apoyado en una mesa. Sigilo grupal CD 12: pasan sin despertarlo y roban 35 MO de su cinturón; si fallan, grita alertando a los secuaces de Grak.',
+        text: 'Un guardia ronca apoyado en una mesa. AGI grupal CD 12: pasan sin despertarlo y roban 35 MO de su cinturón; si fallan, grita alertando a los secuaces de Grak.',
         rewardGold: 35,
       },
     ],
@@ -199,12 +199,12 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Página Quemada del Diario de Wardoz',
         badge: 'Pista de Historia',
-        text: 'Un pergamino chamuscado advierte: "La Magia del Terror petrifica el cuerpo y devora la mente… los guardianes de piedra de los pasillos resisten el acero común". Arcano CD 12: +1 daño mágico contra constructos en esta sala.',
+        text: 'Un pergamino chamuscado advierte: "La Magia del Terror petrifica el cuerpo y devora la mente… los guardianes de piedra de los pasillos resisten el acero común". MEN CD 12: +1 daño mágico contra constructos en esta sala.',
       },
       {
         title: 'Efluvio Púrpura del Laboratorio',
         badge: 'Dilema Alquímico',
-        text: 'Un vapor violeta brota de un frasco roto. CON CD 12 o perder 1 casilla de movimiento el próximo turno; si un héroe lo embotella con Arcano CD 13 obtiene 1 Poción de Piel de Piedra (+1 Def por 2 turnos).',
+        text: 'Un vapor violeta brota de un frasco roto. FUE CD 12 o perder 1 casilla de movimiento el próximo turno; si un héroe lo embotella con MEN CD 13 obtiene 1 Poción de Piel de Piedra (+1 Def por 2 turnos).',
         rewardLoot: {
           name: 'Poción de Piel de Piedra',
           type: 'Poción',
@@ -220,7 +220,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Ojos de Piedra que Siguen al Grupo',
         badge: 'Tensión de Pasillo',
-        text: 'Las estatuas del corredor central crujen levemente al pasar. Percepción CD 12: detectan qué Guerrero de Piedra está listo para moverse y ganan +2 a Iniciativa.',
+        text: 'Las estatuas del corredor central crujen levemente al pasar. MEN CD 12: detectan qué Guerrero de Piedra está listo para moverse y ganan +2 a Iniciativa.',
       },
     ],
   },
@@ -230,7 +230,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Onda de Calor de Balur (desde R1)',
         badge: 'Peligro Volcánico',
-        text: 'El aire se vuelve sofocante en Darkfire Crag. Todos tiran CON CD 12: quienes superen soportan el calor sin problemas; quienes fallen sufren -1 a su próxima tirada de ataque por fatiga (salvo Enanos o resistencia al fuego).',
+        text: 'El aire se vuelve sofocante en Darkfire Crag. Todos tiran FUE CD 12: quienes superen soportan el calor sin problemas; quienes fallen sufren -1 a su próxima tirada de ataque por fatiga (salvo Enanos o resistencia al fuego).',
       },
       {
         title: 'Ungüento Ignífugo de Darkfire',
@@ -242,7 +242,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Rastro de Ceniza hacia el Centro (XX en R11)',
         badge: 'Pista de Balur',
-        text: 'Runas de teletransporte quemadas en el suelo apuntan hacia la Gran Sala Central (R11). Arcano CD 12: descubren que Balur puede huir mágicamente hacia R11 si se ve acorralado.',
+        text: 'Runas de teletransporte quemadas en el suelo apuntan hacia la Gran Sala Central (R11). MEN CD 12: descubren que Balur puede huir mágicamente hacia R11 si se ve acorralado.',
       },
     ],
   },
@@ -252,7 +252,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'La Risa del Guía Traidor',
         badge: 'Presión Contrarreloj',
-        text: 'Un eco burlón rebota por el laberinto mientras caen guijarros del techo. ¡No pierdan tiempo! Un héroe puede motivar al grupo con Persuasión o Atletismo CD 11: todos ganan +2 casillas de movimiento en este turno.',
+        text: 'Un eco burlón rebota por el laberinto mientras caen guijarros del techo. ¡No pierdan tiempo! Un héroe puede motivar al grupo con SUE o FUE CD 11: todos ganan +2 casillas de movimiento en este turno.',
       },
       {
         title: 'Suministros de un Explorador Atrapado',
@@ -265,7 +265,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Brisa Fresca del Exterior (hacia R5)',
         badge: 'Guía de Escape',
-        text: 'Una corriente de aire limpio sopla desde la cámara de las escaleras (R5). Supervivencia CD 11: detectan el camino más corto y evitan 1 trampa de pasillo en su próximo movimiento.',
+        text: 'Una corriente de aire limpio sopla desde la cámara de las escaleras (R5). MEN CD 11: detectan el camino más corto y evitan 1 trampa de pasillo en su próximo movimiento.',
       },
     ],
   },
@@ -275,19 +275,19 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Carcajada del Fantasma de Ollar',
         badge: 'Caos Dimensional',
-        text: 'El Fantasma de Ollar atraviesa el techo riendo a carcajadas. El próximo héroe que cruce una puerta mágica puede elegir repetir 1 de sus 2 Dados Rojos si supera Arcano CD 13.',
+        text: 'El Fantasma de Ollar atraviesa el techo riendo a carcajadas. El próximo héroe que cruce una puerta mágica puede elegir repetir 1 de sus 2 Dados Rojos si supera MEN CD 13.',
       },
       {
         title: 'Espejismo de Monedas Doradas',
         badge: 'Advertencia de Ilusión',
-        text: 'Un brillo dorado parpadea y se desvanece al tocarlo. Investigación o Arcano CD 12: descubren que la magia de Ollar crea oro ilusorio — ¡no todo lo que brilla en la mina (R6) es real!',
+        text: 'Un brillo dorado parpadea y se desvanece al tocarlo. MEN CD 12: descubren que la magia de Ollar crea oro ilusorio — ¡no todo lo que brilla en la mina (R6) es real!',
       },
     ],
     corridor: [
       {
         title: 'Distorsión Espacial',
         badge: 'Fenómeno Mágico',
-        text: 'El pasillo parece estirarse un instante. SAB CD 12: quien la supere mantiene el rumbo y recupera +1 PM por la energía residual del castillo.',
+        text: 'El pasillo parece estirarse un instante. MEN CD 12: quien la supere mantiene el rumbo y recupera +1 PM por la energía residual del castillo.',
       },
     ],
   },
@@ -303,14 +303,14 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Brillo Rúnico del Azote de Orcos (R11)',
         badge: 'Pista de Reliquia',
-        text: 'Un murmullo metálico vibra desde el salón central (R11): un Guerrero del Terror empuña una hoja legendaria. Percepción CD 12: el grupo gana Ventaja en su primer ataque contra Orcos en la próxima sala.',
+        text: 'Un murmullo metálico vibra desde el salón central (R11): un Guerrero del Terror empuña una hoja legendaria. MEN CD 12: el grupo gana Ventaja en su primer ataque contra Orcos en la próxima sala.',
       },
     ],
     corridor: [
       {
         title: 'Relevo de Guardia del Bastión',
         badge: 'Decisión Táctica',
-        text: 'Botas pesadas marchan cerca. Sigilo grupal CD 12 para pegarse a las sombras y dejar pasar la ronda; si fallan, el Reloj del Caos sube +1.',
+        text: 'Botas pesadas marchan cerca. AGI grupal CD 12 para pegarse a las sombras y dejar pasar la ronda; si fallan, el Reloj del Caos sube +1.',
       },
     ],
   },
@@ -320,19 +320,19 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Advertencia Tallada de los Enanos',
         badge: 'Pista Vital',
-        text: 'Runas antiguas grabadas en la piedra rezan: "Ningún acero mortal hiere al Señor de los Brujos; solo el Filo del Espíritu". Quien lo lea con Historia/Arcano CD 11 gana +2 a su próxima tirada de huida o Atletismo.',
+        text: 'Runas antiguas grabadas en la piedra rezan: "Ningún acero mortal hiere al Señor de los Brujos; solo el Filo del Espíritu". Quien lo lea con MEN CD 11 gana +2 a su próxima tirada de huida o Atletismo.',
       },
       {
         title: 'Frío Sepulcral de la Tumba (R12)',
         badge: 'Terror de Barak Tor',
-        text: 'El aliento se congela en el aire. Todos tiran SAB CD 12: quienes fallen pierden 1 casilla de movimiento este turno; quienes superen resisten el aura del Señor de los Brujos con Ventaja en su próxima salvación.',
+        text: 'El aliento se congela en el aire. Todos tiran MEN CD 12: quienes fallen pierden 1 casilla de movimiento este turno; quienes superen resisten el aura del Señor de los Brujos con Ventaja en su próxima salvación.',
       },
     ],
     corridor: [
       {
         title: 'Puertas Falsas que Crujen (Ala Noreste)',
         badge: 'Trampa de Tiempo',
-        text: 'Una puerta del corredor este no tiene bisagras reales. Investigación CD 11: descubren que es una puerta falsa pintada sobre roca sólida sin perder su acción.',
+        text: 'Una puerta del corredor este no tiene bisagras reales. MEN CD 11: descubren que es una puerta falsa pintada sobre roca sólida sin perder su acción.',
       },
     ],
   },
@@ -342,7 +342,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Martilleo Fantasmal de los Enanos (hacia R21)',
         badge: 'Eco de la Reliquia',
-        text: 'Un sonido lejano de yunque resuena desde el extremo sureste (R21), guiando a los héroes hacia el Filo del Espíritu. El Enano del grupo (o quien supere SAB CD 12) gana +1 DC en su próximo ataque.',
+        text: 'Un sonido lejano de yunque resuena desde el extremo sureste (R21), guiando a los héroes hacia el Filo del Espíritu. El Enano del grupo (o quien supere MEN CD 12) gana +1 DC en su próximo ataque.',
       },
       {
         title: 'Rocío de la Fuente de Leben',
@@ -354,7 +354,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Techo Agrietado del Templo',
         badge: 'Alerta de Bloques',
-        text: 'Polvo y cascotes caen del techo anunciando bloques movedizos. Percepción CD 12: quien lleva Yelmo o supera la prueba ignora el próximo golpe de bloque caído.',
+        text: 'Polvo y cascotes caen del techo anunciando bloques movedizos. MEN CD 12: quien lleva Yelmo o supera la prueba ignora el próximo golpe de bloque caído.',
       },
     ],
   },
@@ -390,7 +390,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Manos Esqueléticas del Suelo',
         badge: 'Trampa Necrótica',
-        text: 'Brazos de hueso brotan entre las losas intentando sujetar los tobillos. Salvación FUE o DES CD 12 para liberarse sin perder movimiento.',
+        text: 'Brazos de hueso brotan entre las losas intentando sujetar los tobillos. Salvación FUE o AGI CD 12 para liberarse sin perder movimiento.',
       },
     ],
   },
@@ -406,12 +406,12 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Recuerdo Fragmentado de Nelath',
         badge: 'Clima de Campaña',
-        text: 'Un susurro triste recorre la sala: "No quería servir a la oscuridad…". Un Bardo o héroe con Persuasión/Arcano CD 12 absorbe la chispa y recupera +1 PM.',
+        text: 'Un susurro triste recorre la sala: "No quería servir a la oscuridad…". Un Bardo o héroe con SUE o MEN CD 12 absorbe la chispa y recupera +1 PM.',
       },
       {
         title: 'Esencia Translúcida Condensada',
         badge: 'Hallazgo Espectral',
-        text: 'Sobre una piedra brilla un frasco de aceite plateado. Investigación CD 12: obtienen una Poción de Clarividencia (+2 PM).',
+        text: 'Sobre una piedra brilla un frasco de aceite plateado. MEN CD 12: obtienen una Poción de Clarividencia (+2 PM).',
         rewardLoot: {
           name: 'Poción de Clarividencia',
           type: 'Poción',
@@ -427,7 +427,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Corriente Espiritual Helada',
         badge: 'Ambiente Espectral',
-        text: 'Una neblina azulada cruza el pasillo. Salvación SAB CD 12: quien falle siente un escalofrío (-1 a su próxima iniciativa); quien supere distingue si hay enemigos tras la siguiente puerta.',
+        text: 'Una neblina azulada cruza el pasillo. Mente MEN CD : quien falle siente un escalofrío (-1 a su próxima iniciativa); quien supere distingue si hay enemigos tras la siguiente puerta.',
       },
     ],
   },
@@ -438,7 +438,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Señal de la Resistencia de Elethorn',
         badge: 'Intriga en Elethorn',
-        text: 'Un símbolo plateado oculto bajo el marco marca un alijo secreto de Ithraeon. Investigación CD 12: recuperan 1 Bomba de Humo y 35 MO.',
+        text: 'Un símbolo plateado oculto bajo el marco marca un alijo secreto de Ithraeon. MEN CD 12: recuperan 1 Bomba de Humo y 35 MO.',
         rewardGold: 35,
         rewardLoot: {
           name: 'Bomba de Humo de Elethorn',
@@ -453,7 +453,7 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Reflejo Plateado de la Luna del Terror',
         badge: 'Fenómeno Lunar',
-        text: 'La luz carmesí se filtra por una grieta. Los héroes con magia o Visión en la Oscuridad detectan al instante cualquier Espectro Etéreo cercano; los demás tiran SAB CD 12 para mantener el temple.',
+        text: 'La luz carmesí se filtra por una grieta. Los héroes con magia o Visión en la Oscuridad detectan al instante cualquier Espectro Etéreo cercano; los demás tiran MEN CD 12 para mantener el temple.',
       },
       {
         title: 'Frasco Alquímico de Contrabando',
@@ -474,12 +474,12 @@ export const MISSION_CONTEXT_EVENTS = {
       {
         title: 'Sombra de un Asesino del Velo',
         badge: 'Emboscada Silenciosa',
-        text: 'Percepción CD 13: detectan un brillo metálico antes de que una daga vuele desde la lluvia. Si fallan, el héroe más atrasado recibe 1 ataque sorpresa de 2 DC (o pierde su Disfraz).',
+        text: 'MEN CD 13: detectan un brillo metálico antes de que una daga vuele desde la lluvia. Si fallan, el héroe más atrasado recibe 1 ataque sorpresa de 2 DC (o pierde su Disfraz).',
       },
       {
         title: 'Patrulla de Guardias Magos bajo la Lluvia',
         badge: 'Sigilo / Disfraz',
-        text: 'Antorchas azules doblan la esquina. Con Disfraz activo o Sigilo CD 12 pasan desapercibidos y escuchan la contraseña del sector (+2 a Iniciativa en la próxima sala).',
+        text: 'Antorchas azules doblan la esquina. Con Disfraz activo o AGI CD 12 pasan desapercibidos y escuchan la contraseña del sector (+2 a Iniciativa en la próxima sala).',
       },
     ],
   },
@@ -503,29 +503,29 @@ export const GENERIC_DUNGEON_EVENTS = {
     {
       title: 'Baldosa Suelta con Compartimento',
       badge: 'Hallazgo Secreto',
-      text: 'Al pisar cerca de la pared se escucha un clic hueco. Investigación CD 12: bajo la losa hay una bolsa con 45 MO y una nota vieja sobre una trampa cercana.',
+      text: 'Al pisar cerca de la pared se escucha un clic hueco. MEN CD 12: bajo la losa hay una bolsa con 45 MO y una nota vieja sobre una trampa cercana.',
       rewardGold: 45,
     },
     {
       title: 'Bramido en la Oscuridad',
       badge: 'Tensión',
-      text: 'Un aullido helado retumba por los muros. Todos los héroes en la sala tiran Salvación de SAB CD 11: quien falle sufre -1 a su próxima tirada d20; quien supere gana Ventaja en su próxima tirada de iniciativa o ataque.',
+      text: 'Un aullido helado retumba por los muros. Todos los héroes en la sala tiran Mente MEN CD : quien falle sufre -1 a su próxima tirada d20; quien supere gana Ventaja en su próxima tirada de iniciativa o ataque.',
     },
     {
       title: 'Brasero aún Encendido',
       badge: 'Ventaja Táctica',
-      text: 'Un brasero de hierro arde con carbones rojos. Un héroe puede gastar 1 acción gratuita para prender su arma en llamas (+1 daño de Fuego en su próximo ataque) o volcarlo hacia un enemigo (DES CD 12 o 1 PC).',
+      text: 'Un brasero de hierro arde con carbones rojos. Un héroe puede gastar 1 acción gratuita para prender su arma en llamas (+1 daño de Fuego en su próximo ataque) o volcarlo hacia un enemigo (AGI CD 12 o 1 PC).',
     },
     {
       title: 'Estatua Agrietada con Gema',
       badge: 'Riesgo / Recompensa',
-      text: 'Una estatua antigua sostiene una gema roja en su ojo. Desarmar Trampas o DES CD 13: si la extraen con cuidado ganan 65 MO; si fallan, un dardo oculto dispara por 1 PC.',
+      text: 'Una estatua antigua sostiene una gema roja en su ojo. AGI CD 13: si la extraen con cuidado ganan 65 MO; si fallan, un dardo oculto dispara por 1 PC.',
       rewardGold: 65,
     },
     {
       title: 'Esqueleto de un Explorador Imperial',
       badge: 'Equipo Olvidado',
-      text: 'Apoyado contra la esquina yace un aventurero caído hace años. Medicina o Investigación CD 11: rescatan un Antídoto Imperial sellado de su morral.',
+      text: 'Apoyado contra la esquina yace un aventurero caído hace años. MEN CD 11: rescatan un Antídoto Imperial sellado de su morral.',
       rewardLoot: {
         name: 'Antídoto Imperial',
         type: 'Poción',
@@ -539,12 +539,12 @@ export const GENERIC_DUNGEON_EVENTS = {
     {
       title: 'Muro con Inscripción Rúnica',
       badge: 'Sabiduría Arcana',
-      text: 'Símbolos brillantes parpadean en el muro. Arcano CD 12: el lanzador que los descifre recupera +1 PM al instante y descubre si hay enemigos tras la siguiente puerta cerrada.',
+      text: 'Símbolos brillantes parpadean en el muro. MEN CD 12: el lanzador que los descifre recupera +1 PM al instante y descubre si hay enemigos tras la siguiente puerta cerrada.',
     },
     {
       title: 'Cadenas Colgantes del Techo',
       badge: 'Terreno Táctico',
-      text: 'Cadenas oxidadas cuelgan a baja altura. Un héroe ágil (Atletismo CD 12) puede balancearse para saltar 3 casillas sin provocar ataques de oportunidad; si falla, hace ruido (+1 Reloj del Caos).',
+      text: 'Cadenas oxidadas cuelgan a baja altura. Un héroe ágil (FUE CD 12) puede balancearse para saltar 3 casillas sin provocar ataques de oportunidad; si falla, hace ruido (+1 Reloj del Caos).',
     },
     {
       title: 'Barril de Pólvora o Aceite',
@@ -554,34 +554,34 @@ export const GENERIC_DUNGEON_EVENTS = {
     {
       title: 'Espejo Empañado',
       badge: 'Visión Fugaz',
-      text: 'Un espejo roto refleja brevemente la sala contigua antes de oscurecerse. Percepción CD 12: el DM revela gratis qué monstruos hay en una habitación adyacente sin abrir la puerta.',
+      text: 'Un espejo roto refleja brevemente la sala contigua antes de oscurecerse. MEN CD 12: el DM revela gratis qué monstruos hay en una habitación adyacente sin abrir la puerta.',
     },
     {
       title: 'Botiquín de Campaña Roto',
       badge: 'Suministro Útil',
-      text: 'Entre restos de cajas encuentran vendajes limpios y hierbas secas. Medicina CD 11: un héroe puede curar +2 PC a un compañero aquí mismo sin gastar pociones.',
+      text: 'Entre restos de cajas encuentran vendajes limpios y hierbas secas. MEN CD 11: un héroe puede curar +2 PC a un compañero aquí mismo sin gastar pociones.',
     },
   ],
   corridor: [
     {
       title: 'Corriente de Aire Helado',
       badge: 'Pista de Secreto',
-      text: 'Una brisa fina brota de una rendija entre los ladrillos. Percepción o Investigación CD 12: el DM confirma si existe una Puerta Secreta o atajo en este tramo del pasillo.',
+      text: 'Una brisa fina brota de una rendija entre los ladrillos. MEN CD 12: el DM confirma si existe una Puerta Secreta o atajo en este tramo del pasillo.',
     },
     {
       title: 'Techo Inestable',
       badge: 'Peligro de Pasillo',
-      text: 'Pequeñas piedras caen del techo agrietado. Si el grupo corre o grita aquí, el último héroe tira Salvación DES CD 12 o recibe 1 PC por escombros.',
+      text: 'Pequeñas piedras caen del techo agrietado. Si el grupo corre o grita aquí, el último héroe tira Salvación AGI CD 12 o recibe 1 PC por escombros.',
     },
     {
       title: 'Huellas Frescas en el Polvo',
       badge: 'Rastreo',
-      text: 'Marcas recientes cruzan el suelo. Supervivencia CD 11: determinan el tipo de enemigos que patrullan el sector siguiente (ganan +2 a Iniciativa en el próximo combate).',
+      text: 'Marcas recientes cruzan el suelo. MEN CD 11: determinan el tipo de enemigos que patrullan el sector siguiente (ganan +2 a Iniciativa en el próximo combate).',
     },
     {
       title: 'Reja Semicaída',
       badge: 'Obstáculo Táctico',
-      text: 'Una reja oxidada cuelga a media altura. Atletismo CD 12 para levantarla y trabarla (paso libre), o pasar agachados gastando +2 casillas de movimiento.',
+      text: 'Una reja oxidada cuelga a media altura. FUE CD 12 para levantarla y trabarla (paso libre), o pasar agachados gastando +2 casillas de movimiento.',
     },
     {
       title: 'Bolsa Caída en las Sombras',
@@ -592,12 +592,12 @@ export const GENERIC_DUNGEON_EVENTS = {
     {
       title: 'Eco de Pasos Cercanos',
       badge: 'Decisión Rápida',
-      text: 'Se oyen pisadas acercándose por el cruce. Sigilo grupal CD 12: si se esconden pegados a la pared, dejan pasar a la patrulla sin combatir; si fallan, aparece 1 Monstruo Errante.',
+      text: 'Se oyen pisadas acercándose por el cruce. AGI grupal CD 12: si se esconden pegados a la pared, dejan pasar a la patrulla sin combatir; si fallan, aparece 1 Monstruo Errante.',
     },
     {
       title: 'Antorcha de Pared con Palanca',
       badge: 'Mecanismo Oculto',
-      text: 'Una antorcha está ligeramente torcida. Investigación CD 12: al girarla desactiva una trampa cercana o abre un nicho con una Poción de Curación Menor (+2 PC).',
+      text: 'Una antorcha está ligeramente torcida. MEN CD 12: al girarla desactiva una trampa cercana o abre un nicho con una Poción de Curación Menor (+2 PC).',
       rewardLoot: {
         name: 'Poción de Curación Menor',
         type: 'Poción',
@@ -622,29 +622,29 @@ export function generateDynamicMissionEvent(currentMap, isCorridor, partyLevel =
     {
       title: `Rastro de ${wandering} en ${missionShort}`,
       badge: 'Pista Dinámica',
-      text: `Encuentran armas melladas y marcas frescas de ${wandering}. Supervivencia CD ${cd}: descubren su punto débil y el grupo gana Ventaja en el primer ataque del próximo combate.`,
+      text: `Encuentran armas melladas y marcas frescas de ${wandering}. MEN CD ${cd}: descubren su punto débil y el grupo gana Ventaja en el primer ataque del próximo combate.`,
     },
     {
       title: `Alijo Oculto de ${missionShort}`,
       badge: 'Botín Escondido',
-      text: `Detrás de una piedra floja hay un escondite improvisado. Investigación CD ${cd}: recuperan ${goldAmt} MO sin hacer ruido.`,
+      text: `Detrás de una piedra floja hay un escondite improvisado. MEN CD ${cd}: recuperan ${goldAmt} MO sin hacer ruido.`,
       rewardGold: goldAmt,
     },
     {
       title: `Eco Mágico de ${currentMap?.expansion || 'Zargon'}`,
       badge: 'Anomalía Arcana',
-      text: `El aire vibra con energía antigua. Arcano CD ${cd}: un héroe absorbe la chispa y recupera +1 PM (si falla, las antorchas parpadean y el Reloj del Caos sube +1).`,
+      text: `El aire vibra con energía antigua. MEN CD ${cd}: un héroe absorbe la chispa y recupera +1 PM (si falla, las antorchas parpadean y el Reloj del Caos sube +1).`,
     },
     {
       title: `Trampa Improvisada de ${wandering}`,
       badge: 'Alerta Táctica',
-      text: `Un cable tenso cruza detrás de la entrada. Percepción o Desarmar Trampas CD ${cd}: si lo desarman obtienen piezas útiles (+${Math.round(goldAmt / 2)} MO); si fallan, el primero recibe 1 PC.`,
+      text: `Un cable tenso cruza detrás de la entrada. AGI o MEN CD ${cd}: si lo desarman obtienen piezas útiles (+${Math.round(goldAmt / 2)} MO); si fallan, el primero recibe 1 PC.`,
       rewardGold: Math.round(goldAmt / 2),
     },
     {
       title: `Mensaje de un Explorador Caído`,
       badge: 'Moral y Tensión',
-      text: `Un aviso tallado en la pared advierte sobre los peligros de ${missionShort}. Quien lo estudie con Medicina o Persuasión CD ${cd} prepara al grupo (+2 a Iniciativa en la próxima pelea).`,
+      text: `Un aviso tallado en la pared advierte sobre los peligros de ${missionShort}. Quien lo estudie con MEN o SUE CD ${cd} prepara al grupo (+2 a Iniciativa en la próxima pelea).`,
     },
   ];
 
@@ -652,18 +652,18 @@ export function generateDynamicMissionEvent(currentMap, isCorridor, partyLevel =
     {
       title: `Cruce Vigilado por ${wandering}`,
       badge: 'Táctica de Pasillo',
-      text: `Voces y pasos resuenan en el siguiente cruce. Sigilo CD ${cd}: si lo superan, el DM les dice qué hay tras la puerta más cercana sin alertar a nadie.`,
+      text: `Voces y pasos resuenan en el siguiente cruce. AGI CD ${cd}: si lo superan, el DM les dice qué hay tras la puerta más cercana sin alertar a nadie.`,
     },
     {
       title: `Escombros de ${missionShort}`,
       badge: 'Obstáculo Rápido',
-      text: `Un derrumbe parcial estrecha el corredor. Atletismo CD ${cd} para apartar la roca principal y abrir paso (entre los escombros brillan ${goldAmt} MO).`,
+      text: `Un derrumbe parcial estrecha el corredor. FUE CD ${cd} para apartar la roca principal y abrir paso (entre los escombros brillan ${goldAmt} MO).`,
       rewardGold: goldAmt,
     },
     {
       title: `Bruma Fría del Corredor`,
       badge: 'Ambiente Sobrenatural',
-      text: `Una neblina baja cubre el suelo. Salvación de SAB CD ${cd}: quien la supere detecta al instante cualquier trampa de foso en los próximos 4 pasos.`,
+      text: `Una neblina baja cubre el suelo. Prueba de Mente (MEN CD ${cd}: quien la supere detecta al instante cualquier trampa de foso en los próximos 4 pasos.`,
     },
   ];
 
@@ -685,7 +685,7 @@ export function generateEpicSceneTwist(currentMap, selectedRoomId, roomMonsters 
     {
       title: '🔥 Candil / Lámpara Colgante Sobre los Enemigos',
       badge: 'Giro de Escena · Terreno',
-      text: `Un candil de hierro arde justo encima de la sala (${selectedRoomId}). Un héroe puede gastar su acción para cortar la cadena (Ataque a distancia o DES CD ${cd}): ¡cae en llamas infligiendo 2 DC a los enemigos en 2×2 casillas! Si falla, el ruido sube +1 el Reloj del Caos.`,
+      text: `Un candil de hierro arde justo encima de la sala (${selectedRoomId}). Un héroe puede gastar su acción para cortar la cadena (Ataque a distancia o AGI CD ${cd}): ¡cae en llamas infligiendo 2 DC a los enemigos en 2×2 casillas! Si falla, el ruido sube +1 el Reloj del Caos.`,
     },
     {
       title: '⚔️ Maniobra de Flanqueo Heroico',
@@ -700,7 +700,7 @@ export function generateEpicSceneTwist(currentMap, selectedRoomId, roomMonsters 
     {
       title: '💥 Mesa / Mueble como Barricada o Proyectil',
       badge: 'Giro de Escena · Interactivo',
-      text: `En medio del combate de ${missionShort}, un héroe con FUE (Atletismo CD ${cd}) puede volcar una mesa o empujar escombros: otorga cobertura (+1 DC Defensa contra proyectiles) o derriba a un enemigo adyacente.`,
+      text: `En medio del combate de ${missionShort}, un héroe con FUE (FUE CD ${cd}) puede volcar una mesa o empujar escombros: otorga cobertura (+1 DC Defensa contra proyectiles) o derriba a un enemigo adyacente.`,
     },
   ];
 
@@ -708,7 +708,7 @@ export function generateEpicSceneTwist(currentMap, selectedRoomId, roomMonsters 
     {
       title: '👑 Duelo de Voluntades con el Jefe',
       badge: 'Momento Épico · Jefe',
-      text: `El líder enemigo en ${selectedRoomId} señala al héroe más fuerte y lanza un desafío brutal. Si el héroe acepta (Intimidación o SAB CD ${cd}), el Jefe queda obligado a atacarlo solo a él este turno, pero los aliados ganan Ventaja contra él hasta el final de la ronda.`,
+      text: `El líder enemigo en ${selectedRoomId} señala al héroe más fuerte y lanza un desafío brutal. Si el héroe acepta (FUE o MEN CD ${cd}), el Jefe queda obligado a atacarlo solo a él este turno, pero los aliados ganan Ventaja contra él hasta el final de la ronda.`,
     },
     {
       title: '⚡ Pulso de Poder Oscuro (Oportunidad)',

@@ -20,7 +20,7 @@ export const DUNGEON_NPCS = [
     icon: '🕯️',
     role: 'Clériga / Alquimista',
     dialogue: '«Me quedé atrapada aquí buscando raíces lunares para curar la plaga de Elethorn. Si me escoltan hasta la puerta o me dan 1 Hierba Lunar, bendeciré sus heridas.»',
-    miniQuest: 'Mini-Misión: Proteger a Lyra 1 combate o entregarle 1 Hierba Lunar / superar Medicina CD 12.',
+    miniQuest: 'Mini-Misión: Proteger a Lyra 1 combate o entregarle 1 Hierba Lunar / superar Mente MEN CD 12.',
     rewardText: 'Recompensa: Cura +3 PC y +2 PM a un héroe + 1 Poción de Curación Menor.',
     rewardLoot: {
       name: 'Poción de Curación Menor',
@@ -37,8 +37,8 @@ export const DUNGEON_NPCS = [
     name: 'Pip el Goblin Traidor',
     icon: '👺',
     role: 'Informante Cobarde',
-    dialogue: '«¡No me peguen, no me peguen! El jefe me golpea todo el día. Si me dan 20 monedas de oro (o superan Persuasión/Intimidación CD 11), les digo dónde está la puerta secreta y todas las trampas de adelante.»',
-    miniQuest: 'Mini-Misión: Pagar 20 MO o superar Persuasión / Intimidación CD 11.',
+    dialogue: '«¡No me peguen, no me peguen! El jefe me golpea todo el día. Si me dan 20 monedas de oro (o superan Suerte/Fuerza (SUE/FUE CD 11)), les digo dónde está la puerta secreta y todas las trampas de adelante.»',
+    miniQuest: 'Mini-Misión: Pagar 20 MO o superar Suerte/Fuerza (SUE/FUE CD 11).',
     rewardText: 'Recompensa: El DM revela gratis 1 puerta secreta o trampa cercana y el grupo gana +1 🏅 Reputación.',
     rewardGold: 0,
   },
@@ -48,7 +48,7 @@ export const DUNGEON_NPCS = [
     icon: '👻',
     role: 'Caballero Caído de Elethorn',
     dialogue: '«Mi guardia no termina hasta que caiga el monstruo que profana esta cripta. Juren sobre mi escudo que purificarán esta sala y les prestaré mi fuerza espectral.»',
-    miniQuest: 'Mini-Misión: Derrotar al monstruo más fuerte de la sala o rezar con SAB CD 12.',
+    miniQuest: 'Mini-Misión: Derrotar al monstruo más fuerte de la sala o rezar con Mente MEN CD 12.',
     rewardText: 'Recompensa: +1 Polvo Rúnico al héroe y +1 Pergamino de Coraje.',
     rewardLoot: {
       name: 'Pergamino de Coraje',

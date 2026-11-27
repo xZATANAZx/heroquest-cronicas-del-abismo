@@ -76,7 +76,7 @@ export const PROCEDURAL_BIOMES = [
     icon: '❄️',
     badgeColor: 'bg-sky-950/60 border-sky-700/60 text-sky-200',
     globalRule:
-      'Suelo Helado: Correr más de 6 casillas en combate pide Atletismo CD 11 o caes Derribado. El Fuego (hechizos/Fuego Griego) hace +1 DC.',
+      'Suelo Helado: Correr más de 6 casillas en combate pide FUE CD 11 o caes Derribado. El Fuego (hechizos/Fuego Griego) hace +1 DC.',
     monsterPool: ['abomination', 'dread_warrior', 'goblin', 'skeleton'],
     bossPool: ['gargoyle', 'dread_warrior'],
     wandering: 'Abominación Ártica',
@@ -129,7 +129,7 @@ export const QUEST_PLOTS = [
     id: 'exploracion',
     name: 'Sellado de Brechas',
     icon: '🧭',
-    objective: 'Explorar 3 salas clave del complejo para sellar runas/grietas (Arcano o Atletismo CD 13) antes de enfrentar al Jefe.',
+    objective: 'Explorar 3 salas clave del complejo para sellar runas/grietas (Arcano o FUE CD 13) antes de enfrentar al Jefe.',
     climaxRule: 'Cada brecha sellada debilita al Jefe Final (-1 PC y -1 DC de Defensa).',
   },
   {
@@ -188,25 +188,25 @@ export const HAZARD_ROOMS = [
     id: 'haz_gas',
     name: 'Cámara de Gas Tóxico',
     icon: '☠️',
-    rule: 'Al terminar tu turno dentro de esta sala, supera CON CD 12 o pierdes 1 PC y quedas Envenenado. Contiene 1 Glándula de Veneno extra.',
+    rule: 'Al terminar tu turno dentro de esta sala, supera FUE CD 12 o pierdes 1 PC y quedas Envenenado. Contiene 1 Glándula de Veneno extra.',
   },
   {
     id: 'haz_inundada',
     name: 'Sala Inundada',
     icon: '🌊',
-    rule: 'El agua hasta la cintura reduce el movimiento a la mitad y da Desventaja en ataques con fuego/pólvora. Oculta +30 MO sumergidos (Percepción CD 12).',
+    rule: 'El agua hasta la cintura reduce el movimiento a la mitad y da Desventaja en ataques con fuego/pólvora. Oculta +30 MO sumergidos (MEN CD 12).',
   },
   {
     id: 'haz_hongos',
     name: 'Bosque de Hongos Luminiscentes',
     icon: '🍄',
-    rule: 'Esporas alucinógenas: al entrar, supera SAB CD 12 o pierdes 1 PM. Recolectar (Naturaleza/Supervivencia CD 11) da 2 Hierbas Lunares.',
+    rule: 'Esporas alucinógenas: al entrar, supera MEN CD 12 o pierdes 1 PM. Recolectar (Naturaleza/MEN CD 11) da 2 Hierbas Lunares.',
   },
   {
     id: 'haz_inestable',
     name: 'Techo Inestable',
     icon: '🪨',
-    rule: 'Cualquier ataque con 3+ calaveras o explosión hace caer piedras (DES CD 13 o 2 PC de daño).',
+    rule: 'Cualquier ataque con 3+ calaveras o explosión hace caer piedras (AGI CD 13 o 2 PC de daño).',
   },
   {
     id: 'haz_runas',
@@ -218,7 +218,7 @@ export const HAZARD_ROOMS = [
     id: 'haz_telaranas',
     name: 'Nido de Telarañas Gigantes',
     icon: '🕸️',
-    rule: 'Terreno difícil (-2 Mov). Al entrar supera FUE o DES CD 12 o quedas inmovilizado hasta gastar tu acción para liberarte.',
+    rule: 'Terreno difícil (-2 Mov). Al entrar supera FUE o AGI CD 12 o quedas inmovilizado hasta gastar tu acción para liberarte.',
   },
   {
     id: 'haz_bruma',
@@ -241,7 +241,7 @@ const ROOM_HINT_TEMPLATES = [
   {
     title: 'Huellas Recientes junto a la Puerta',
     clue: 'Marcas frescas de botas y garras cruzan el polvo de esta cámara hacia el siguiente acceso.',
-    reward: 'Supervivencia CD 11: sorprenden a la siguiente sala (ganan +2 a Iniciativa y Ventaja en el primer ataque).',
+    reward: 'MEN CD 11: sorprenden a la siguiente sala (ganan +2 a Iniciativa y Ventaja en el primer ataque).',
     consequence: 'Si avanzan haciendo ruido, los guardias pasan a estado ALERTA.',
   },
   {
@@ -259,14 +259,14 @@ const ROOM_HINT_TEMPLATES = [
   {
     title: 'Rastro de Hierbas y Frascos Rotos',
     clue: 'Un explorador anterior dejó caer un frasco roto junto a la pared de esta habitación.',
-    reward: 'Investigación CD 11: recuperan +1 Hierba Lunar o +1 Polvo Rúnico gratis.',
-    consequence: 'Sin guantes (DES CD 11) el vidrio corta por 1 PC.',
+    reward: 'MEN CD 11: recuperan +1 Hierba Lunar o +1 Polvo Rúnico gratis.',
+    consequence: 'Sin guantes (AGI CD 11) el vidrio corta por 1 PC.',
   },
   {
     title: 'Aroma a Pólvora y Aceite',
     clue: 'El olor a aceite de armas delata un escondite improvisado detrás de los muebles.',
-    reward: 'Percepción CD 12: +1 Pólvora Negra o +1 Acero Templado al examinar el próximo mueble.',
-    consequence: 'Usar fuego descuidadamente aquí provoca una chispa (DES CD 12 o 1 PC).',
+    reward: 'MEN CD 12: +1 Pólvora Negra o +1 Acero Templado al examinar el próximo mueble.',
+    consequence: 'Usar fuego descuidadamente aquí provoca una chispa (AGI CD 12 o 1 PC).',
   },
 ];
 
@@ -274,19 +274,19 @@ const CORRIDOR_HINT_TEMPLATES = [
   {
     title: 'Corriente de Aire en el Pasillo',
     clue: 'La llama de la antorcha se inclina bruscamente hacia un tramo concreto de la pared del corredor.',
-    reward: 'Percepción CD 11: el DM confirma si existe una Puerta Secreta o atajo en este pasillo.',
+    reward: 'MEN CD 11: el DM confirma si existe una Puerta Secreta o atajo en este pasillo.',
     consequence: 'Si la antorcha se apaga, el grupo avanza con Desventaja en Percepción 1 turno.',
   },
   {
     title: 'Losa Floja en el Corredor',
     clue: 'Una baldosa suena hueca al pisar cerca del cruce del pasillo.',
-    reward: 'Desarmar Trampas o DES CD 12: neutralizan una trampa del pasillo y rescatan +1 Acero Templado.',
+    reward: 'AGI CD 12: neutralizan una trampa del pasillo y rescatan +1 Acero Templado.',
     consequence: 'Si fallan por 5+, suena un clic metálico (+1 Reloj del Caos).',
   },
   {
     title: 'Eco de Patrulla a la Vuelta',
     clue: 'Pasos rítmicos resuenan más adelante en el corredor.',
-    reward: 'Sigilo grupal CD 12: dejan pasar la patrulla o la emboscan con Ventaja en el primer turno.',
+    reward: 'AGI grupal CD 12: dejan pasar la patrulla o la emboscan con Ventaja en el primer turno.',
     consequence: 'Si fallan el Sigilo, el Monstruo Errante los sorprende desde el cruce.',
   },
   {
@@ -317,10 +317,10 @@ export function generateHintCard(biomeId = 'catacumbas', isCorridor = false) {
 // ============================================================================
 export const DOOR_STATES = [
   { id: 'normal', label: 'Puerta Normal', badge: 'Abierta gratis', rule: 'Acción gratuita al estar adyacente. Regla Anti-Campeo: al abrir, el DM puede usar Romper Filas (enemigo empuja/flanquea) o permitir abrir a 2 de ancho.' },
-  { id: 'cerrada', label: 'Cerrada con Llave', badge: 'DES CD 13 / Llave', rule: 'Requiere Llave, Herramientas de Ladrón (DES CD 13) o derribarla con FUE CD 14 (+1 Reloj del Caos).' },
+  { id: 'cerrada', label: 'Cerrada con Llave', badge: 'AGI CD 13 / Llave', rule: 'Requiere Llave, Herramientas de Ladrón (AGI CD 13) o derribarla con FUE CD 14 (+1 Reloj del Caos).' },
   { id: 'atrancada', label: 'Atrancada por Dentro', badge: 'FUE CD 15', rule: 'Los monstruos la bloquearon: requiere FUE CD 15 o Bomba de Pólvora. Los enemigos dentro están en estado Alerta.' },
-  { id: 'entreabierta', label: 'Entreabierta', badge: 'Espiar Gratis', rule: 'Un héroe adyacente puede espiar la sala sin entrar ni activar enemigos (Percepción CD 11).' },
-  { id: 'trampa_aguja', label: 'Trampa en el Picaporte', badge: 'DES CD 13', rule: 'Si se abre sin buscar trampas, dispara una aguja envenenada (1 PC + Envenenado salvo CON CD 12).' },
+  { id: 'entreabierta', label: 'Entreabierta', badge: 'Espiar Gratis', rule: 'Un héroe adyacente puede espiar la sala sin entrar ni activar enemigos (MEN CD 11).' },
+  { id: 'trampa_aguja', label: 'Trampa en el Picaporte', badge: 'AGI CD 13', rule: 'Si se abre sin buscar trampas, dispara una aguja envenenada (1 PC + Envenenado salvo FUE CD 12).' },
   { id: 'sello_puzzle', label: 'Sello Rúnico (Puzzle)', badge: 'Puzzle Móvil', rule: 'El DM envía un Puzzle interactivo al celular de un héroe para desbloquear el paso sin subir el Caos.' },
 ];
 
@@ -446,7 +446,7 @@ function buildQuestNarrative({ biome, plot, title, bossName, arcInfo, nemesis })
       title: 'Señales del Enemigo',
       readAloud:
         'Encuentran restos recientes de actividad: antorchas aún tibias, marcas frescas en el suelo y suministros apresurados. Quien manda aquí sabe que alguien podría bajar... pero aún no sabe que ya están dentro.',
-      dmTip: 'Momento ideal para robar 1 Pista Sensorial o dejar que un héroe haga Percepción/Investigación CD 12.',
+      dmTip: 'Momento ideal para robar 1 Pista Sensorial o dejar que un héroe haga Percepción/MEN CD 12.',
     },
     R5: {
       stage: 'Tensión · Mitad de Mazmorra',
@@ -660,14 +660,14 @@ function buildProceduralBoardMap({
     if (raw.type === 'alchemy_bench') {
       alchemyCount += 1;
       if (alchemyCount > 1) {
-        // Garantizar máximo 1 Mesa de Alquimia por misión: las demás se vuelven Mesa o Altar
+        // Garantizar máximo 1 Alquimia en Campo por misión: las demás se vuelven Mesa o Altar
         items.push({ ...raw, type: 'table', note: 'Mesa de Laboratorio' });
         return;
       }
       items.push({
         ...raw,
-        label: 'Mesa de Alquimia 3×2 (Única en la misión)',
-        note: 'Los héroes pueden destilar pociones aquí con tirada d20 de Arcano.',
+        label: 'Alquimia en Campo 3×2 (Única en la misión)',
+        note: 'Estantes con ingredientes frescos para destilar desde el celular (Calificados = Ventaja · Otros = Suerte).',
       });
       return;
     }
@@ -1049,23 +1049,23 @@ const EW_TRIGGERS = [
 const EW_EFFECTS = [
   'invoca 2 Esqueletos o Goblins en las esquinas más cercanas al héroe con menos PC.',
   'todos los monstruos visibles ganan +1 DC de Ataque y Defensa durante 1 ronda completa.',
-  'las antorchas parpadean: los héroes atacan con Desventaja hasta que alguien supere SAB CD 13.',
-  'una trampa oculta se activa bajo el líder (DES CD 13 o pierde 2 PC y termina su movimiento).',
+  'las antorchas parpadean: los héroes atacan con Desventaja hasta que alguien supere MEN CD 13.',
+  'una trampa oculta se activa bajo el líder (AGI CD 13 o pierde 2 PC y termina su movimiento).',
   'el enemigo más cercano entra en Modo Espíritu: su próximo ataque daña PM en lugar de PC.',
   'un muro de sombras bloquea la puerta detrás del grupo durante 2 turnos (FUE CD 14 para abrirlo).',
 ];
 
 const EW_DREAD_VARIANTS = [
-  { title: 'Bola en Llamas (Terror)', type: 'Hechizo', rarity: 'Inusual', text: 'Envuelve a un héroe visible en llamas: sufre 2 PC (tira 2 Dados Rojos o DES CD {CD}: cada 5–6 reduce 1 daño).' },
-  { title: 'Nube de Terror (Terror)', type: 'Hechizo', rarity: 'Rara', text: 'Paraliza a los héroes de la sala actual (no mueven ni atacan). Cada víctima se libera con SAB CD {CD} o sacando 6 con tantos d6 como PM.' },
-  { title: 'Luces del Terror (Luna)', type: 'Maldición', rarity: 'Inusual', text: 'Haces fantasmales rodean a un héroe: todos los monstruos tiran +1 DC Ataque contra él hasta superar SAB CD {CD} o sacar 5–6 en 1d6.' },
+  { title: 'Bola en Llamas (Terror)', type: 'Hechizo', rarity: 'Inusual', text: 'Envuelve a un héroe visible en llamas: sufre 2 PC (tira 2 Dados Rojos o AGI CD {CD}: cada 5–6 reduce 1 daño).' },
+  { title: 'Nube de Terror (Terror)', type: 'Hechizo', rarity: 'Rara', text: 'Paraliza a los héroes de la sala actual (no mueven ni atacan). Cada víctima se libera con MEN CD {CD} o sacando 6 con tantos d6 como PM.' },
+  { title: 'Luces del Terror (Luna)', type: 'Maldición', rarity: 'Inusual', text: 'Haces fantasmales rodean a un héroe: todos los monstruos tiran +1 DC Ataque contra él hasta superar MEN CD {CD} o sacar 5–6 en 1d6.' },
   { title: 'Canalizar el Terror (Luna)', type: 'Hechizo', rarity: 'Común', text: 'Un monstruo canaliza energía oscura: tira 1d6 (+1 por cada aliado adyacente): 4–5 = 1 PC, 6+ = 2 PC a un héroe en LdV.' },
-  { title: 'Rayo Mortífero (Terror)', type: 'Hechizo', rarity: 'Rara', text: 'Un rayo atraviesa en línea recta hasta chocar con pared/puerta: 2 PC a todos en el camino (DES CD {CD} reduce a 1 PC).' },
-  { title: 'Dominación Oscura (Terror)', type: 'Maldición', rarity: 'Rara', text: 'Un héroe debe superar SAB CD {CD} o Zargon lo mueve 3 casillas y le hace atacar a un aliado adyacente.' },
+  { title: 'Rayo Mortífero (Terror)', type: 'Hechizo', rarity: 'Rara', text: 'Un rayo atraviesa en línea recta hasta chocar con pared/puerta: 2 PC a todos en el camino (AGI CD {CD} reduce a 1 PC).' },
+  { title: 'Dominación Oscura (Terror)', type: 'Maldición', rarity: 'Rara', text: 'Un héroe debe superar MEN CD {CD} o Zargon lo mueve 3 casillas y le hace atacar a un aliado adyacente.' },
   { title: 'Refuerzo de la Horda', type: 'Emboscada', rarity: 'Común', text: 'Al inicio del turno de Zargon, aparece 1 {WANDERING} en la puerta o esquina más cercana fuera de línea de visión.' },
   { title: 'Frenesí de Zargon', type: 'Táctica', rarity: 'Común', text: 'Todos los monstruos visibles ganan +1 DC Ataque este turno pero defienden con -1 DC.' },
-  { title: 'Trampa Reactivada', type: 'Trampa', rarity: 'Común', text: 'Cuando un héroe avance por un pasillo o abra una puerta, se activa un dardo oculto (DES CD {CD} o 1 PC + Envenenado).' },
-  { title: 'Muro de Sombras', type: 'Hechizo', rarity: 'Inusual', text: 'Una puerta abierta se sella mágicamente por 2 turnos (FUE CD {CD} o Arcano CD {CD} para abrirla antes).' },
+  { title: 'Trampa Reactivada', type: 'Trampa', rarity: 'Común', text: 'Cuando un héroe avance por un pasillo o abra una puerta, se activa un dardo oculto (AGI CD {CD} o 1 PC + Envenenado).' },
+  { title: 'Muro de Sombras', type: 'Hechizo', rarity: 'Inusual', text: 'Una puerta abierta se sella mágicamente por 2 turnos (FUE CD {CD} o MEN CD {CD} para abrirla antes).' },
   { title: 'Velo Espectral', type: 'Maldición', rarity: 'Inusual', text: 'El enemigo más cercano entra en forma espectral por 1 ronda: su próximo ataque daña PM en lugar de PC.' },
   { title: 'Invocar Espectros (Luna)', type: 'Emboscada', rarity: 'Rara', text: 'De las sombras emerge 1 Espectro Etéreo (2 si el grupo es Nivel 6+) adyacente al héroe con menos PM.' },
 ];
@@ -1104,9 +1104,9 @@ const EV_NOUNS = [
   'Cambio de Guardia',
 ];
 const EV_OUTCOMES = [
-  'todos los héroes deben superar DES CD {CD} o quedar Derribados y perder 1 PC.',
+  'todos los héroes deben superar AGI CD {CD} o quedar Derribados y perder 1 PC.',
   'aparece una patrulla errante de {N} monstruos desde las escaleras de entrada.',
-  'las sombras drenan la voluntad: cada héroe supera SAB CD {CD} o pierde 1 PM.',
+  'las sombras drenan la voluntad: cada héroe supera MEN CD {CD} o pierde 1 PM.',
   'una grieta revela un escondite con {GOLD} MO y 1 Material de Crafteo, pero el ruido atrae 1 monstruo errante.',
   'un pulso mágico recarga 1 hechizo gastado al lanzador más herido, pero sube +1 el Reloj del Caos.',
 ];
@@ -1134,10 +1134,10 @@ export function generateProceduralEvent(level = 1, missionContext = null) {
 const FURN_FINDS = [
   { type: 'Tesoro', text: 'Encuentras un doble fondo oculto con {GOLD} MO y 1 Material de Crafteo.' },
   { type: 'Alquimia', text: 'Hallazgo de 2 ingredientes intactos (Hierba Lunar / Polvo Rúnico) listos para crafteo.' },
-  { type: 'Trampa', text: '¡Resorte oculto! Supera DES CD {CD} o sufres 2 PC por dardo envenenado.' },
+  { type: 'Trampa', text: '¡Resorte oculto! Supera AGI CD {CD} o sufres 2 PC por dardo envenenado.' },
   { type: 'Pista', text: 'Encuentras notas que revelan la posición de 1 trampa o puerta secreta en esta ala.' },
   { type: 'Bendición', text: 'Un talismán antiguo otorga Ventaja en tu próximo ataque o tirada de salvación.' },
-  { type: 'Emboscada', text: '¡Un Mímico menor o rata gigante salta desde el interior! (1 PC salvo DES CD {CD}).' },
+  { type: 'Emboscada', text: '¡Un Mímico menor o rata gigante salta desde el interior! (1 PC salvo AGI CD {CD}).' },
 ];
 
 export function generateProceduralFurniture(furnitureType = 'Genérico', level = 1) {
@@ -1179,7 +1179,7 @@ export function generateProceduralTreasure(level = 1) {
       id: `proc-tr-${Date.now()}`,
       kind: 'Trampa',
       title: `Trampa Procedural (Nv.${level})`,
-      text: `Una runa de presión se ilumina bajo tus pies: supera DES o Arcano CD ${cd} o sufres ${Math.min(4, 1 + Math.ceil(level / 3))} PC de daño.`,
+      text: `Una runa de presión se ilumina bajo tus pies: supera DES o MEN CD ${cd} o sufres ${Math.min(4, 1 + Math.ceil(level / 3))} PC de daño.`,
     };
   }
   const gold = randInt(4, 9) * 20 + level * 25;
@@ -1195,19 +1195,19 @@ const TRAVEL_BIOMES = ['Bosque Sombrío', 'Paso de Montaña', 'Camino Real', 'Pa
 const TRAVEL_EVENTS = [
   {
     title: 'Caravana Atacada',
-    test: 'Atletismo o Persuasión CD {CD}',
+    test: 'Atletismo o SUE CD {CD}',
     success: 'Ayudan a los mercaderes y reciben {GOLD} MO + 1 Ración de Mazmorra cada uno.',
     fail: 'Llegan tarde; el retraso sube el Reloj del Caos inicial a 2.',
   },
   {
     title: 'Santuario Olvidado',
-    test: 'Religión o Arcano CD {CD}',
+    test: 'Religión o MEN CD {CD}',
     success: 'Cada héroe comienza la próxima misión con Ventaja en su primera tirada y 1 Polvo Rúnico.',
     fail: 'Un espíritu inquieto drena 1 PM al líder antes de desaparecer.',
   },
   {
     title: 'Emboscada en el Puente',
-    test: 'Percepción o Sigilo CD {CD}',
+    test: 'Percepción o AGI CD {CD}',
     success: 'Detectan la trampa y roban 1 Bomba de Humo y {GOLD} MO a los bandidos.',
     fail: 'Un héroe al azar comienza la misión con 2 PC menos por flechas en el camino.',
   },

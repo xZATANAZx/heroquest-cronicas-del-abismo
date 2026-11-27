@@ -65,27 +65,27 @@ const SVG_H = MARGIN_TOP + BOARD_ROWS * CELL + 8;
 
 const coordLabel = (x, y) => `${COL_LETTERS[x]}${y + 1}`;
 
-// Reglas claras de las trampas del tablero (con material al desarmar SOLO si aplica)
+// Reglas claras de las trampas del tablero (4 Pilares HQ-D20 v6: AGI / MEN / FUE / SUE)
 const TRAP_RULES = {
   trap_pit: {
     name: 'Trampa de Foso Oculto',
-    detect: 'Percepción CD 12 (CD 14 en Supervivencia) al buscar trampas sin enemigos visibles.',
-    disarm: 'Desarmar Trampas o Saltar (DES CD 12 / 14 en Supervivencia).',
+    detect: 'Mente (MEN CD 12 / 14 en Supervivencia) al buscar trampas sin enemigos visibles.',
+    disarm: 'Agilidad (AGI CD 12 / 14 en Supervivencia) para desarmar o saltar.',
     effect: 'Si un héroe pisa esta casilla sin verla, cae al foso: sufre 1 PC de daño, termina su turno y ataca/defiende con -1 DC hasta salir.',
     disarmMaterial: null,
   },
   trap_spear: {
     name: 'Trampa de Lanza / Aguja',
-    detect: 'Percepción CD 12 (CD 14 en Supervivencia) al buscar trampas o revisar el cofre.',
-    disarm: 'Desarmar Trampas CD 13 / 15 en Supervivencia (Enano/Pícaro tienen Ventaja).',
-    effect: 'Si se activa, dispara una lanza o aguja: Salvación DES CD 13 o recibe 1 PC (si es aguja envenenada, queda Envenenado -1 DC Ataque).',
+    detect: 'Mente (MEN CD 12 / 14 en Supervivencia) al buscar trampas o revisar el cofre.',
+    disarm: 'Agilidad (AGI CD 13 / 15 en Supervivencia — Enano/Pícaro/Cerrajero con Ventaja).',
+    effect: 'Si se activa, dispara una lanza o aguja: Agilidad (AGI CD 13) o recibe 1 PC (si es aguja envenenada, queda Envenenado -1 DC Ataque).',
     disarmMaterial: { id: 'glandula_veneno', label: '☠️ Glándula de Veneno' },
   },
   trap_falling_rock: {
     name: 'Trampa de Bloque Cayendo',
-    detect: 'Percepción CD 13 (CD 15 en Supervivencia) buscando grietas en el techo.',
-    disarm: 'Desarmar Trampas CD 13 / 15 en Supervivencia (Enano/Ingeniero tienen Ventaja).',
-    effect: 'Cae un bloque de piedra: Salvación DES CD 13 o sufre 2 PC (1 PC si supera) y la casilla queda bloqueada como Muro.',
+    detect: 'Mente (MEN CD 13 / 15 en Supervivencia) buscando grietas en el techo.',
+    disarm: 'Agilidad (AGI CD 13 / 15 en Supervivencia — Enano/Ingeniero con Ventaja).',
+    effect: 'Cae un bloque de piedra: Agilidad (AGI CD 13) o sufre 2 PC (1 PC si supera) y la casilla queda bloqueada como Muro.',
     disarmMaterial: { id: 'chatarra_acero', label: '⚙️ Acero Templado' },
   },
 };
@@ -135,19 +135,19 @@ function detectSpawnable(disc, currentMap) {
   };
 }
 
-// Guía rápida de reglas tácticas para cada mueble que aparezca en la sala
+// Guía rápida de reglas tácticas para cada mueble que aparezca en la sala (4 Pilares v6)
 const FURNITURE_QUICK_RULES = {
   table: 'Táctica: Volcar mesa (Acción gratuita, FUE CD 11) da +1 Def vs proyectiles. Subir encima (+1 mov) da Ventaja de altura.',
-  alchemy_bench: 'Alquimia: Con Materiales de Crafteo y Arcano CD 12, un héroe fabrica pociones o tónicos en campo.',
-  bookcase: 'Examinar (Acción): Puede revelar pergaminos, mapas de puertas secretas o debilidades de jefes (Investigación/Arcano CD 12).',
+  alchemy_bench: 'Examinar (Acción): Guarda ingredientes frescos (Hierbas, Polvo Rúnico o Veneno). Recuerda: las pociones se destilan desde el celular en cualquier momento por Suerte o Calificación.',
+  bookcase: 'Examinar (Acción): Puede revelar pergaminos, mapas de puertas secretas o debilidades de jefes (MEN CD 12).',
   weapon_rack: 'Examinar (Acción): Puede contener armas de repuesto, dagas arrojadizas o piedra de afilar (+1 DC próximo ataque).',
-  chest: 'Revisar Trampas primero (Percepción CD 12). Abrir sin revisar puede activar aguja/gas o despertar un Mímico.',
+  chest: 'Revisar Trampas primero (AGI/MEN CD 12). Abrir sin revisar puede activar aguja/gas o despertar un Mímico.',
   tomb: 'Examinar (Acción): Puede guardar reliquias o oro, pero perturbarla puede despertar Esqueletos/Espectros.',
-  sorcerer_table: 'Altar del Mago: Arcano CD 12 puede recuperar 1 hechizo gastado o +2 PM; fallar puede costar 1 PM.',
-  throne: 'Trono: Investigación CD 12 puede hallar compartimentos secretos o palancas de puertas ocultas.',
+  sorcerer_table: 'Altar del Mago: Mente (MEN CD 12) puede recuperar 1 hechizo gastado o +2 PM; fallar cuesta 1 PM.',
+  throne: 'Trono: Mente (MEN CD 12) puede hallar compartimentos secretos o palancas de puertas ocultas.',
   cupboard: 'Armario: Puede esconder pociones, capas o emboscadas de arañas.',
   fireplace: 'Chimenea: Revisar brasas puede ocultar bolsas ignífugas de oro o activar humo sofocante.',
-  torture_rack: 'Potro: Puede contener llaves del carcelero (Ventaja en Trampas) o causar pérdida de 1 PM (SAB CD 13).',
+  torture_rack: 'Potro: Puede contener llaves del carcelero (Ventaja en AGI) o causar pérdida de 1 PM (MEN CD 13).',
 };
 
 // Construye los Disparadores / Eventos ESPECÍFICOS de la sala actual con CUÁNDO y PARA QUÉ claros
@@ -268,19 +268,19 @@ function buildRoomTriggers(currentMap, selectedRoomId, roomItems) {
       badgeColor: 'bg-sky-700 text-white',
       when: 'Si un héroe mueve más de 6 casillas en combate o lanza un ataque de Fuego.',
       purpose:
-        'Mover >6 casillas pide Atletismo CD 11 o cae Derribado. Hechizos de Fuego y Fuego Griego ganan +1 DC extra aquí.',
+        'Mover >6 casillas pide Agilidad (AGI CD 11) o cae Derribado. Hechizos de Fuego y Fuego Griego ganan +1 DC extra aquí.',
     });
   } else if (biomeId === 'laboratorio_alquimico' && (typesInRoom.has('alchemy_bench') || typesInRoom.has('sorcerer_table'))) {
     triggers.push({
       id: 'biome_rule',
       icon: '⚗️',
       badge: 'EFECTO DE BIOMA',
-      title: 'Gases Volátiles y Alambique',
+      title: 'Gases Volátiles del Laboratorio',
       color: 'bg-teal-950/35 border-teal-500/45 text-teal-100',
       badgeColor: 'bg-teal-700 text-white',
-      when: 'Al examinar el Banco de Alquimista o al usar Fuego/Bombas dentro de esta sala.',
+      when: 'Al examinar muebles alquímicos o al usar Fuego/Bombas dentro de esta sala.',
       purpose:
-        'Examinar el banco otorga DOBLE drop de ingredientes de crafteo. Usar Fuego provoca una chispa extra (+1 DC en 2×2).',
+        'Examinar los estantes otorga DOBLE drop de ingredientes de crafteo. Usar Fuego provoca una chispa extra (+1 DC en 2×2).',
     });
   }
 
@@ -300,7 +300,7 @@ function buildRoomTriggers(currentMap, selectedRoomId, roomItems) {
         : 'Cuando un héroe se acerque a hablar o curarlo.',
       purpose: isPrisoner
         ? 'Libera al prisionero (escoltarlo a R14) y dispara la alarma / patrulla de persecución.'
-        : 'Si lo curan (Medicina CD 12 o 1 poción), otorga +1 🏅 Reputación y revela 1 trampa o puerta secreta cercana.',
+        : 'Si lo curan (Mente MEN CD 12 o 1 poción), otorga +1 🏅 Reputación y revela 1 trampa o puerta secreta cercana.',
     });
   }
 
@@ -313,23 +313,23 @@ function buildRoomTriggers(currentMap, selectedRoomId, roomItems) {
       title: 'Puerta Secreta en esta Sala',
       color: 'bg-amber-950/30 border-amber-500/45 text-amber-100',
       badgeColor: 'bg-amber-600 text-slate-950',
-      when: 'SOLO si un héroe gasta su acción en Buscar Puertas Secretas (Investigación CD 12) sin monstruos.',
+      when: 'SOLO si un héroe gasta su acción en Buscar Puertas Secretas (MEN CD 12) sin monstruos.',
       purpose: 'Revela un atajo o almacén secreto con botín y +2 Materiales de Crafteo del bioma.',
     });
   }
 
-  // 5B. Cámara de Alquimia (Mesa de Alquimia para craftear pociones en mazmorra)
+  // 5B. Reserva de Ingredientes Alquímicos (Ya no requiere mesa para destilar)
   if (typesInRoom.has('alchemy_bench')) {
     triggers.push({
-      id: 'alchemy_chamber',
-      icon: '⚗️',
-      badge: 'MESA DE ALQUIMIA',
-      title: 'Cámara de Alquimia (Crafteo en Campo)',
+      id: 'alchemy_stash',
+      icon: '🧪',
+      badge: 'RESERVA DE INGREDIENTES',
+      title: 'Estantes de Ingredientes Frescos',
       color: 'bg-teal-950/40 border-teal-500/55 text-teal-100',
       badgeColor: 'bg-teal-600 text-white',
-      when: 'Al limpiar esta sala y acercarse al Banco de Alquimista.',
+      when: 'Al examinar este mueble sin enemigos en la sala.',
       purpose:
-        'Los héroes tiran d20 de Arcano en mesa para fabricar pociones/venenos desde su celular (Común CD 10 · Poco Común CD 12 · Raro CD 14). Crítico (20 o +5) = ×2 unidades · Fallo por 1–3 = Inestable · Fallo grave (o 1) = Explosión (-1 PC y +1 Caos).',
+        'Suelta materiales alquímicos frescos (+Hierba Lunar, Veneno o Polvo Rúnico). Recuerda: cualquier héroe puede intentar preparar pociones desde su celular en cualquier momento (Calificados con Ventaja · Otros por Suerte).',
     });
   }
 
@@ -378,7 +378,7 @@ function evaluateRoomQuirks(heroes = [], roomItems = [], roomMonstersScaled = []
         icon: q.icon || '🔥',
         quirkName: q.name,
         trigger: hasFlammable
-          ? '¡Hay muebles/antorchas en esta sala! Pide Salvación SAB CD 11 o intentará prenderlos.'
+          ? '¡Hay muebles/antorchas en esta sala! Pide Mente (MEN CD 11) o intentará prenderlos.'
           : 'En combate: recuerda que gana +1 DC con Fuego/Bombas.',
         bonus: q.bonus,
         drawback: q.drawback,
@@ -404,7 +404,7 @@ function evaluateRoomQuirks(heroes = [], roomItems = [], roomMonstersScaled = []
         icon: q.icon || '🚪',
         quirkName: q.name,
         trigger: hasTrap
-          ? '¡Hay trampa en esta sala! Si entra primero, sufre -1 a su Salvación de DES.'
+          ? '¡Hay trampa en esta sala! Si entra primero, sufre -1 a su prueba de Agilidad (AGI).'
           : 'Si intenta derribar una puerta cerrada/atrancada, tiene Ventaja en FUE.',
         bonus: q.bonus,
         drawback: q.drawback,
@@ -2333,9 +2333,9 @@ export default function TacticalBoard({
                         onClick={() =>
                           setRoomDiscovery({
                             source: 'Pasillo · Escuchar tras Puerta',
-                            title: '👂 Escuchar en la Puerta (Percepción CD 12)',
+                            title: '👂 Escuchar en la Puerta (Mente MEN CD 12)',
                             badge: 'Acción Táctica',
-                            text: 'Si superan Percepción CD 12, el DM les dice cuántos enemigos escuchan dentro y si están Distraídos (Ventaja en 1ª ronda). Si fallan por 5+, hacen ruido (+1 Reloj del Caos).',
+                            text: 'Si superan Mente MEN CD 12, el DM les dice cuántos enemigos escuchan dentro y si están Distraídos (Ventaja en 1ª ronda). Si fallan por 5+, hacen ruido (+1 Reloj del Caos).',
                           })
                         }
                         className="py-2 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-200 font-bold cursor-pointer"
@@ -2348,7 +2348,7 @@ export default function TacticalBoard({
                             source: 'Pasillo · Ladrillo Suelto',
                             title: '🧱 Alijo Oculto en el Muro',
                             badge: 'Hallazgo',
-                            text: 'Investigación CD 12: tras un ladrillo flojo encuentran 15 MO y 1 Venda de Campaña (+1 PC).',
+                            text: 'Mente MEN CD 12: tras un ladrillo flojo encuentran 15 MO y 1 Venda de Campaña (+1 PC).',
                             rewardGold: 15,
                             rewardLoot: {
                               name: 'Venda de Campaña (+1 PC)',

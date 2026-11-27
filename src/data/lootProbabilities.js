@@ -207,7 +207,7 @@ export function rollTreasureProbability({ partyLevel = 1, hero = null }) {
     isTrap = true;
     badge = '¡Trampa!';
     title = '¡Trampa de Aguja en el Escondite!';
-    text = '¡Clic! Una aguja salta al buscar. Salvación DES CD 12 o pierde 1 PC (y el Reloj del Caos sube +1).';
+    text = '¡Clic! Una aguja salta al buscar. Agilidad AGI CD 12 o pierde 1 PC (y el Reloj del Caos sube +1).';
   } else if (rollPct <= 64) {
     badge = 'Común · Oro';
     rewardGold = Math.round((15 + partyLevel * 6 + Math.floor(Math.random() * 15)) * heroBonuses.goldMultiplier);

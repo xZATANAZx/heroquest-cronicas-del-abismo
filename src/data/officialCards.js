@@ -234,7 +234,7 @@ export const OFFICIAL_ARTIFACTS = [
     rarity: 'epico',
     dice: '1 uso/misión',
     restriction: 'Todas las clases',
-    text: 'Una vez por Misión atrapa a un Monstruo en un campo de fuerza mágica (pierde su siguiente turno; resiste con SAB CD 13 o sacando 6 con 1 Dado Rojo por PM).',
+    text: 'Una vez por Misión atrapa a un Monstruo en un campo de fuerza mágica (pierde su siguiente turno; resiste con Resistencia Mental (sacando 6 con 1 Dado Rojo por PM)).',
   },
   {
     id: 'art_cenizas_fenix',

@@ -422,7 +422,7 @@ export const TOWN_EVENTS_TABLE = [
     title: 'Bolsillos Ligeros en la Taberna',
     tone: 'peligro',
     target: 'single',
-    effect: 'Un ladrón intenta robar al héroe seleccionado. Tira Percepción CD 13 en mesa: si falla pierde 15 MO; si lo atrapa recupera 10 MO y gana +1 Reputación.',
+    effect: 'Un ladrón intenta robar al héroe seleccionado. Tira MEN CD 13 en mesa: si falla pierde 15 MO; si lo atrapa recupera 10 MO y gana +1 Reputación.',
     actions: [
       {
         id: 'catch_thief',
@@ -470,7 +470,7 @@ export const TOWN_EVENTS_TABLE = [
     title: 'Fiebre de los Muelles',
     tone: 'peligro',
     target: 'all',
-    effect: 'Una plaga leve azota el barrio bajo. Cada héroe tira CON CD 12 en mesa: quienes fallen pagan 15 MO en el Templo o sufren -2 PC.',
+    effect: 'Una plaga leve azota el barrio bajo. Cada héroe tira FUE CD 12 en mesa: quienes fallen pagan 15 MO en el Templo o sufren -2 PC.',
     actions: [
       {
         id: 'pay_temple_all',
@@ -488,7 +488,7 @@ export const TOWN_EVENTS_TABLE = [
       },
       {
         id: 'resist_fever',
-        label: '✅ Todos superaron CON CD 12',
+        label: '✅ Todos superaron FUE CD 12',
         style: 'emerald',
         note: 'El grupo resiste la plaga sin consecuencias.',
       },
@@ -523,7 +523,7 @@ export const TOWN_EVENTS_TABLE = [
     title: 'Inquisidor en la Plaza',
     tone: 'mixto',
     target: 'single',
-    effect: 'Los clérigos inspeccionan magia oscura. Tira Persuasión/CAR CD 12: si fallas pagas 15 MO de diezmo; si triunfas recibes Agua Bendita gratis (+1 Reputación).',
+    effect: 'Los clérigos inspeccionan magia oscura. Tira SUE CD 12: si fallas pagas 15 MO de diezmo; si triunfas recibes Agua Bendita gratis (+1 Reputación).',
     actions: [
       {
         id: 'pass_inq',
@@ -547,7 +547,7 @@ export const TOWN_EVENTS_TABLE = [
     title: 'Torneo de la Guardia',
     tone: 'oportunidad',
     target: 'single',
-    effect: 'Un héroe puede inscribirse por 15 MO y tirar Atletismo o Combate (CD 14): si gana obtiene 45 MO (+30 netos) y +1 Fama; si pierde, solo pierde la apuesta.',
+    effect: 'Un héroe puede inscribirse por 15 MO y tirar FUE (CD 14): si gana obtiene 45 MO (+30 netos) y +1 Fama; si pierde, solo pierde la apuesta.',
     actions: [
       {
         id: 'win_tourney',
@@ -577,7 +577,7 @@ export const TOWN_EVENTS_TABLE = [
     title: 'Incendio en el Almacén Alquímico',
     tone: 'mixto',
     target: 'single',
-    effect: 'Un héroe puede ayudar a apagar el fuego (Atletismo CD 13): éxito otorga 2 Hierbas Lunares + 1 Polvo Rúnico + 1 Reputación; fallo causa -2 PC por quemaduras.',
+    effect: 'Un héroe puede ayudar a apagar el fuego (FUE CD 13): éxito otorga 2 Hierbas Lunares + 1 Polvo Rúnico + 1 Reputación; fallo causa -2 PC por quemaduras.',
     actions: [
       {
         id: 'help_fire_ok',
@@ -604,7 +604,7 @@ export const TOWN_EVENTS_TABLE = [
     title: 'Emboscada en el Callejón',
     tone: 'peligro',
     target: 'single',
-    effect: 'Matones locales acorralan a un héroe. Tira Intimidación o DES CD 13: éxito obtiene 15 MO y +20 XP; fallo sufre -2 PC y pierde 10 MO.',
+    effect: 'Matones locales acorralan a un héroe. Tira FUE o AGI CD 13: éxito obtiene 15 MO y +20 XP; fallo sufre -2 PC y pierde 10 MO.',
     actions: [
       {
         id: 'beat_ambush',
@@ -670,7 +670,7 @@ export const TOWN_EVENTS_TABLE = [
     title: 'Tormenta de Ceniza',
     tone: 'mixto',
     target: 'all',
-    effect: 'Cae ceniza volcánica sobre la ciudad. Tiren Supervivencia CD 12: si tienen éxito recolectan 1 Pólvora Negra por héroe; si fallan pagan 10 MO en reparaciones.',
+    effect: 'Cae ceniza volcánica sobre la ciudad. Tiren MEN CD 12: si tienen éxito recolectan 1 Pólvora Negra por héroe; si fallan pagan 10 MO en reparaciones.',
     actions: [
       {
         id: 'ash_success',

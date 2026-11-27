@@ -238,7 +238,7 @@ export const CRAFTING_RECIPES = [
     arcanaCD: 13,
     costGold: 20,
     ingredients: { sangre_icor: 2, hierba_lunar: 1 },
-    effect: 'Ganas +2 DC de Ataque durante 2 turnos. ⚠️ RIESGO: Al terminar tira en la Tabla de Efectos Secundarios de Tónicos (o CON CD 13 para evitarlo).',
+    effect: 'Ganas +2 DC de Ataque durante 2 turnos. ⚠️ RIESGO: Al terminar tira en la Tabla de Efectos Secundarios de Tónicos (o FUE CD 13 para evitarlo).',
   },
   {
     id: 'rec_tonico_hierro',
@@ -251,7 +251,7 @@ export const CRAFTING_RECIPES = [
     arcanaCD: 13,
     costGold: 20,
     ingredients: { sangre_icor: 1, chatarra_acero: 1, hierba_lunar: 1 },
-    effect: 'Ganas +2 DC de Defensa durante 2 turnos. ⚠️ RIESGO: Al terminar supera CON CD 13 o sufre 1 efecto secundario de Tónico.',
+    effect: 'Ganas +2 DC de Defensa durante 2 turnos. ⚠️ RIESGO: Al terminar supera FUE CD 13 o sufre 1 efecto secundario de Tónico.',
   },
   {
     id: 'rec_veneno_pieles_verdes',
@@ -344,7 +344,7 @@ export const CRAFTING_RECIPES = [
     arcanaCD: 0,
     costGold: 30,
     ingredients: { polvora_negra: 2, chatarra_acero: 1 },
-    effect: 'Arrojadiza (4 casillas): explota en 3×3 infligiendo 4 DC (DES CD 14 mitad) y vuela puertas cerradas/atrancadas. +1 Reloj del Caos por el ruido.',
+    effect: 'Arrojadiza (4 casillas): explota en 3×3 infligiendo 4 DC (AGI CD 14 mitad) y vuela puertas cerradas/atrancadas. +1 Reloj del Caos por el ruido.',
   },
   {
     id: 'rec_trampa_oso',
@@ -676,7 +676,7 @@ export function rollMaterialDrop(sourceKey = 'mueble_general', partyLevel = 1) {
 }
 
 // ============================================================================
-// ALQUIMIA POR SUERTE Y CALIFICACIÓN (Sin requerir Mesa de Alquimia)
+// ALQUIMIA POR SUERTE Y CALIFICACIÓN (Sin requerir Alquimia en Campo)
 // Cualquier héroe puede intentar preparar pociones, pero los más calificados
 // (Alquimista, Mago, Druida, Clérigo, Gnomo o Prof. Alquimista/Escriba) tiran
 // con VENTAJA. Los no calificados dependen de su Suerte (SUE): pueden lograrlo,

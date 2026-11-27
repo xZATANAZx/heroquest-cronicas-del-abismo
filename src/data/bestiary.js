@@ -85,7 +85,7 @@ export const MONSTERS = [
       'No Muerto: Inmune a veneno y miedo.',
       'Horda Sofocante: Si 2 o más Zombis atacan al mismo héroe en un turno, cada uno tira +1 DC.',
     ],
-    eliteAbility: 'Zombi de Plaga (Élite): Al morir explota en gas pútrido (salvación CON CD 12 o 1 daño + Envenenado).',
+    eliteAbility: 'Zombi de Plaga (Élite): Al morir explota en gas pútrido (salvación FUE CD 12 o 1 daño + Envenenado).',
     lore: 'Lentos pero tenaces; en grupo pueden arrastrar al suelo incluso al bárbaro más fuerte.',
   },
   {
@@ -99,9 +99,9 @@ export const MONSTERS = [
     abilities: [
       'No Muerto y Vulnerable al Fuego (recibe +1 daño por hechizos de Fuego).',
       'Inmortal: Al inicio del turno de Zargon tira 1 DC; con Calavera recupera 1 PC (salvo daño por fuego).',
-      'Toque Maldito: Si inflige 2+ heridas, el héroe salva SAB CD 12 o pierde 1 PM.',
+      'Toque Maldito: Si inflige 2+ heridas, el héroe salva MEN CD 12 o pierde 1 PM.',
     ],
-    eliteAbility: 'Faraón Guardián (Élite): Aura de Miedo (salvación SAB CD 13 al entrar en la sala o -1 DC al atacar).',
+    eliteAbility: 'Faraón Guardián (Élite): Aura de Miedo (Mente MEN CD  al entrar en la sala o -1 DC al atacar).',
     lore: 'Guardianes vendados de tumbas antiguas cuya maldición pudre el cuerpo y el espíritu.',
   },
   {
@@ -130,7 +130,7 @@ export const MONSTERS = [
     mov: 6, at: 4, def: 5, pc: 4, pm: 4, initMod: 0, xp: 400,
     abilities: [
       'Piel de Piedra Viva: Ignora el primer punto de daño físico en cada ronda si no es mágico.',
-      'Aliento Tóxico (recarga 5-6 en d6): En vez de atacar, todos los héroes en 3 casillas salvan CON CD 13 o pierden 1 PC.',
+      'Aliento Tóxico (recarga 5-6 en d6): En vez de atacar, todos los héroes en 3 casillas salvan FUE CD 13 o pierden 1 PC.',
     ],
     eliteAbility: 'Gárgola Primordial (Élite): Puede volar ignorando muebles/trampas y ataca con 5 DC.',
     lore: 'Estatuas demoníacas que despiertan en el momento exacto para masacrar intrusos.',
@@ -162,9 +162,9 @@ export const MONSTERS = [
     mov: 8, at: 3, def: 3, pc: 2, pm: 2, initMod: 3, xp: 200,
     abilities: [
       'Etéreo: Atraviesa muros, puertas, trampas y héroes. Los ataques físicos normales solo lo hieren sacando Escudos Negros (la magia, artefactos y ataques espirituales lo hieren normal).',
-      'Toque Gélido: Quien sufra daño salva CON CD 12 o pierde 1 casilla de movimiento el próximo turno.',
+      'Toque Gélido: Quien sufra daño salva FUE CD 12 o pierde 1 casilla de movimiento el próximo turno.',
     ],
-    eliteAbility: 'Espectro Aullador (Élite): Grito que hace salvar SAB CD 13 a toda la sala o perder 1 PM.',
+    eliteAbility: 'Espectro Aullador (Élite): Grito que hace salvar MEN CD 13 a toda la sala o perder 1 PM.',
     lore: 'Almas desgarradas de Elethorn atadas a la Luna del Terror.',
   },
   {
@@ -209,7 +209,7 @@ export const MONSTERS = [
     mov: 10, at: 4, def: 3, pc: 2, pm: 3, initMod: 4, xp: 230,
     abilities: [
       'Agilidad Mortal: Ataca y mueve en diagonal, atraviesa héroes sin coste y divide su movimiento antes y después de atacar.',
-      'Hoja Envenenada: Si causa daño, el héroe salva CON CD 12 o queda Envenenado (-1 DC).',
+      'Hoja Envenenada: Si causa daño, el héroe salva FUE CD 12 o queda Envenenado (-1 DC).',
     ],
     eliteAbility: 'Asesino Élite (Verdugo): Inflige +1 daño automático si ataca por la espalda o desde sigilo.',
     lore: 'Sombras contratadas para silenciar a los héroes antes de que alcancen el corazón del culto.',
@@ -226,7 +226,7 @@ export const MONSTERS = [
       'Canalizar Terror: Lanza 1d6 (+1 por cada otro Sectario adyacente): 4-5 = 1 daño; 6+ = 2 daños a un héroe en LdV.',
       'Ofrenda al Caos: Si hiere a un héroe, el Reloj del Caos del DM sube +1.',
     ],
-    eliteAbility: 'Fanático del Velo (Élite): Al morir lanza una maldición final (salvación SAB CD 12 o -1 PM).',
+    eliteAbility: 'Fanático del Velo (Élite): Al morir lanza una maldición final (Mente MEN CD  o -1 PM).',
     lore: 'Adoradores encapuchados de la Cuadrilla del Velo del Cuervo que canalizan energía oscura en grupo.',
   },
   {
@@ -303,7 +303,7 @@ export const MONSTERS = [
       'Conjuración Doble: En su primer turno lanza Rayo Mortífero y Bola en Llamas juntos.',
       'Escudo de Almas: Estadísticas de Guerrero del Terror con +1 DC Defensa mientras mantenga su aura arcana.',
     ],
-    eliteAbility: 'Furia del Tormento (Fase 2 a mitad de PC): Todos los héroes salvan SAB CD 14 o pierden 2 PM.',
+    eliteAbility: 'Furia del Tormento (Fase 2 a mitad de PC): Todos los héroes salvan MEN CD 14 o pierden 2 PM.',
     lore: 'Hechicera despiadada que profanó la Tumba de Nelath para servir a Zargon.',
   },
   {
@@ -333,7 +333,7 @@ export const MONSTERS = [
     image: '/art/monster_mimic.jpg',
     mov: 4, at: 4, def: 3, pc: 4, pm: 1, initMod: 2, xp: 280,
     abilities: [
-      'Emboscada Perfecta: Parece un cofre normal hasta que un héroe lo abre o examina (salvación DES CD 13 o recibe un mordisco gratis).',
+      'Emboscada Perfecta: Parece un cofre normal hasta que un héroe lo abre o examina (salvación AGI CD 13 o recibe un mordisco gratis).',
       'Adhesivo: El héroe mordido no puede moverse hasta superar Atletismo (FUE CD 13).',
     ],
     eliteAbility: 'Mímico Voraz (Élite): Recupera 1 PC cada vez que hiere a un héroe.',
@@ -348,7 +348,7 @@ export const MONSTERS = [
     miniature: 'Token / Proxy (o Goblin)',
     mov: 8, at: 2, def: 2, pc: 2, pm: 1, initMod: 3, xp: 100,
     abilities: [
-      'Veneno Paralizante: Al hacer daño, el defensor salva CON CD 12 o queda sin poder moverse su próximo turno.',
+      'Veneno Paralizante: Al hacer daño, el defensor salva FUE CD 12 o queda sin poder moverse su próximo turno.',
       'Telaraña: Ignora terreno difícil y muebles.',
     ],
     eliteAbility: 'Reina Arácnida (Élite): Dispara telaraña a 5 casillas (inmoviliza hasta superar FUE CD 13).',
@@ -381,7 +381,7 @@ export const MONSTERS = [
       'Embestida Imparable: Si mueve 3+ casillas en línea recta, ataca con +2 DC y atraviesa/empuja al héroe.',
       'Laberíntico: Nunca puede ser sorprendido ni flanqueado.',
     ],
-    eliteAbility: 'Señor del Laberinto (Jefe): Rugido atronador (salvación CON CD 14 o Aturdido 1 turno).',
+    eliteAbility: 'Señor del Laberinto (Jefe): Rugido atronador (salvación FUE CD 14 o Aturdido 1 turno).',
     lore: 'Furia cornuda que destroza líneas defensivas en los pasillos estrechos.',
   },
   {
@@ -533,7 +533,7 @@ export const MONSTER_TEMPLATES = [
     defMod: -1,
     movMod: -2,
     xpMult: 1.15,
-    ability: 'Plantilla Zombificada: +2 PC pero lento (-2 Mov). Al morir explota en nube tóxica (CON CD 12 o 1 PC).',
+    ability: 'Plantilla Zombificada: +2 PC pero lento (-2 Mov). Al morir explota en nube tóxica (FUE CD 12 o 1 PC).',
   },
   {
     id: 'momificado',
@@ -659,9 +659,9 @@ export const MONSTER_ALERTNESS = [
 ];
 
 export const MONSTER_NEGOTIATION_GUIDE = [
-  'Soborno (Persuasión CAR CD 13 + 30–60 MO): Goblins, Orcos o Mercenarios dejan pasar al grupo o revelan 1 trampa.',
+  'Soborno (Persuasión SUE CD 13 + 30–60 MO): Goblins, Orcos o Mercenarios dejan pasar al grupo o revelan 1 trampa.',
   'Intimidación (CAR o FUE CD 14): Si el grupo ya venció al líder o tiene ventaja numérica, enemigos con Miedo sueltan su botín y huyen.',
-  'Tregua / Intercambio (Persuasión CD 15): Monstruos inteligentes (Hechiceros, Asesinos, Abominaciones) pueden cambiar información o un prisionero por un objeto/pacto.',
+  'Tregua / Intercambio (SUE CD 15): Monstruos inteligentes (Hechiceros, Asesinos, Abominaciones) pueden cambiar información o un prisionero por un objeto/pacto.',
 ];
 
 // ============================================================================

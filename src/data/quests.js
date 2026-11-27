@@ -198,11 +198,11 @@ export const QUESTS = [
     recLevel: 3,
     wanderingMonster: 'Abominación',
     boss: 'Grak, Hijo de Ulag (R15 · Mov 8, Atq 4, Def 4, PC 3, PM 3)',
-    bossPhase2: 'Fase 2 (al 50% PC): Grak lanza "Miedo" en área (SAB CD 13) y desata a 2 Orcos Negros si no fueron derrotados.',
+    bossPhase2: 'Fase 2 (al 50% PC): Grak lanza "Miedo" en área (MEN CD 13) y desata a 2 Orcos Negros si no fueron derrotados.',
     intro: 'Grak, el vengativo hijo de Ulag, los emboscó en el camino. Despiertan desarmados en las celdas de su fortaleza: ¡deben escapar, recuperar su equipo en la Armería y acabar con él!',
-    hqD20Twist: '⛓️ FUGA SIN EQUIPO Y REFUGIO: Empiezan sin armas (1 DC o improvisar muebles). Sigilo o Desarmar Trampas CD 12 abre la celda sin ruido. Si Ulag escapó en la Misión 3, ¡aparece aquí junto a Grak como Némesis!',
+    hqD20Twist: '⛓️ FUGA SIN EQUIPO Y REFUGIO: Empiezan sin armas (1 DC o improvisar muebles). AGI CD 12 abre la celda sin ruido. Si Ulag escapó en la Misión 3, ¡aparece aquí junto a Grak como Némesis!',
     tacticalSetup: {
-      doors: 'Puerta de la Celda: Cerrada con Llave (DES CD 12). Armería: Atrancada por fuera con guardia en ALERTA.',
+      doors: 'Puerta de la Celda: Cerrada con Llave (AGI CD 12). Armería: Atrancada por fuera con guardia en ALERTA.',
       alertness: 'Guardias de la cantina están DISTRAÍDOS bebiendo; si hacen ruido al forzar la celda pasan a PATRULLA.',
       negotiation: 'Un prisionero pícaro en la celda vecina ofrece ayudar a abrir cerraduras (Ventaja en DES) a cambio de 40 MO al salir.',
       hazardRoom: 'Potro de Tortura (sala de Grak — AHQ Revisited) + Nido de Ratas en los túneles de drenaje (usar Cebo de Ratas o Fuego).',
@@ -231,12 +231,12 @@ export const QUESTS = [
     boss: 'Wardoz Corrompido (Hechicero Zombi) + Guardián de Piedra',
     bossPhase2: 'Fase 2: Al caer su forma física, el espíritu de Wardoz emerge como Espectro Etéreo; un héroe puede purificarlo con Arcano/Religión CD 14.',
     intro: 'Wardoz, mago personal del Emperador, desapareció investigando magia del Caos. Su torre subterránea está llena de laboratorios volátiles, constructos y un secreto trágico.',
-    hqD20Twist: '⚗️ LABORATORIO VOLÁTIL Y REDENCIÓN: El Banco de Alquimista permite destilar 1 Mezcla Experimental gratis. Purificar el alma de Wardoz en lugar de solo destruirlo otorga +1 Ficha de Reputación extra y 1 Gema Abismal.',
+    hqD20Twist: '⚗️ LABORATORIO VOLÁTIL Y REDENCIÓN: Los estantes alquímicos otorgan +2 ingredientes frescos para destilar desde el celular. Purificar el alma de Wardoz en lugar de solo destruirlo otorga +1 Ficha de Reputación extra y 1 Gema Abismal.',
     tacticalSetup: {
       doors: 'Puerta del Estudio de Wardoz: Sello Rúnico (Puzzle Móvil). Armarios arcanos pueden contener portales.',
       alertness: 'Constructos y No Muertos en GUARDIA; no negociables salvo el alma de Wardoz.',
-      negotiation: 'Si un héroe habla con el alma de Wardoz (Persuasión/Arcano CD 14), este revela dónde escondió la Armadura de Borin.',
-      hazardRoom: 'Estudio del Mago (AHQ): Los hechizos fallan salvo INT CD 12; Gases Volátiles (+1 DC a Fuego en 2×2).',
+      negotiation: 'Si un héroe habla con el alma de Wardoz (SUE o MEN CD 14), este revela dónde escondió la Armadura de Borin.',
+      hazardRoom: 'Estudio del Mago (AHQ): Los hechizos fallan salvo MEN CD 12; Gases Volátiles (+1 DC a Fuego en 2×2).',
       hintClue: 'Frascos de Hierba Lunar intactos marcan un camino seguro evitando las baldosas con runas explosivas.',
     },
     objectives: [
@@ -260,11 +260,11 @@ export const QUESTS = [
     recLevel: 4,
     wanderingMonster: 'Abominación',
     boss: 'Balur, el Mago del Fuego (X en R1 · Mov 8, Atq 2, Def 5, PC 3, PM 7)',
-    bossPhase2: 'Fase 2 (al 50% PC): Invoca 1 Elemental de Fuego (At 3, Def 3, PC 3) y el suelo arde en 2 casillas cada ronda (DES CD 13 o 1 PC fuego).',
+    bossPhase2: 'Fase 2 (al 50% PC): Invoca 1 Elemental de Fuego (At 3, Def 3, PC 3) y el suelo arde en 2 casillas cada ronda (AGI CD 13 o 1 PC fuego).',
     intro: 'Balur, maestro piromante inmune a las llamas, planea incendiar las aldeas del Imperio. Atraviesen su guarida volcánica y arrebátenle la Varita de la Magia.',
     hqD20Twist: '🔥 CAVERNA DE FUEGO (AHQ): En la cámara de Balur todos los ataques de Fuego hacen +1 DC, pero Balur es vulnerable a Hielo/Agua (+1 DC). Las mesas y barriles de aceite pueden explotar si se empujan contra braseros.',
     tacticalSetup: {
-      doors: 'Puerta Central: Puerta de Piedra Caliente (tocarla sin guantes/arma hace 1 PC salvo CON CD 12).',
+      doors: 'Puerta Central: Puerta de Piedra Caliente (tocarla sin guantes/arma hace 1 PC salvo FUE CD 12).',
       alertness: 'Guerreros del Terror en GUARDIA frente a los braseros; Balur empieza con escudo de fuego activo.',
       negotiation: 'Un aprendiz asustado en una sala lateral (MIEDO) revela la debilidad de Balur al hielo y regala 1 Poción de Resistencia si lo dejan huir.',
       hazardRoom: 'Braseros Volcánicos (empujar enemigo = +1 PC fuego) + Cámara de Humo (LdV máx. 4 casillas).',
@@ -297,8 +297,8 @@ export const QUESTS = [
     tacticalSetup: {
       doors: 'Puertas Atrancadas y 1 Puerta Falsa (trampa de tiempo). El Minero puede despejar derrumbes en 1 acción.',
       alertness: 'Enemigos en PATRULLA y EMBOSCADA esperando en pasillos estrechos para frenarlos.',
-      negotiation: 'El guía traidor (si lo alcanzan) puede ser intimidado (FUE/CAR CD 13) para mostrar el atajo secreto.',
-      hazardRoom: 'Sala Inundada (-50% Mov) + Techo Inestable (derrumbes) + Suelo Helado (correr >6 pide Atletismo CD 11).',
+      negotiation: 'El guía traidor (si lo alcanzan) puede ser intimidado (FUE o SUE CD 13) para mostrar el atajo secreto.',
+      hazardRoom: 'Sala Inundada (-50% Mov) + Techo Inestable (derrumbes) + Suelo Helado (correr >6 pide FUE CD 11).',
       hintClue: 'Una corriente de aire fresco y seco indica exactamente en qué cuadrante están las escaleras de salida.',
     },
     objectives: [
@@ -322,9 +322,9 @@ export const QUESTS = [
     recLevel: 5,
     wanderingMonster: 'El Fantasma de Ollar (ríe y desaparece)',
     boss: 'Guardianes del Castillo de Ollar (Puertas Teletransportadoras 2d6)',
-    bossPhase2: 'Fase 2: Al llegar a 50% PC, el guardián central cambia de posición con un héroe mediante teletransporte (SAB CD 14 para evitarlo).',
+    bossPhase2: 'Fase 2: Al llegar a 50% PC, el guardián central cambia de posición con un héroe mediante teletransporte (MEN CD 14 para evitarlo).',
     intro: 'El castillo del excéntrico mago Ollar está repleto de puertas mágicas y portales que teletransportan a los intrusos en busca de una mina de oro legendaria.',
-    hqD20Twist: '✨ PUERTAS MÁGICAS Y ESPEJOS (HQ Homebrew): Cada portal usa 1d6 para destino, salvo que un héroe supere Arcano CD 13 para elegir sala. ¡Un Espejo Mágico puede invocar copias oscuras de los héroes si fallan SAB CD 13!',
+    hqD20Twist: '✨ PUERTAS MÁGICAS Y ESPEJOS (HQ Homebrew): Cada portal usa 1d6 para destino, salvo que un héroe supere MEN CD 13 para elegir sala. ¡Un Espejo Mágico puede invocar copias oscuras de los héroes si fallan MEN CD 13!',
     tacticalSetup: {
       doors: '4 Puertas Mágicas (teletransporte) + 1 Puerta Sentiente que exige resolver un acertijo/Puzzle Móvil para abrir la bóveda.',
       alertness: 'Guardianes en GUARDIA alrededor de los portales; Mímicos disfrazados entre los montones de oro.',
@@ -334,7 +334,7 @@ export const QUESTS = [
     },
     objectives: [
       'Principal: Descifrar la red de portales, saquear la cámara del tesoro y escapar.',
-      'Secundario 1 (+1 🏅 Reputación): Estabilizar al menos 2 portales con Arcano CD 13.',
+      'Secundario 1 (+1 🏅 Reputación): Estabilizar al menos 2 portales con MEN CD 13.',
       'Secundario 2 (+1 🏅 Reputación): Vencer a las copias del Espejo o engañar a la Puerta Sentiente.',
     ],
     zargonCounters: { trampa: 3, emboscada: 2, patrulla: 1, destino: 2, escape: 0 },
@@ -359,7 +359,7 @@ export const QUESTS = [
     tacticalSetup: {
       doors: 'Puertas reforzadas con mirillas (los enemigos ven venir al grupo si hacen ruido).',
       alertness: 'Cuartel militar: TODOS los enemigos comienzan en ALERTA o GUARDIA. Usa Sigilo o Bombas de Humo.',
-      negotiation: 'Un mercenario humano arrepentido en la sala de guardia puede pasarse al bando de los héroes (CAR CD 14).',
+      negotiation: 'Un mercenario humano arrepentido en la sala de guardia puede pasarse al bando de los héroes (SUE CD 14).',
       hazardRoom: 'Trono del Poder (AHQ: enemigo sentado da +1 DC a aliados) + Armería con Trampa de Alarma.',
       hintClue: 'Un plano táctico sobre la mesa revela dónde duerme la guardia de relevo.',
     },
@@ -388,10 +388,10 @@ export const QUESTS = [
     intro: 'La Estrella de Occidente reposa en las profundidades de Barak Tor, la tumba del Señor Brujo. Deben recuperarla… pero al hacerlo despertarán un horror invulnerable a las armas comunes.',
     hqD20Twist: '💀 ENCUENTRO INMORTAL + HORDA POST-OBJETIVO: El Señor Brujo NO puede morir sin la Hoja Espiritual (solo pueden aturdirlo/empujarlo 1 turno con magia o daño radiante). Al tomar la Estrella, las tumbas se abren y comienza la huida épica.',
     tacticalSetup: {
-      doors: 'Puerta de la Cripta Real: Sello Antiguo (solo se abre con Arcano CD 13 o palanca en R5).',
+      doors: 'Puerta de la Cripta Real: Sello Antiguo (solo se abre con MEN CD 13 o palanca en R5).',
       alertness: 'Momias y Esqueletos en letargo (DISTRAÍDOS) hasta que abran la tumba central; luego VENGANZA total.',
       negotiation: 'No Muertos sin mente: no negociables. El Acólito del Templo puede consagrar una tumba para frenarlos.',
-      hazardRoom: 'Cámara de Gas Sepulcral (CON CD 13) + Mirada Funesta (AHQ Skull Room: -1 Def en la línea central).',
+      hazardRoom: 'Cámara de Gas Sepulcral (FUE CD 13) + Mirada Funesta (AHQ Skull Room: -1 Def en la línea central).',
       hintClue: 'Inscripciones élficas advierten: "No luchen contra la Sombra sin la Hoja de los Enanos; corran hacia la luz".',
     },
     objectives: [
@@ -417,7 +417,7 @@ export const QUESTS = [
     boss: 'Gárgola Primordial y Custodios de la Forja',
     bossPhase2: 'Fase 2 (al 50% PC): La Gárgola despliega alas (ignora Zona de Control) y ataca con barrido de fuego.',
     intro: 'Solo una reliquia puede destruir al Señor Brujo: la legendaria Hoja Espiritual, forjada por los enanos de antaño y custodiada en una fortaleza tomada por el Caos.',
-    hqD20Twist: '🗡️ FORJA DE LA RELIQUIA Y SINTONIZACIÓN: Al hallar la Hoja Espiritual, quien la empuñe supera SAB CD 13 para sintonizarla (ilumina 4 casillas y anula niebla/oscuridad). La Forja Enana permite a un Herrero mejorar 1 arma gratis.',
+    hqD20Twist: '🗡️ FORJA DE LA RELIQUIA Y SINTONIZACIÓN: Al hallar la Hoja Espiritual, quien la empuñe supera MEN CD 13 para sintonizarla (ilumina 4 casillas y anula niebla/oscuridad). La Forja Enana permite a un Herrero mejorar 1 arma gratis.',
     tacticalSetup: {
       doors: 'Puerta de la Forja Sagrada: Cerrada con Sello Enano (Minero/Enano tiene Ventaja o Puzzle Móvil).',
       alertness: 'Custodios en GUARDIA permanente; 1 Espectro patrulla buscando robar la espada.',
