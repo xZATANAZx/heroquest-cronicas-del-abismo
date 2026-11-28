@@ -55,6 +55,25 @@ function shuffle(arr) {
   return c;
 }
 
+function getUsageBadgeClass(usageType) {
+  switch (usageType) {
+    case 'passive':
+      return 'bg-emerald-950/90 border-emerald-600/60 text-emerald-200';
+    case 'unlimited':
+      return 'bg-sky-950/90 border-sky-600/60 text-sky-200';
+    case 'per_turn':
+      return 'bg-cyan-950/90 border-cyan-600/60 text-cyan-200';
+    case 'per_quest_recharge':
+      return 'bg-amber-950/90 border-amber-500/60 text-amber-200';
+    case 'per_quest':
+      return 'bg-rose-950/90 border-rose-500/60 text-rose-200';
+    case 'resource':
+      return 'bg-purple-950/90 border-purple-500/60 text-purple-200';
+    default:
+      return 'bg-indigo-950/90 border-indigo-500/60 text-indigo-200';
+  }
+}
+
 export default function FetenQuestHub({ showToast = null }) {
   // 6 Pestañas principales ultra-organizadas (empieza en Galería de los 25 Héroes)
   const [subTab, setSubTab] = useState('heroes'); // 'heroes' | 'rules' | 'abilities_spells' | 'city' | 'mb_screen' | 'decks'
@@ -540,8 +559,19 @@ export default function FetenQuestHub({ showToast = null }) {
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
                   {activeHero.abilities.map((ab, idx) => (
-                    <div key={idx} className="p-3 rounded-xl bg-slate-950/80 border border-emerald-800/40 space-y-1">
-                      <div className="font-black text-emerald-200">• {ab.name}</div>
+                    <div key={idx} className="p-3 rounded-xl bg-slate-950/80 border border-emerald-800/40 space-y-1.5">
+                      <div className="flex flex-wrap items-center justify-between gap-1.5">
+                        <div className="font-black text-emerald-200">• {ab.name}</div>
+                        {ab.usage && (
+                          <span
+                            className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${getUsageBadgeClass(
+                              ab.usageType
+                            )}`}
+                          >
+                            {ab.usage}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-slate-200 leading-relaxed">{ab.text}</p>
                     </div>
                   ))}
@@ -572,19 +602,31 @@ export default function FetenQuestHub({ showToast = null }) {
                   {heroSchools.length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
                       {heroSchools.map((sc) => (
-                        <div key={sc.id} className="p-3 rounded-xl bg-slate-950/85 border border-purple-800/50 space-y-1.5">
+                        <div key={sc.id} className="p-3 rounded-xl bg-slate-950/85 border border-purple-800/50 space-y-2">
                           <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-1">
                             <strong className="text-purple-200">{sc.name}</strong>
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-950 text-amber-300 font-bold">
                               Nv.{sc.level} · {sc.saber}
                             </span>
                           </div>
-                          {sc.spells.map((sp) => (
-                            <div key={sp.name} className="text-[11px] leading-snug">
-                              <strong className="text-sky-300">{sp.name}:</strong>{' '}
-                              <span className="text-slate-300">{sp.text}</span>
+                          {sc.usesLabel && (
+                            <div className="px-2 py-1 rounded-lg bg-amber-950/40 border border-amber-600/40 text-[10px] text-amber-200 font-bold">
+                              📊 {sc.usesLabel}
                             </div>
-                          ))}
+                          )}
+                          <div className="space-y-1.5">
+                            {sc.spells.map((sp) => (
+                              <div key={sp.name} className="text-[11px] leading-snug">
+                                <strong className="text-sky-300">{sp.name}:</strong>{' '}
+                                {sp.usage && (
+                                  <span className="inline-block mr-1 px-1.5 py-0.2 rounded bg-purple-950 border border-purple-500/50 text-[9px] text-purple-200 font-bold">
+                                    {sp.usage}
+                                  </span>
+                                )}
+                                <span className="text-slate-300">{sp.text}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -678,11 +720,25 @@ export default function FetenQuestHub({ showToast = null }) {
                         {h.category}
                       </span>
                     </div>
+                    <div className="px-2.5 py-1.5 rounded-lg bg-rose-950/35 border border-rose-800/40 text-[11px] text-rose-100">
+                      <strong className="text-rose-300">🚫 Restricciones:</strong> {h.restrictions}
+                    </div>
                     <div className="space-y-1.5">
                       {h.abilities.map((ab, idx) => (
-                        <div key={idx} className="p-2 rounded-xl bg-slate-950/70 border border-slate-800/80">
-                          <div className="font-bold text-emerald-300">{ab.name}</div>
-                          <p className="text-slate-300 leading-snug mt-0.5">{ab.text}</p>
+                        <div key={idx} className="p-2 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+                          <div className="flex flex-wrap items-center justify-between gap-1.5">
+                            <div className="font-bold text-emerald-300">{ab.name}</div>
+                            {ab.usage && (
+                              <span
+                                className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${getUsageBadgeClass(
+                                  ab.usageType
+                                )}`}
+                              >
+                                {ab.usage}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-slate-300 leading-snug">{ab.text}</p>
                         </div>
                       ))}
                     </div>
@@ -716,11 +772,23 @@ export default function FetenQuestHub({ showToast = null }) {
                         Nv.{sc.level} · {sc.saber}
                       </span>
                     </div>
+                    {sc.usesLabel && (
+                      <div className="px-2.5 py-1 rounded-lg bg-amber-950/40 border border-amber-600/40 text-[10px] text-amber-200 font-bold">
+                        📊 {sc.usesLabel}
+                      </div>
+                    )}
                     <div className="space-y-1.5">
                       {sc.spells.map((sp) => (
-                        <div key={sp.name} className="p-2 rounded-xl bg-slate-950/70 border border-slate-800">
-                          <strong className="text-sky-300">{sp.name}:</strong>{' '}
-                          <span className="text-slate-200">{sp.text}</span>
+                        <div key={sp.name} className="p-2 rounded-xl bg-slate-950/70 border border-slate-800 space-y-0.5">
+                          <div className="flex flex-wrap items-center justify-between gap-1">
+                            <strong className="text-sky-300">{sp.name}</strong>
+                            {sp.usage && (
+                              <span className="px-2 py-0.5 rounded-full bg-purple-950 border border-purple-500/50 text-[9px] text-purple-200 font-bold">
+                                {sp.usage}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-slate-200 leading-snug">{sp.text}</div>
                         </div>
                       ))}
                     </div>
@@ -757,13 +825,18 @@ export default function FetenQuestHub({ showToast = null }) {
                   (p) => !qLow || p.name.toLowerCase().includes(qLow) || p.text.toLowerCase().includes(qLow)
                 ).map((p) => (
                   <div key={p.d20} className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <strong className="text-amber-200">
                         [{p.d20}] {p.name}
                       </strong>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-sky-300 font-bold">
-                        {p.origin}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-rose-950 border border-rose-500/50 text-rose-200 font-bold">
+                          1 solo uso (salvo 12)
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-sky-300 font-bold">
+                          {p.origin}
+                        </span>
+                      </div>
                     </div>
                     <p className="text-slate-300 leading-snug">{p.text}</p>
                   </div>
