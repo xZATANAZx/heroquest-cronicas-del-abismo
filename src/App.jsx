@@ -21,6 +21,7 @@ import {
   Smartphone,
   MessageSquarePlus,
   Crown,
+  ScrollText,
 } from 'lucide-react';
 import DecksPanel from './components/DecksPanel';
 import BestiaryPanel from './components/BestiaryPanel';
@@ -30,6 +31,7 @@ import DiceRoller from './components/DiceRoller';
 import GrimoirePanel from './components/GrimoirePanel';
 import TacticalBoard from './components/TacticalBoard';
 import ClassicOfficialBoard from './components/ClassicOfficialBoard';
+import FetenQuestHub from './components/FetenQuestHub';
 import CityHubPanel from './components/CityHubPanel';
 import PlayerMobileView from './components/PlayerMobileView';
 import ActionResolverBanner from './components/ActionResolverBanner';
@@ -102,6 +104,7 @@ const NAV_GROUPS = [
     group: 'Juego Original (Sin Mods)',
     items: [
       { id: 'classic_board', label: 'HQ Clásico Oficial', subtitle: 'Juego Base + Luna del Terror (100% Oficial)', icon: Crown },
+      { id: 'fetenquest', label: 'FetenQuest 4.1', subtitle: '25 Hojas A4, Pantalla MB y Mazos', icon: ScrollText },
     ],
   },
   {
@@ -1071,6 +1074,10 @@ export default function App() {
 
             {activeTab === 'classic_board' && (
               <ClassicOfficialBoard showToast={showToast} />
+            )}
+
+            {activeTab === 'fetenquest' && (
+              <FetenQuestHub showToast={showToast} />
             )}
 
             {activeTab === 'city' && (
