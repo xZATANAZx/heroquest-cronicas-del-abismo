@@ -36,6 +36,89 @@ import {
 import { PROFESSIONS } from '../data/citySystem';
 import { getRarityMeta } from '../data/lootCatalog';
 import { KeywordChip, RichRuleText, KeywordModal } from './KeywordTooltip';
+import { FQ_HEROES } from '../data/fetenquestData';
+import { FQ_HERO_SHOWCASE_META, FQ_ARMORY_CATALOG, FQ_SPELL_SCHOOLS } from '../data/fetenquestExtendedData';
+
+function mapFqHeroToClassId(fqId) {
+  const m = {
+    fq_barbaro: 'barbaro',
+    fq_enano: 'enano_ingeniero',
+    fq_elfo: 'explorador',
+    fq_mago: 'mago',
+    fq_bardo: 'bardo',
+    fq_berserker: 'barbaro',
+    fq_brujo: 'brujo',
+    fq_caballero: 'caballero',
+    fq_cazador: 'explorador',
+    fq_cazador_brujas: 'cazador_sombras',
+    fq_druida: 'druida',
+    fq_bloodbowl: 'barbaro',
+    fq_explorador: 'explorador',
+    fq_guerrero_tumba: 'caballero',
+    fq_guerrero_caos: 'caballero',
+    fq_hechicero_caos: 'brujo',
+    fq_herrero_runico: 'caballero_runico',
+    fq_ladron: 'picaro',
+    fq_matador: 'barbaro',
+    fq_nigromante: 'nigromante',
+    fq_ogro: 'barbaro',
+    fq_orco: 'barbaro',
+    fq_picaro: 'picaro',
+    fq_sacerdote: 'clerigo',
+    fq_vampiro: 'nigromante',
+  };
+  return m[fqId] || 'barbaro';
+}
+
+function computeFqPillars(fqHero) {
+  const fue = fqHero.at >= 3 || fqHero.pc >= 7 ? 3 : fqHero.pc >= 6 ? 2 : 1;
+  const men = fqHero.pm >= 5 ? 3 : fqHero.pm >= 4 ? 2 : 1;
+  const agi = ['fq_picaro', 'fq_ladron', 'fq_cazador', 'fq_elfo', 'fq_bardo', 'fq_explorador'].includes(fqHero.id)
+    ? 3
+    : fqHero.size === 'Grande'
+      ? 0
+      : 1;
+  const sue = ['fq_bardo', 'fq_ladron', 'fq_explorador', 'fq_cazador_brujas'].includes(fqHero.id) ? 2 : 1;
+  return { FUE: fue, AGI: agi, MEN: men, SUE: sue };
+}
+
+function buildFqStartingInventory(fqHero) {
+  const gearLow = (fqHero.startingGear || '').toLowerCase();
+  const matched = FQ_ARMORY_CATALOG.filter((it) => {
+    const baseName = it.name.split('/')[0].trim().toLowerCase();
+    return gearLow.includes(baseName);
+  });
+  if (matched.length > 0) {
+    return matched.map((mg, idx) => ({
+      id: `init-${fqHero.id}-${idx}-${Date.now()}`,
+      name: mg.name,
+      type: mg.cat === 'Armadura' ? 'Armadura' : mg.cat === 'Apoyo' ? 'Herramienta' : 'Arma',
+      dice: mg.dc,
+      attack: mg.cat !== 'Armadura' && mg.cat !== 'Apoyo' ? Number((mg.dc.match(/(\d+)/) || [])[1] || fqHero.at) : 0,
+      defense: mg.cat === 'Armadura' ? Number((mg.dc.match(/\+(\d+)/) || [])[1] || 1) : 0,
+      properties: mg.tags || [],
+      effect: mg.traits,
+      notes: mg.traits,
+      price: mg.price,
+      rarity: 'comun',
+      equipped: true,
+      qty: 1,
+    }));
+  }
+  return [
+    {
+      id: `init-${fqHero.id}-0-${Date.now()}`,
+      name: fqHero.startingGear || 'Arma Inicial',
+      type: 'Arma',
+      dice: `${fqHero.at} DC`,
+      attack: fqHero.at,
+      effect: 'Arma inicial del héroe.',
+      rarity: 'comun',
+      equipped: true,
+      qty: 1,
+    },
+  ];
+}
 
 export default function CharacterForge({
   heroes,
@@ -46,35 +129,23 @@ export default function CharacterForge({
   const [mode, setMode] = useState(mobileCreateOnly ? 'create' : heroes.length > 0 ? 'sheet' : 'create');
   const [selectedHeroId, setSelectedHeroId] = useState(heroes[0]?.id || null);
 
-  // Estado del Creador de Personajes (Simplificado: 4 Pilares automáticos según Clase + Raza)
+  // Estado del Creador de Personajes Renovado (25 Héroes Clásicos y Extra · Sin Manías · Sin Spoilers de Rangos)
   const [name, setName] = useState('');
   const [playerName, setPlayerName] = useState('');
-  const [raceId, setRaceId] = useState('humano');
-  const [dragonElement, setDragonElement] = useState('Fuego');
-  const [classId, setClassId] = useState('barbaro');
-  const level = 1; // Todos los héroes nuevos inician en Nivel 1; solo el DM los sube de nivel
+  const [fqHeroId, setFqHeroId] = useState(FQ_HEROES[0].id);
+  const [fqCatFilter, setFqCatFilter] = useState('Todos'); // 'Todos' | 'Clásico' | 'Extra'
+  const level = 1; // Todos los héroes nuevos inician en Rango 1 (Aprendiz)
   const [activeKeyword, setActiveKeyword] = useState(null);
   const [professionId, setProfessionId] = useState('herrero');
-  const [quirkId, setQuirkId] = useState('corazon_de_hierro');
   const [showStatusPicker, setShowStatusPicker] = useState(false);
 
-  const race = RACES.find((r) => r.id === raceId) || RACES[0];
-  const cls = CLASSES.find((c) => c.id === classId) || CLASSES[0];
-  const finalAttrs = computeClassRacePillars(cls, race);
+  const selectedFqHero = FQ_HEROES.find((h) => h.id === fqHeroId) || FQ_HEROES[0];
+  const mappedClassId = mapFqHeroToClassId(selectedFqHero.id);
+  const cls = CLASSES.find((c) => c.id === mappedClassId) || CLASSES[0];
+  const finalAttrs = computeFqPillars(selectedFqHero);
 
-  const calcMaxPC = () => {
-    const fueBonus = Math.max(0, Math.floor((finalAttrs.FUE || 0) / 2));
-    const raceBonus = raceId === 'enano' ? 1 : 0;
-    const quirkBonus = quirkId === 'corazon_de_hierro' ? 1 : 0;
-    return cls.basePC + fueBonus + raceBonus + quirkBonus + (level - 1) * cls.pcPerLevel;
-  };
-
-  const calcMaxPM = () => {
-    const menBonus = Math.max(0, Math.floor((finalAttrs.MEN || 0) / 2));
-    const raceBonus = raceId === 'alto_elfo' ? 1 : 0;
-    const quirkBonus = quirkId === 'sangre_arcana' ? 1 : 0;
-    return cls.basePM + menBonus + raceBonus + quirkBonus + (level - 1) * cls.pmPerLevel;
-  };
+  const calcMaxPC = () => selectedFqHero.pc;
+  const calcMaxPM = () => selectedFqHero.pm;
 
   const randomizeHero = () => {
     const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -88,48 +159,47 @@ export default function CharacterForge({
       'Fuego Lunar', 'el Errante', 'la Audaz', 'Colmillo de Plata', 'del Abismo',
       'Guardia del Alba', 'Paso Silencioso',
     ];
-
-    const rRace = pick(RACES);
-    const rCls = pick(CLASSES);
-
+    const rFq = pick(FQ_HEROES);
     setName(`${pick(firstNames)} ${pick(epithets)}`);
-    setRaceId(rRace.id);
-    setClassId(rCls.id);
+    setFqHeroId(rFq.id);
     setProfessionId(pick(PROFESSIONS).id);
-    setQuirkId(pick(QUIRKS).id);
-    setDragonElement(Math.random() < 0.5 ? 'Fuego' : 'Hielo');
   };
 
   const createHero = () => {
-    const heroName = name.trim() || `${cls.name} de ${race.name.split(' ')[0]}`;
+    const baseTitle = selectedFqHero.name.split('/')[0].trim();
+    const heroName = name.trim() || baseTitle;
     const levelInfo = LEVEL_TABLE.find((l) => l.level === level) || LEVEL_TABLE[0];
     const maxPC = calcMaxPC();
     const maxPM = calcMaxPM();
-    const speedBase = 8 + (race.speedMod || 0);
+    const speedBase = 8;
     const initMod = finalAttrs.AGI || 1;
-    const chosenSub = null; // La subclase se desbloquea cuando el DM sube al héroe a Nivel 3
-
-    const finalSkills = Array.from(new Set([...cls.proficientSkills]));
-    const raceTraitFull =
-      raceId === 'draconido'
-        ? `${race.traitName} (${dragonElement}): ${race.traitDesc}`
-        : `${race.traitName}: ${race.traitDesc}`;
+    const meta = FQ_HERO_SHOWCASE_META[selectedFqHero.id] || { summary: '', schoolIds: [] };
 
     const newHero = {
       id: `h-${Date.now()}`,
+      fqHeroId: selectedFqHero.id,
       name: heroName,
       playerName: playerName.trim() || 'Jugador',
-      raceId: race.id,
-      raceName: raceId === 'draconido' ? `${race.name} (${dragonElement})` : race.name,
-      dragonElement: raceId === 'draconido' ? dragonElement : null,
-      raceTrait: raceTraitFull,
+      raceId: selectedFqHero.size === 'Pequeño' ? 'enano' : 'humano',
+      raceName: `${selectedFqHero.category} · Tamaño ${selectedFqHero.size}`,
+      raceTrait: selectedFqHero.restrictions,
       usedSpells: [],
       activeEffects: [],
-      classId: cls.id,
-      className: cls.name,
-      role: cls.role,
-      miniature: cls.miniature,
-      subclass: chosenSub,
+      cooldowns: {},
+      usesLeft: {},
+      spellRepeats: {},
+      inbox: [],
+      classId: mappedClassId,
+      className: selectedFqHero.name,
+      role: selectedFqHero.role,
+      size: selectedFqHero.size,
+      restrictions: selectedFqHero.restrictions,
+      magicSaber: selectedFqHero.magicSaber,
+      fqAbilities: selectedFqHero.abilities || [],
+      fqStartingSpells: selectedFqHero.startingSpells || [],
+      fqSchoolIds: meta.schoolIds || [],
+      miniature: baseTitle,
+      subclass: null,
       level,
       xp: levelInfo.xp,
       profBonus: levelInfo.prof,
@@ -139,26 +209,26 @@ export default function CharacterForge({
       currentPC: maxPC,
       maxPM,
       currentPM: maxPM,
-      attackDice: cls.baseAttackDice,
-      defendDice: cls.baseDefendDice,
+      attackDice: selectedFqHero.at,
+      defendDice: selectedFqHero.def,
       speed: speedBase,
       initMod,
-      resourceName: cls.resourceName,
-      coreAbility: cls.coreAbility,
-      proficientSkills: finalSkills,
+      resourceName: selectedFqHero.magicSaber || 'Vigor',
+      coreAbility: (selectedFqHero.abilities || []).map((a) => `${a.name}: ${a.text}`).join(' | '),
+      proficientSkills: cls.proficientSkills || [],
       alignment: null,
       motivation: null,
       perks: [],
       flaws: [],
-      inventory: buildStartingInventory(cls),
+      inventory: buildFqStartingInventory(selectedFqHero),
       professionId,
       professionName: PROFESSIONS.find((p) => p.id === professionId)?.name || 'Herrero de Batalla',
-      quirk: QUIRKS.find((q) => q.id === quirkId) || null,
+      quirk: null,
       materials: {
         racion_mazmorra: 1,
-        ...(professionId === 'herbolario' || raceId === 'gnomo' ? { hierba_lunar: 1 } : {}),
+        ...(professionId === 'herbolario' ? { hierba_lunar: 1 } : {}),
         ...(professionId === 'herrero' ? { chatarra_acero: 1 } : {}),
-        ...(professionId === 'escriba' || raceId === 'gnomo' ? { polvo_runico: 1 } : {}),
+        ...(professionId === 'escriba' ? { polvo_runico: 1 } : {}),
         ...(professionId === 'cazador' ? { colmillos_hueso: 1 } : {}),
       },
       bankedGold: 0,
@@ -347,125 +417,137 @@ export default function CharacterForge({
             </div>
           </div>
 
-          {/* Paso 2: Raza / Linaje */}
+          {/* Paso 2: Elegir Héroe (25 Arquetipos Clásicos y Extra · Estilo FetenQuest adaptado a HQ-D20) */}
           <div className="grimoire-panel rounded-2xl p-6 space-y-4">
-            <h3 className="text-xl font-bold text-amber-300">2. Raza / Linaje</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {RACES.map((r) => {
-                const active = r.id === raceId;
-                return (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-xl font-bold text-amber-300">2. Elige tu Héroe (25 Clásicos y Extra)</h3>
+              <div className="flex gap-1.5 text-xs">
+                {['Todos', 'Clásico', 'Extra'].map((cat) => (
                   <button
-                    key={r.id}
-                    onClick={() => setRaceId(r.id)}
-                    className={`p-4 rounded-xl border text-left transition cursor-pointer ${
-                      active
-                        ? 'bg-amber-950/50 border-amber-400 shadow-lg'
-                        : 'bg-stone-900/70 border-stone-800 hover:border-stone-600'
+                    key={cat}
+                    type="button"
+                    onClick={() => setFqCatFilter(cat)}
+                    className={`px-3 py-1 rounded-xl font-black cursor-pointer ${
+                      fqCatFilter === cat ? 'bg-amber-500 text-slate-950' : 'bg-stone-900 text-stone-300 border border-stone-700'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl">{r.icon}</span>
-                      <span className="text-[11px] font-bold text-emerald-300">
-                        {Object.entries(r.bonuses)
-                          .map(([k, v]) => `+${v} ${k}`)
-                          .join(', ')}
-                      </span>
-                    </div>
-                    <div className="font-display font-bold text-stone-100 mt-2">{r.name}</div>
-                    <div className="text-xs text-amber-300/90 font-semibold mt-1">{r.traitName}</div>
-                    <p className="text-[11px] text-stone-400 mt-1 leading-snug">
-                      <RichRuleText text={r.traitDesc} onSelectKeyword={setActiveKeyword} />
-                    </p>
+                    {cat === 'Clásico' ? 'Clásicos (4)' : cat === 'Extra' ? 'Extra (21)' : 'Todos (25)'}
                   </button>
-                );
-              })}
-            </div>
-
-            {/* Opción Especial de Raza: Sangre de Dragón (Elemento) */}
-            {raceId === 'draconido' && (
-              <div className="p-4 rounded-xl bg-orange-950/30 border border-orange-700/50 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div>
-                  <div className="font-bold text-amber-300">🐉 Linaje de Sangre de Dragón — Elige tu Elemento de Aliento:</div>
-                  <div className="text-stone-300">Se lanza 1 vez por misión en línea recta (3 casillas frente a ti) con 2 DC de daño mágico.</div>
-                </div>
-                <div className="flex gap-2">
-                  {['Fuego', 'Hielo'].map((el) => (
-                    <button
-                      key={el}
-                      type="button"
-                      onClick={() => setDragonElement(el)}
-                      className={`px-4 py-2 rounded-lg font-bold border cursor-pointer ${
-                        dragonElement === el
-                          ? 'bg-amber-600 text-black border-amber-300'
-                          : 'bg-stone-900 border-stone-700 text-stone-300'
-                      }`}
-                    >
-                      {el === 'Fuego' ? '🔥 Fuego (corta regeneración)' : '❄️ Hielo (escarcha mágica)'}
-                    </button>
-                  ))}
-                </div>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* Paso 3: Clase / Arquetipo */}
-          <div className="grimoire-panel rounded-2xl p-6 space-y-4">
-            <h3 className="text-xl font-bold text-amber-300">3. Clase / Arquetipo</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {CLASSES.map((c) => {
-                const active = c.id === classId;
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 max-h-[340px] overflow-y-auto pr-1">
+              {FQ_HEROES.filter((h) => fqCatFilter === 'Todos' || h.category === fqCatFilter).map((h) => {
+                const active = h.id === selectedFqHero.id;
                 return (
                   <button
-                    key={c.id}
-                    onClick={() => {
-                      setClassId(c.id);
-                    }}
-                    className={`p-4 rounded-xl border text-left transition cursor-pointer ${
+                    key={h.id}
+                    type="button"
+                    onClick={() => setFqHeroId(h.id)}
+                    className={`p-3.5 rounded-xl border text-left transition cursor-pointer space-y-1 ${
                       active
-                        ? 'bg-red-950/40 border-amber-400 shadow-lg'
-                        : 'bg-stone-900/70 border-stone-800 hover:border-stone-600'
+                        ? 'bg-amber-950/55 border-amber-400 shadow-lg'
+                        : 'bg-stone-900/75 border-stone-800 hover:border-stone-600'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl">{c.icon}</span>
-                      <span className="text-[11px] font-bold text-amber-300">
-                        PC {c.basePC} · PM {c.basePM}
+                    <div className="flex items-center justify-between gap-1">
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-black uppercase ${h.category === 'Clásico' ? 'bg-amber-500/20 text-amber-300' : 'bg-purple-500/20 text-purple-300'}`}>
+                        {h.category}
+                      </span>
+                      <span className="font-mono text-[10px] text-amber-200 font-bold">
+                        AT{h.at} DF{h.def} PC{h.pc} PM{h.pm}
                       </span>
                     </div>
-                    <div className="font-display font-bold text-stone-100 mt-2">{c.name}</div>
-                    <div className="text-[11px] text-stone-400">{c.role}</div>
-                    <div className="text-[10px] text-sky-300 mt-1">Mini: {c.miniature}</div>
-                    <p className="text-[11px] text-stone-300 mt-2 leading-snug">
-                      <RichRuleText text={c.coreAbility} onSelectKeyword={setActiveKeyword} />
-                    </p>
-                    {Array.isArray(c.startingGear) && c.startingGear.length > 0 && (
-                      <div className="mt-2.5 pt-2 border-t border-stone-800/80 space-y-0.5">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-                          🎒 Equipo Inicial:
-                        </div>
-                        {c.startingGear.map((g, gi) => (
-                          <div key={gi} className="text-[10px] text-stone-300 leading-tight">
-                            • {g}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <div className="font-display font-bold text-sm text-stone-100 leading-tight">{h.name}</div>
+                    <div className="text-[11px] text-sky-300 truncate">{h.role}</div>
+                    <div className="text-[10px] text-stone-400 truncate">⚔️ {h.startingGear}</div>
                   </button>
                 );
               })}
             </div>
+
+            {/* Vista Detallada del Héroe Seleccionado (SIN SPOILERS DE RANGOS FUTUROS) */}
+            {(() => {
+              const meta = FQ_HERO_SHOWCASE_META[selectedFqHero.id] || { summary: '', schoolIds: [] };
+              const gearLow = (selectedFqHero.startingGear || '').toLowerCase();
+              const matchedGear = FQ_ARMORY_CATALOG.filter((it) =>
+                gearLow.includes(it.name.split('/')[0].trim().toLowerCase())
+              );
+              const heroSchools = (meta.schoolIds || [])
+                .map((sid) => FQ_SPELL_SCHOOLS.find((s) => s.id === sid))
+                .filter((s) => s && s.level === 1); // Solo muestra escuelas Nv.1 iniciales (sin spoilear rangos futuros)
+              return (
+                <div className="p-4 rounded-2xl bg-slate-950/90 border border-amber-500/45 space-y-3 text-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                    <div>
+                      <strong className="font-display text-lg text-amber-200">{selectedFqHero.name}</strong>
+                      <span className="ml-2 text-sky-300 font-bold">{selectedFqHero.role}</span>
+                      <span className="ml-2 text-slate-400">· Tamaño: {selectedFqHero.size}</span>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-950 border border-amber-500/60 text-amber-200 font-black">
+                      Rango 1 · Aprendiz (🔒 Rangos 2–10 ocultos)
+                    </span>
+                  </div>
+                  {meta.summary && (
+                    <p className="text-amber-50 bg-amber-950/25 border-l-4 border-amber-400 p-2.5 rounded-r-xl leading-relaxed">
+                      {meta.summary}
+                    </p>
+                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                    <div className="p-3 rounded-xl bg-slate-900/90 border border-emerald-800/50 space-y-1">
+                      <div className="text-[10px] font-black uppercase text-emerald-400">⚔️ Equipo Inicial (Ya equipado)</div>
+                      <div className="font-bold text-white">{selectedFqHero.startingGear}</div>
+                      {matchedGear.map((mg) => (
+                        <div key={mg.id} className="text-[11px] text-slate-300 pt-1 border-t border-slate-800">
+                          <strong className="text-amber-300">{mg.name}</strong> ({mg.dc} · {mg.hands}){' '}
+                          {(mg.tags || []).map((t) => `[${t}]`).join(' ')} — {mg.traits}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-3 rounded-xl bg-slate-900/90 border border-rose-800/50 space-y-1">
+                      <div className="text-[10px] font-black uppercase text-rose-400">🚫 Restricciones Exactas</div>
+                      <p className="text-slate-200 leading-relaxed">{selectedFqHero.restrictions}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="text-[10px] font-black uppercase text-emerald-300">⚡ Habilidades de Rango 1:</div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {(selectedFqHero.abilities || []).map((ab, i) => (
+                        <div key={i} className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-0.5">
+                          <div className="flex flex-wrap items-center justify-between gap-1">
+                            <strong className="text-emerald-200">{ab.name}</strong>
+                            {ab.usage && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-950 border border-amber-500/40 text-amber-200 font-bold">
+                                {ab.usage}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-slate-300 leading-snug">{ab.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {heroSchools.length > 0 && (
+                    <div className="p-2.5 rounded-xl bg-purple-950/30 border border-purple-700/40 text-[11px] text-purple-100">
+                      <strong>✨ Magia Inicial ({selectedFqHero.magicSaber}):</strong>{' '}
+                      {heroSchools.map((s) => s.name).join(', ')} (Nv.1: hasta 3 usos/reto por hechizo).
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
-          {/* Paso 4: Los 4 Pilares (Fuerza, Agilidad, Mente, Suerte) */}
+          {/* Paso 3: Pilares D20 Automáticos */}
           <div className="grimoire-panel rounded-2xl p-6 space-y-4">
             <div>
-              <h3 className="text-xl font-bold text-amber-300">4. Pilares de {cls.name}</h3>
+              <h3 className="text-xl font-bold text-amber-300">3. Pilares D20 de {selectedFqHero.name.split('/')[0].trim()}</h3>
               <p className="text-xs text-stone-400">
-                Bonos directos (<strong>+0 a +4</strong>) asignados según tu <strong>Clase y Raza</strong>. Se suman a tus tiradas de 1d20 en pruebas de exploración, trampas, puzzles y eventos.
+                Bonos directos (<strong>+0 a +3</strong>) calculados automáticamente para pruebas D20 de exploración, trampas, puzzles y eventos.
               </p>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {ATTRIBUTES.map((a) => {
                 const val = finalAttrs[a.id] ?? 1;
                 const isStrong = val >= 3;
@@ -473,9 +555,7 @@ export default function CharacterForge({
                   <div
                     key={a.id}
                     className={`p-4 rounded-xl border text-left space-y-1.5 ${
-                      isStrong
-                        ? 'bg-amber-950/30 border-amber-500/70'
-                        : 'bg-slate-900/90 border-slate-800'
+                      isStrong ? 'bg-amber-950/30 border-amber-500/70' : 'bg-slate-900/90 border-slate-800'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -493,111 +573,40 @@ export default function CharacterForge({
             </div>
           </div>
 
-          {/* Paso 5: Profesión (Ciudad + Mazmorra) y Rasgo de Personalidad (Quirk con Alertas al DM) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="grimoire-panel rounded-2xl p-6 space-y-3">
-              <h3 className="text-xl font-bold text-amber-300">5. Profesión del Héroe</h3>
-              <p className="text-xs text-stone-400">
-                Otorga <strong>-20% de descuento</strong> en su distrito de la Ciudad y un <strong>bono único dentro de la mazmorra</strong>.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
-                {PROFESSIONS.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setProfessionId(p.id)}
-                    className={`p-2.5 rounded-xl border text-left text-xs cursor-pointer transition ${
-                      professionId === p.id
-                        ? 'bg-emerald-950/50 border-emerald-400 text-emerald-100'
-                        : 'bg-stone-900/70 border-stone-800 text-stone-300 hover:border-stone-600'
-                    }`}
-                  >
-                    <div className="font-bold">{p.icon} {p.name}</div>
-                    <div className="text-[11px] text-emerald-300 mt-0.5">{p.cityBonus}</div>
-                    <div className="text-[10px] text-stone-400 mt-0.5">{p.dungeonBonus}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grimoire-panel rounded-2xl p-6 space-y-3">
-              <h3 className="text-xl font-bold text-purple-300">6. Rasgo de Héroe</h3>
-              <p className="text-xs text-stone-400">
-                Elige 1 rasgo táctico equilibrado: otorga una ventaja clara en combate o exploración y una desventaja balanceada.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
-                {QUIRKS.map((q) => (
-                  <button
-                    key={q.id}
-                    onClick={() => setQuirkId(q.id)}
-                    className={`p-2.5 rounded-xl border text-left text-xs cursor-pointer transition ${
-                      quirkId === q.id
-                        ? 'bg-purple-950/50 border-purple-400 text-purple-100'
-                        : 'bg-stone-900/70 border-stone-800 text-stone-300 hover:border-stone-600'
-                    }`}
-                  >
-                    <div className="font-bold">{q.icon} {q.name}</div>
-                    <div className="text-[11px] text-emerald-300 mt-0.5">+ {q.bonus}</div>
-                    <div className="text-[10px] text-red-300 mt-0.5">- {q.drawback}</div>
-                  </button>
-                ))}
-              </div>
+          {/* Paso 4: Profesión del Héroe (SIN Manías ni Rasgos) */}
+          <div className="grimoire-panel rounded-2xl p-6 space-y-3">
+            <h3 className="text-xl font-bold text-amber-300">4. Profesión del Héroe</h3>
+            <p className="text-xs text-stone-400">
+              Otorga <strong>-20% de descuento</strong> en su distrito de La Ciudad y un <strong>bono táctico en la mazmorra</strong>.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {PROFESSIONS.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setProfessionId(p.id)}
+                  className={`p-2.5 rounded-xl border text-left text-xs cursor-pointer transition ${
+                    professionId === p.id
+                      ? 'bg-emerald-950/50 border-emerald-400 text-emerald-100'
+                      : 'bg-stone-900/70 border-stone-800 text-stone-300 hover:border-stone-600'
+                  }`}
+                >
+                  <div className="font-bold">{p.icon} {p.name}</div>
+                  <div className="text-[11px] text-emerald-300 mt-0.5">{p.cityBonus}</div>
+                  <div className="text-[10px] text-stone-400 mt-0.5">{p.dungeonBonus}</div>
+                </button>
+              ))}
             </div>
           </div>
-
-          {/* Ficha FetenQuest-HQ: Restricciones, Usos de Magia y Progresión por Rangos (1–10) */}
-          {(() => {
-            const cMeta = getClassDetailedMeta(cls.id, race.id);
-            return (
-              <div className="grimoire-panel rounded-2xl p-5 border-sky-500/40 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
-                  <h3 className="text-base font-black text-sky-300">
-                    📜 Ficha Completa de {cls.name} ({race.name}) — Tamaño: {cMeta.size}
-                  </h3>
-                  <span className="px-2.5 py-0.5 rounded-full bg-amber-950 border border-amber-500/50 text-amber-200 text-[11px] font-bold">
-                    Inicia en Rango 1 · Aprendiz
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 rounded-xl bg-rose-950/30 border border-rose-700/40 space-y-1">
-                    <div className="font-black text-rose-300 uppercase text-[10px]">🚫 Restricciones de Equipo y Tamaño</div>
-                    <p className="text-slate-200 leading-relaxed">{cMeta.restrictions}</p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-purple-950/30 border border-purple-700/40 space-y-1">
-                    <div className="font-black text-purple-300 uppercase text-[10px]">✨ Regla de Magia y Usos por Reto</div>
-                    <p className="text-slate-200 leading-relaxed">{cMeta.magicRule}</p>
-                  </div>
-                </div>
-                {cls.progression && (
-                  <div className="space-y-1.5">
-                    <div className="text-[10px] font-black uppercase text-amber-300">
-                      🏰 Progresión por Rangos (1 al 10 — Salones Imperiales):
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-1.5 text-[11px]">
-                      {LEVEL_TABLE.map((r) => (
-                        <div key={r.level} className="p-2 rounded-lg bg-slate-950/80 border border-slate-800">
-                          <div className="font-black text-amber-200">
-                            R{r.level} · {r.rankTitle}
-                          </div>
-                          <div className="text-[10px] text-slate-300 leading-snug mt-0.5">
-                            {cls.progression[r.level] || r.reward}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
 
           {/* Resumen y Botón Final */}
           <div className="grimoire-panel rounded-2xl p-6 flex flex-wrap items-center justify-between gap-4 border-amber-500/50">
             <div className="flex flex-wrap gap-4 text-sm">
               <div><span className="text-stone-400">PC Máx:</span> <strong className="text-emerald-300 text-lg">{calcMaxPC()}</strong></div>
               <div><span className="text-stone-400">PM Máx:</span> <strong className="text-cyan-300 text-lg">{calcMaxPM()}</strong></div>
-              <div><span className="text-stone-400">Ataque:</span> <strong className="text-red-300 text-lg">{cls.baseAttackDice} DC</strong></div>
-              <div><span className="text-stone-400">Defensa:</span> <strong className="text-amber-300 text-lg">{cls.baseDefendDice} DC</strong></div>
-              <div><span className="text-stone-400">Movimiento:</span> <strong className="text-purple-300 text-lg">{8 + (race.speedMod || 0)} cas</strong></div>
+              <div><span className="text-stone-400">Ataque:</span> <strong className="text-red-300 text-lg">{selectedFqHero.at} DC</strong></div>
+              <div><span className="text-stone-400">Defensa:</span> <strong className="text-amber-300 text-lg">{selectedFqHero.def} DC</strong></div>
+              <div><span className="text-stone-400">Movimiento:</span> <strong className="text-purple-300 text-lg">2D6 (8)</strong></div>
             </div>
             <button
               onClick={createHero}

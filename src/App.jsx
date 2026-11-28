@@ -435,6 +435,32 @@ export default function App() {
     );
   };
 
+  const handleAdvanceGlobalTurn = (roundNumber = 1) => {
+    if (heroes.length === 0) return;
+    updateHeroesSynced((prev) =>
+      prev.map((h) => {
+        const nextCds = {};
+        Object.entries(h.cooldowns || {}).forEach(([k, v]) => {
+          if (Number(v) > 1) nextCds[k] = Number(v) - 1;
+        });
+        const nextEffects = (h.activeEffects || [])
+          .map((ef) => {
+            if (typeof ef.duration === 'number' && ef.duration < 90) {
+              return { ...ef, duration: ef.duration - 1 };
+            }
+            return ef;
+          })
+          .filter((ef) => typeof ef.duration !== 'number' || ef.duration > 0);
+        return {
+          ...h,
+          cooldowns: nextCds,
+          activeEffects: nextEffects,
+        };
+      })
+    );
+    showToast(`🔄 Ronda ${roundNumber} · Turno de Héroes: enfriamientos y estados actualizados en todos los celulares.`);
+  };
+
   // ==================== DESPACHO ATÓMICO DM -> CELULAR (Botín, Tesoros, Eventos, Viajes, Trampas) ====================
   const handleDispatchHeroEvent = (targetHeroIdOrAll, payload = {}) => {
     if (!payload) return;
@@ -1115,6 +1141,7 @@ export default function App() {
                 onSendLootToHero={handleSendLootToHero}
                 onSendMaterialToHero={handleSendMaterialToHero}
                 onDispatchHeroEvent={handleDispatchHeroEvent}
+                onAdvanceGlobalTurn={handleAdvanceGlobalTurn}
                 proceduralQuests={proceduralQuests}
                 activeProceduralQuest={activeProceduralMap}
                 activeOfficialMapRequest={activeOfficialMapRequest}

@@ -271,6 +271,7 @@ export default function PlayerMobileView({ initialPlayerParam }) {
   const [inboxHistoryOpen, setInboxHistoryOpen] = useState(false);
   const seenInboxIdsRef = useRef(new Set());
   const inboxInitializedForHeroRef = useRef(null);
+  const localWriteLockUntilRef = useRef(0);
   const lastVersionRef = useRef(null);
   const prevStateRef = useRef({ level: null, invCount: null, gold: null, maxPC: null, maxPM: null });
   const mainScrollRef = useRef(null);
@@ -290,8 +291,9 @@ export default function PlayerMobileView({ initialPlayerParam }) {
 
       if (heroId && heroId !== 'new' && heroId !== 'lobby') {
         const found = list.find((h) => h.id === heroId);
-        if (found && versionChanged) {
-          // Detectar cambios enviados en tiempo real por el DM (subida de nivel, objeto nuevo, oro)
+        // No sobrescribir el estado local mientras un guardado del jugador esté en curso (evita resets al refrescar)
+        if (found && versionChanged && Date.now() >= localWriteLockUntilRef.current) {
+          // Detectar subida de rango enviada por el DM
           const prev = prevStateRef.current;
           if (prev.level !== null && found.level > prev.level) {
             const hCls = CLASSES.find((c) => c.id === found.classId);
@@ -312,11 +314,17 @@ export default function PlayerMobileView({ initialPlayerParam }) {
               unlockedFeatures,
               subclass: found.level >= 3 && prev.level < 3 ? found.subclass : null,
             });
-          } else if (prev.invCount !== null && (found.inventory?.length || 0) > prev.invCount) {
-            const newest = found.inventory[found.inventory.length - 1];
-            setLiveAlert(`🎁 ¡El DM te envió un objeto!: ${newest?.name || 'Nuevo tesoro'}`);
-          } else if (prev.gold !== null && found.gold > prev.gold) {
-            setLiveAlert(`💰 ¡Recibiste +${found.gold - prev.gold} Monedas de Oro!`);
+          }
+
+          // Sincronizar cooldowns y usos persistidos en el héroe (para que no se reseteen al salir o refrescar)
+          if (found.cooldowns && typeof found.cooldowns === 'object') {
+            setCooldowns(found.cooldowns);
+          }
+          if (found.usesLeft && typeof found.usesLeft === 'object') {
+            setUsesLeft(found.usesLeft);
+          }
+          if (found.spellRepeats && typeof found.spellRepeats === 'object') {
+            setSpellRepeats(found.spellRepeats);
           }
           // Detectar mensajes nuevos del DM en hero.inbox (Botín exacto, Tesoros, Eventos, Viajes, Trampas)
           if (Array.isArray(found.inbox) && found.inbox.length > 0) {
@@ -453,6 +461,7 @@ export default function PlayerMobileView({ initialPlayerParam }) {
   }, [heroId]);
 
   const pushHeroUpdate = async (updatedHero) => {
+    localWriteLockUntilRef.current = Date.now() + 3000;
     setHero(updatedHero);
     prevStateRef.current = {
       level: updatedHero.level,
@@ -462,13 +471,19 @@ export default function PlayerMobileView({ initialPlayerParam }) {
       maxPM: updatedHero.maxPM,
     };
     try {
-      await fetch('/api/heroes/update', {
+      const res = await fetch('/api/heroes/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hero: updatedHero }),
       });
+      if (res.ok) {
+        const d = await res.json();
+        if (d?.version) lastVersionRef.current = d.version;
+      }
     } catch {
       // ignore
+    } finally {
+      localWriteLockUntilRef.current = Date.now() + 800;
     }
   };
 
@@ -612,15 +627,59 @@ export default function PlayerMobileView({ initialPlayerParam }) {
   const hasFragileMind = (hero.flaws || []).some((f) => f.id === 'fragil_mente');
   const isShock = (hero.currentPM ?? hero.maxPM) <= (hasFragileMind ? 1 : 0);
 
-  // Efectos activos (Buffs / Debuffs) sincronizados en la hoja
+  // Efectos activos (Buffs / Debuffs) + CÁLCULO REAL DE EQUIPO EQUIPADO (Armas, Armaduras, Escudos, Accesorios)
   const activeEffects = hero.activeEffects || [];
   const usedSpells = hero.usedSpells || [];
   const atkMod = activeEffects.reduce((acc, ef) => acc + (ef.attackMod || 0), 0);
   const defMod = activeEffects.reduce((acc, ef) => acc + (ef.defendMod || 0), 0);
   const spdMod = activeEffects.reduce((acc, ef) => acc + (ef.speedMod || 0), 0);
-  const effectiveAttack = Math.max(1, (hero.attackDice || 2) + atkMod);
-  const effectiveDefend = Math.max(0, (hero.defendDice || 2) + defMod);
-  const effectiveSpeed = Math.max(1, (hero.speed || 8) + spdMod);
+
+  const equippedItems = (hero.inventory || []).filter((it) => it && it.equipped);
+  let equipWeaponMaxDC = 0;
+  let equipAtkBonus = 0;
+  let equipDefBonus = 0;
+  let equipMovBonus = 0;
+  let equipPCBonus = 0;
+  let equipPMBonus = 0;
+
+  equippedItems.forEach((it) => {
+    const rawDice = String(it.dice || '');
+    const rawText = `${it.name || ''} ${rawDice} ${it.effect || ''} ${it.traits || ''} ${it.notes || ''}`.toLowerCase();
+    // Arma equipada: sustituye dados de ataque base si es mayor (ej. Espada Ancha 3 DC, Hacha Batalla 4 DC)
+    if (it.type === 'Arma' || /\b\d+\s*dc\b/i.test(rawDice)) {
+      const mAtk = it.attack ? Number(it.attack) : Number((rawDice.match(/(\d+)\s*dc/i) || [])[1] || 0);
+      if (mAtk > equipWeaponMaxDC) equipWeaponMaxDC = mAtk;
+    }
+    // Bono explícito de ataque (+1 At / +1 DC) en accesorios o mejoras
+    if (it.type !== 'Arma') {
+      const mAtkPlus = rawText.match(/\+(\d+)\s*(dc\s*ataque|ataque|at\b)/i);
+      if (mAtkPlus) equipAtkBonus += Number(mAtkPlus[1]);
+    }
+    // Defensa de Armaduras / Escudos / Yelmos / Accesorios (+1 Def, +2 Def)
+    if (it.defense) {
+      equipDefBonus += Number(it.defense);
+    } else {
+      const mDef = rawDice.match(/\+(\d+)\s*(def|defensa)/i) || rawText.match(/\+(\d+)\s*(dc\s*def|dado.*defensa|def\b)/i);
+      if (mDef) equipDefBonus += Number(mDef[1]);
+    }
+    // Bonos o penalizaciones de Movimiento (+1 Mov, -2 casillas)
+    const mMovPlus = rawText.match(/\+(\d+)\s*(mov|casilla)/i);
+    if (mMovPlus) equipMovBonus += Number(mMovPlus[1]);
+    const mMovMinus = rawText.match(/-(\d+)\s*(mov|casilla)/i);
+    if (mMovMinus) equipMovBonus -= Number(mMovMinus[1]);
+    // Bonos de PC / PM en accesorios
+    const mPC = rawText.match(/\+(\d+)\s*pc\b/i);
+    if (mPC && it.type !== 'Poción' && it.type !== 'Consumible') equipPCBonus += Number(mPC[1]);
+    const mPM = rawText.match(/\+(\d+)\s*pm\b/i);
+    if (mPM && it.type !== 'Poción' && it.type !== 'Consumible') equipPMBonus += Number(mPM[1]);
+  });
+
+  const baseAttack = hero.attackDice || clsData?.baseAttackDice || 2;
+  const effectiveAttack = Math.max(1, Math.max(baseAttack, equipWeaponMaxDC) + equipAtkBonus + atkMod);
+  const effectiveDefend = Math.max(0, (hero.defendDice || clsData?.baseDefendDice || 2) + equipDefBonus + defMod);
+  const effectiveSpeed = Math.max(1, (hero.speed || 8) + equipMovBonus + spdMod);
+  const effectiveMaxPC = Math.max(1, (hero.maxPC || 6) + equipPCBonus);
+  const effectiveMaxPM = Math.max(0, (hero.maxPM || 3) + equipPMBonus);
 
   const showToast = (msg) => {
     setActionToast(msg);
@@ -929,12 +988,10 @@ export default function PlayerMobileView({ initialPlayerParam }) {
       return;
     }
 
-    if (ab.cooldownTurns > 0) {
-      setCooldowns((prev) => ({ ...prev, [ab.id]: ab.cooldownTurns }));
-    }
-    if (ab.maxUses !== null) {
-      setUsesLeft((prev) => ({ ...prev, [ab.id]: Math.max(0, rem - 1) }));
-    }
+    const nextCooldowns = ab.cooldownTurns > 0 ? { ...cooldowns, [ab.id]: ab.cooldownTurns } : cooldowns;
+    const nextUsesLeft = ab.maxUses !== null ? { ...usesLeft, [ab.id]: Math.max(0, rem - 1) } : usesLeft;
+    if (ab.cooldownTurns > 0) setCooldowns(nextCooldowns);
+    if (ab.maxUses !== null) setUsesLeft(nextUsesLeft);
 
     // Si es habilidad de apoyo a aliado (ej: Manos Sanadoras / Imposición de Manos)
     let supportEffect = null;
@@ -959,38 +1016,30 @@ export default function PlayerMobileView({ initialPlayerParam }) {
       }
     }
 
-    // Aplicar costes de PM, curaciones y Buffs/Debuffs directamente en la hoja del héroe
-    const needsHeroUpdate =
-      (ab.costPM || 0) > 0 ||
-      ab.buff ||
-      ab.debuff ||
-      ab.healPC ||
-      ab.healPM ||
-      selfSupportHealPC > 0 ||
-      selfSupportHealPM > 0;
-    if (needsHeroUpdate) {
-      let nextPC = hero.currentPC ?? hero.maxPC;
-      let nextPM = Math.max(0, curPM - (ab.costPM || 0));
-      let nextEffects = [...activeEffects];
-      if (ab.healPC || selfSupportHealPC) {
-        nextPC = Math.min(hero.maxPC, nextPC + (ab.healPC || 0) + selfSupportHealPC);
-      }
-      if (ab.healPM || selfSupportHealPM) {
-        nextPM = Math.min(hero.maxPM, nextPM + (ab.healPM || 0) + selfSupportHealPM);
-      }
-      if (ab.buff) {
-        nextEffects = [...nextEffects.filter((e) => e.id !== ab.buff.id), ab.buff];
-      }
-      if (ab.debuff) {
-        nextEffects = [...nextEffects.filter((e) => e.id !== ab.debuff.id), ab.debuff];
-      }
-      await pushHeroUpdate({
-        ...hero,
-        currentPC: nextPC,
-        currentPM: nextPM,
-        activeEffects: nextEffects,
-      });
+    // Guardar SIEMPRE cooldowns, usos, costes de PM, curaciones y Buffs/Debuffs en el servidor para que nunca se reseteen
+    let nextPC = hero.currentPC ?? effectiveMaxPC;
+    let nextPM = Math.max(0, curPM - (ab.costPM || 0));
+    let nextEffects = [...activeEffects];
+    if (ab.healPC || selfSupportHealPC) {
+      nextPC = Math.min(effectiveMaxPC, nextPC + (ab.healPC || 0) + selfSupportHealPC);
     }
+    if (ab.healPM || selfSupportHealPM) {
+      nextPM = Math.min(effectiveMaxPM, nextPM + (ab.healPM || 0) + selfSupportHealPM);
+    }
+    if (ab.buff) {
+      nextEffects = [...nextEffects.filter((e) => e.id !== ab.buff.id), ab.buff];
+    }
+    if (ab.debuff) {
+      nextEffects = [...nextEffects.filter((e) => e.id !== ab.debuff.id), ab.debuff];
+    }
+    await pushHeroUpdate({
+      ...hero,
+      currentPC: nextPC,
+      currentPM: nextPM,
+      activeEffects: nextEffects,
+      cooldowns: nextCooldowns,
+      usesLeft: nextUsesLeft,
+    });
 
     await notifyDMAction({
       abilityName: ab.name,
@@ -2828,12 +2877,11 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                     “{displayArrival}”
                   </p>
                   <p className="text-[11px] text-slate-400">
-                    Al cruzar las puertas vivirás un <strong>evento personal único para {hero.name}</strong> (independiente del resto del grupo).
+                    Al entrar existe un <strong>25% de probabilidad</strong> de vivir un suceso personal con prueba D20; el resto de veces entras tranquilo a los distritos.
                   </p>
                   <button
                     type="button"
                     onClick={() => {
-                      const ev = generatePersonalCityEvent(hero, cityModeMobile);
                       if (cityVisitId) {
                         try {
                           localStorage.setItem(`hq_city_entered_${hero.id}`, String(cityVisitId));
@@ -2841,9 +2889,16 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                           // ignore
                         }
                       }
-                      setPersonalCityEvent(ev);
-                      setPersonalEventOutcome('');
-                      setCityPhase('event');
+                      if (Math.random() < 0.25) {
+                        const ev = generatePersonalCityEvent(hero, cityModeMobile);
+                        setPersonalCityEvent(ev);
+                        setPersonalEventOutcome('');
+                        setCityPhase('event');
+                      } else {
+                        setPersonalCityEvent(null);
+                        setCityPhase('districts');
+                        showToast('🏛️ Llegada tranquila a La Ciudad (sin sucesos imprevistos).');
+                      }
                     }}
                     className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-display font-black text-base shadow-xl cursor-pointer"
                   >
@@ -3491,17 +3546,24 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                   {FAMILIARS.map((fam) => {
                     const price = calcMyPrice(fam.cost, 'gremio');
                     const owned = hero.familiar?.id === fam.id;
+                    const minRank = fam.minRank || (fam.cost >= 300 ? 6 : fam.cost >= 240 ? 4 : fam.cost >= 190 ? 3 : 2);
+                    const lockedByRank = (hero.level || 1) < minRank;
                     return (
-                      <div key={fam.id} className="p-3 rounded-xl bg-slate-900/85 border border-slate-800 space-y-1.5 text-xs">
+                      <div key={fam.id} className={`p-3 rounded-xl bg-slate-900/85 border space-y-1.5 text-xs ${lockedByRank ? 'border-slate-800 opacity-65' : 'border-purple-800/50'}`}>
                         <div className="flex items-center justify-between gap-2">
                           <div>
-                            <div className="font-bold text-amber-200">{fam.icon} {fam.name}</div>
+                            <div className="font-bold text-amber-200 flex items-center gap-1.5">
+                              <span>{fam.icon} {fam.name}</span>
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded font-black ${lockedByRank ? 'bg-rose-950 text-rose-300' : 'bg-emerald-950 text-emerald-300'}`}>
+                                Rango {minRank}+
+                              </span>
+                            </div>
                             {fam.stats && (
                               <div className="text-[10px] text-sky-300 font-semibold">{fam.stats}</div>
                             )}
                           </div>
                           <button
-                            disabled={owned || (hero.gold || 0) < price}
+                            disabled={owned || lockedByRank || (hero.gold || 0) < price}
                             onClick={async () => {
                               await pushHeroUpdate({
                                 ...hero,
@@ -3512,7 +3574,7 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                             }}
                             className="px-3 py-1 rounded-lg bg-purple-700 hover:bg-purple-600 disabled:opacity-40 text-white font-bold text-[11px] cursor-pointer shrink-0"
                           >
-                            {owned ? '✓ Tuyo' : `Adoptar (${price} MO)`}
+                            {owned ? '✓ Tuyo' : lockedByRank ? `🔒 Rango ${minRank}` : `Adoptar (${price} MO)`}
                           </button>
                         </div>
                         <p className="text-[11px] text-slate-200 leading-snug">

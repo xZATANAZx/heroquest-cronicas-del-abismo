@@ -504,6 +504,7 @@ export default function TacticalBoard({
   onSendLootToHero,
   onSendMaterialToHero,
   onDispatchHeroEvent = null,
+  onAdvanceGlobalTurn = null,
   proceduralQuests = [],
   activeProceduralQuest = null,
   activeOfficialMapRequest = null,
@@ -562,18 +563,94 @@ export default function TacticalBoard({
   const [selectedMonsterKey, setSelectedMonsterKey] = useState(null);
   const [selectedTrapKey, setSelectedTrapKey] = useState(null);
 
-  // ==================== MOTOR v7.0 EN TABLERO 2D: D20 D&D + EVENTOS/GUARIDAS + COLOCACIÓN LIBRE ====================
+  // ==================== MOTOR EN TABLERO 2D: TURNOS, D20, MAZO ÚNICO TESOROS, MISIONES NPC Y REJUGABILIDAD ====================
+  const [turnPhase, setTurnPhase] = useState('heroes'); // 'heroes' | 'dm'
+  const [roundNum, setRoundNum] = useState(1);
+  const [monsterAttackHeroId, setMonsterAttackHeroId] = useState('');
   const [v7EventModal, setV7EventModal] = useState(null);
   const [v7HeroTarget, setV7HeroTarget] = useState('ALL');
   const [v7LairUsed, setV7LairUsed] = useState(false);
-  const [pendingBoardPlacement, setPendingBoardPlacement] = useState(null); // { kind, type, label }
-  const [dmPlacedTokens, setDmPlacedTokens] = useState([]); // [{ uid, x, y, kind, type, label }]
+  const [pendingBoardPlacement, setPendingBoardPlacement] = useState(null); // { kind, type, label, questData? }
+  const [dmPlacedTokens, setDmPlacedTokens] = useState([]); // [{ uid, x, y, kind, type, label, questData? }]
   const [d20ModalOpen, setD20ModalOpen] = useState(false);
   const [d20HeroId, setD20HeroId] = useState('');
   const [d20SkillId, setD20SkillId] = useState('percepcion');
   const [d20Cd, setD20Cd] = useState(13);
   const [d20Mode, setD20Mode] = useState('normal'); // 'normal' | 'adv' | 'dis'
   const [d20Result, setD20Result] = useState(null);
+
+  const toggleTurnPhase = () => {
+    if (turnPhase === 'heroes') {
+      setTurnPhase('dm');
+      showToast?.(`💀 Ronda ${roundNum}: Turno del Director de Juego (Mueven y atacan los monstruos).`);
+    } else {
+      const nextR = roundNum + 1;
+      setRoundNum(nextR);
+      setTurnPhase('heroes');
+      onAdvanceGlobalTurn?.(nextR);
+    }
+  };
+
+  const hasHeroPayload = (obj) => {
+    if (!obj) return false;
+    return Boolean(
+      (obj.goldDelta && obj.goldDelta !== 0) ||
+        (obj.pcDelta && obj.pcDelta !== 0) ||
+        (obj.pmDelta && obj.pmDelta !== 0) ||
+        (obj.fameDelta && obj.fameDelta !== 0) ||
+        (obj.repDelta && obj.repDelta !== 0) ||
+        (Array.isArray(obj.items) && obj.items.length > 0) ||
+        (Array.isArray(obj.materials) && obj.materials.length > 0) ||
+        obj.statusAdded
+    );
+  };
+
+  const buildRandomNpcQuestData = () => {
+    const pool = [
+      {
+        icon: '📜',
+        title: 'Misión NPC: El Relicario Perdido',
+        sourceLabel: 'Misión Secundaria de NPC en Tablero',
+        d20Check: { skill: 'Percepción / Investigación', pillar: 'MEN', cd: 13 },
+        narrative: 'Un erudito herido escondido tras un pilar te pide recuperar su relicario sellado antes de que los esbirros lo destruyan. Prueba de Mente (CD 13) para hallar el compartimento oculto.',
+        successOutcome: { goldDelta: 65, fameDelta: 1, narrative: '¡Recuperas el relicario intacto! El erudito te entrega 65 MO y +1 Fama.' },
+        failOutcome: { pcDelta: -1, narrative: 'Al forzar el compartimento se dispara un sello arcano (−1 PC).' },
+      },
+      {
+        icon: '📜',
+        title: 'Misión NPC: Prisionero del Calabozo',
+        sourceLabel: 'Misión Secundaria de NPC en Tablero',
+        d20Check: { skill: 'Trampas y Cerraduras', pillar: 'AGI', cd: 13 },
+        narrative: 'Un explorador imperial encadenado promete revelar un alijo de pociones si logras forzar sus grilletes sin hacer ruido (AGI CD 13).',
+        successOutcome: { goldDelta: 40, items: [{ name: 'Pócima de Curación', type: 'Poción', rarity: 'comun', price: 200, effect: 'Acción gratuita: restaura 4 PC.' }], narrative: '¡Lo liberas en silencio! Recibes +40 MO y 1 Pócima de Curación.' },
+        failOutcome: { pcDelta: 0, narrative: 'El candado se atasca y el ruido alerta a la mazmorra (sin recompensa).' },
+      },
+      {
+        icon: '📜',
+        title: 'Misión NPC: El Mercader Acorralado',
+        sourceLabel: 'Misión Secundaria de NPC en Tablero',
+        d20Check: { skill: 'Persuasión / Negociación', pillar: 'SUE', cd: 12 },
+        narrative: 'Un comerciante enano quedó atrapado con su carreta rota. Si lo escoltas o negocias un trato (SUE CD 12), te recompensa con acero templado y oro.',
+        successOutcome: { goldDelta: 50, materials: [{ id: 'acero_templado', qty: 1 }], narrative: '¡Trato cerrado! Recibes +50 MO y 1× Acero Templado.' },
+        failOutcome: { goldDelta: 15, narrative: 'Solo te entrega 15 MO por el susto y sale corriendo.' },
+      },
+    ];
+    return pool[Math.floor(Math.random() * pool.length)];
+  };
+
+  const randomizeScenarioVariability = () => {
+    const npcQ = buildRandomNpcQuestData();
+    const rx1 = 3 + Math.floor(Math.random() * (BOARD_COLS - 6));
+    const ry1 = 3 + Math.floor(Math.random() * (BOARD_ROWS - 6));
+    const rx2 = 3 + Math.floor(Math.random() * (BOARD_COLS - 6));
+    const ry2 = 3 + Math.floor(Math.random() * (BOARD_ROWS - 6));
+    setDmPlacedTokens((prev) => [
+      ...prev.filter((t) => !t.isScenarioVar),
+      { uid: `var-npc-${Date.now()}`, x: rx1, y: ry1, kind: 'npc_quest', type: 'npc', label: npcQ.title, questData: npcQ, isScenarioVar: true },
+      { uid: `var-door-${Date.now() + 1}`, x: rx2, y: ry2, kind: 'secret_door', type: 'secret_door', label: 'Puerta Secreta Variable', isScenarioVar: true },
+    ]);
+    showToast?.('🎲 ¡Escenario variado! Se colocó una Misión NPC interactiva (📜) y una Puerta Secreta nueva en el tablero.');
+  };
 
   const openV7RandomFrom = (pool, sourceLabel, kind = 'event') => {
     let candidates = pool;
@@ -595,35 +672,37 @@ export default function TacticalBoard({
     const picked = ABISMO_TREASURE_DECK_V7[Math.floor(Math.random() * ABISMO_TREASURE_DECK_V7.length)];
     if (!picked) return;
     if (picked.kind === 'event') {
-      openV7RandomFrom(ABISMO_EVENTS_AND_LAIRS_V7, '❓ Carta Evento disparada desde Tesoros v7', 'event');
+      openV7RandomFrom(ABISMO_EVENTS_AND_LAIRS_V7, '💎 Mazo de Tesoros · ¡Suceso / Guarida!', 'event');
       return;
     }
     setV7HeroTarget(heroes[0]?.id || 'ALL');
     setV7EventModal({
       ...picked,
-      sourceLabel: '💎 Mazo de Tesoros Renovado v7.0',
+      sourceLabel: '💎 Mazo de Tesoros',
       modalKind: picked.kind === 'negative' ? 'trap' : 'treasure',
     });
   };
 
   const dispatchV7Outcome = (outcomeObj, isFail = false) => {
-    if (!v7EventModal || !onDispatchHeroEvent) return;
+    if (!v7EventModal) return;
     const base = outcomeObj || v7EventModal;
-    onDispatchHeroEvent(v7HeroTarget || 'ALL', {
-      kind: isFail ? 'trap' : v7EventModal.modalKind || 'event',
-      icon: v7EventModal.icon || '✨',
-      title: v7EventModal.title,
-      badge: v7EventModal.badge || v7EventModal.sourceLabel || 'Crónicas del Abismo v7',
-      narrative: base.narrative || v7EventModal.narrative || '',
-      goldDelta: base.goldDelta || 0,
-      pcDelta: base.pcDelta || 0,
-      pmDelta: base.pmDelta || 0,
-      fameDelta: base.fameDelta || 0,
-      repDelta: base.repDelta || 0,
-      items: base.items || [],
-      materials: base.materials || [],
-      statusAdded: base.statusAdded || null,
-    });
+    if (onDispatchHeroEvent && hasHeroPayload(base)) {
+      onDispatchHeroEvent(v7HeroTarget || 'ALL', {
+        kind: isFail ? 'trap' : v7EventModal.modalKind || 'event',
+        icon: v7EventModal.icon || '✨',
+        title: v7EventModal.title,
+        badge: v7EventModal.badge || v7EventModal.sourceLabel || 'Mazmorra',
+        narrative: base.narrative || v7EventModal.narrative || '',
+        goldDelta: base.goldDelta || 0,
+        pcDelta: base.pcDelta || 0,
+        pmDelta: base.pmDelta || 0,
+        fameDelta: base.fameDelta || 0,
+        repDelta: base.repDelta || 0,
+        items: base.items || [],
+        materials: base.materials || [],
+        statusAdded: base.statusAdded || null,
+      });
+    }
     setV7EventModal(null);
   };
 
@@ -1548,6 +1627,20 @@ export default function TacticalBoard({
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
+                onClick={toggleTurnPhase}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-md border ${
+                  turnPhase === 'heroes'
+                    ? 'bg-emerald-600 hover:bg-emerald-500 border-emerald-400 text-white'
+                    : 'bg-rose-700 hover:bg-rose-600 border-rose-400 text-white'
+                }`}
+                title="Alterna entre Turno de Héroes y Turno del DM (al volver a Héroes avanza la Ronda y actualiza enfriamientos/estados en todos los celulares)"
+              >
+                {turnPhase === 'heroes'
+                  ? `⚔️ Turno Héroes (R${roundNum}) → Pasar a DM`
+                  : `💀 Turno DM (R${roundNum}) → Nuevo Turno Héroes`}
+              </button>
+              <button
+                type="button"
                 onClick={toggleFullscreenMode}
                 className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-md"
                 title="Abre el Modo Mesa en Pantalla Completa con tablero gigante y botones rápidos a la mano"
@@ -1559,9 +1652,9 @@ export default function TacticalBoard({
                   type="button"
                   onClick={onStartTravelToCity}
                   className="px-3 py-1.5 rounded-xl bg-sky-700 hover:bg-sky-600 text-white text-xs font-black cursor-pointer shadow"
-                  title="Sistema de Viajes: El Viejo Mundo (Kemo & Heval) antes de cada misión"
+                  title="Viaje narrativo hacia la Misión antes de entrar a la mazmorra"
                 >
-                  🧭 Viaje (K&H)
+                  🧭 Viaje a Misión
                 </button>
               )}
               {missionIntroText && (
@@ -2041,7 +2134,7 @@ export default function TacticalBoard({
                 </g>
               );
             })}
-            {/* FICHAS COLOCADAS LIBREMENTE POR EL DM (Monstruos, Guaridas, Trampas Secretas, Puertas Secretas, NPCs) */}
+            {/* FICHAS COLOCADAS LIBREMENTE POR EL DM (Monstruos, Guaridas, Trampas Secretas, Puertas Secretas, Misiones NPC) */}
             {dmPlacedTokens.map((tk) => {
               const px = MARGIN_LEFT + tk.x * CELL;
               const py = MARGIN_TOP + tk.y * CELL;
@@ -2051,15 +2144,25 @@ export default function TacticalBoard({
                   className="cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (tk.kind === 'npc_quest' && tk.questData) {
+                      setV7HeroTarget(heroes[0]?.id || 'ALL');
+                      setV7EventModal({ ...tk.questData, modalKind: 'event' });
+                      return;
+                    }
                     setDmPlacedTokens((prev) => prev.filter((item) => item.uid !== tk.uid));
                     showToast?.(`🗑️ Retirado del tablero: ${tk.label}`);
                   }}
                 >
-                  <title>{`${tk.label} (Clic para retirar del tablero)`}</title>
+                  <title>{tk.kind === 'npc_quest' ? `${tk.label} (Clic para abrir narrativa y opciones)` : `${tk.label} (Clic para retirar)`}</title>
                   {tk.kind === 'trap' ? (
                     <TrapSVG type={tk.type} px={px} py={py} cell={CELL} />
                   ) : tk.kind === 'secret_door' ? (
                     <DoorSVG type="secret_door" px={px} py={py} cell={CELL} edge="N" />
+                  ) : tk.kind === 'npc_quest' ? (
+                    <g>
+                      <circle cx={px + CELL / 2} cy={py + CELL / 2} r={CELL * 0.44} fill="#b45309" stroke="#fde047" strokeWidth="2.2" />
+                      <text x={px + CELL / 2} y={py + CELL / 2 + 4.5} textAnchor="middle" fontSize="13">📜</text>
+                    </g>
                   ) : (
                     <MonsterIconSVG type={tk.type} px={px} py={py} cell={CELL} info={{ isBoss: tk.label.includes('Jefe') }} />
                   )}
@@ -2115,56 +2218,58 @@ export default function TacticalBoard({
               </div>
             )}
 
-            {/* BARRA RÁPIDA DEL DM v7.0 (SIEMPRE A LA MANO SOBRE EL TABLERO) */}
+            {/* BARRA RÁPIDA DEL DM (SIEMPRE A LA MANO SOBRE EL TABLERO) */}
             <div className="mb-2.5 p-2 rounded-xl bg-slate-950/90 border border-amber-500/40 flex flex-wrap items-center gap-1.5 text-[11px]">
               <button
                 type="button"
                 onClick={() => setD20ModalOpen(true)}
                 className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-black cursor-pointer"
               >
-                🎲 Tirada D20 D&D
+                🎲 Tirada D20
               </button>
               <button
                 type="button"
                 onClick={drawV7Treasure}
                 className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black cursor-pointer"
+                title="Mazo único de Tesoros: incluye Oro, Pócimas, Trampas, Monstruos Errantes, Eventos y Guaridas"
               >
-                💎 Tesoro v7
+                💎 Robar Tesoro
               </button>
               <button
                 type="button"
-                onClick={() => openV7RandomFrom(ABISMO_EVENTS_AND_LAIRS_V7, '❓ Mazo de Eventos y Guaridas v7.0', 'event')}
-                className="px-2.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-black cursor-pointer"
-              >
-                ❓ Evento / Guarida {v7LairUsed ? '(1/1)' : '(0/1)'}
-              </button>
-              <button
-                type="button"
-                onClick={() => openV7RandomFrom(ABISMO_HALLWAY_EVENTS_V7, '🚪 Evento de Pasillo v7.0', 'event')}
+                onClick={() => openV7RandomFrom(ABISMO_HALLWAY_EVENTS_V7, '🚪 Evento de Pasillo', 'event')}
                 className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-200 font-bold cursor-pointer"
               >
                 🚪 Pasillo
               </button>
               <button
                 type="button"
-                onClick={() => openV7RandomFrom(ABISMO_BIOME_EVENTS_V7, '🌲 Evento de Bioma v7.0', 'event')}
+                onClick={() => openV7RandomFrom(ABISMO_BIOME_EVENTS_V7, '🌲 Evento de Bioma', 'event')}
                 className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-200 font-bold cursor-pointer"
               >
                 🌲 Bioma
               </button>
               <button
                 type="button"
-                onClick={() => openV7RandomFrom(ABISMO_CLUE_EVENTS_V7, '🔍 Pista Misteriosa v7.0', 'event')}
+                onClick={() => openV7RandomFrom(ABISMO_CLUE_EVENTS_V7, '🔍 Pista de Mazmorra', 'event')}
                 className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-200 font-bold cursor-pointer"
               >
                 🔍 Pista
               </button>
               <button
                 type="button"
-                onClick={() => openV7RandomFrom(ABISMO_EPIC_TWISTS_V7, '⚡ Giro Épico v7.0', 'event')}
+                onClick={() => openV7RandomFrom(ABISMO_EPIC_TWISTS_V7, '⚡ Giro Épico', 'event')}
                 className="px-2.5 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-600 text-white font-black cursor-pointer"
               >
                 ⚡ Giro Épico
+              </button>
+              <button
+                type="button"
+                onClick={randomizeScenarioVariability}
+                className="px-2.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-slate-950 font-black cursor-pointer"
+                title="Agrega Misión NPC interactiva (📜) y Puerta Secreta aleatoria para que cada partida en este mapa sea distinta"
+              >
+                🎲 Variar Escenario
               </button>
               <span className="text-slate-600">|</span>
               <span className="text-[10px] font-bold text-slate-400">📍 Colocar:</span>
@@ -2172,12 +2277,18 @@ export default function TacticalBoard({
                 { kind: 'monster', type: 'orc', label: 'Monstruo (Orco)' },
                 { kind: 'trap', type: 'trap_pit', label: 'Trampa Secreta' },
                 { kind: 'secret_door', type: 'secret_door', label: 'Puerta Secreta' },
-                { kind: 'npc', type: 'npc', label: 'NPC' },
+                { kind: 'npc_quest', type: 'npc', label: 'Misión NPC', dynamicQuest: true },
               ].map((pl) => (
                 <button
                   key={pl.label}
                   type="button"
-                  onClick={() => setPendingBoardPlacement(pl)}
+                  onClick={() =>
+                    setPendingBoardPlacement(
+                      pl.dynamicQuest
+                        ? { ...pl, questData: buildRandomNpcQuestData() }
+                        : pl
+                    )
+                  }
                   className="px-2 py-1 rounded-lg bg-amber-950/70 hover:bg-amber-900 border border-amber-600/50 text-amber-200 font-bold cursor-pointer"
                 >
                   +{pl.label.split(' ')[0]}
@@ -2587,6 +2698,49 @@ export default function TacticalBoard({
                   </button>
                 )}
               </div>
+
+              {/* ATACAR HÉROE DESDE ESTE MONSTRUO (Refleja el daño al instante en el celular del Héroe) */}
+              {selectedMonsterObj.currentPC > 0 && heroes.length > 0 && onDispatchHeroEvent && (
+                <div className="p-2.5 rounded-xl bg-rose-950/35 border border-rose-700/50 space-y-2 text-xs">
+                  <div className="font-black text-rose-300 text-[11px]">
+                    ⚔️ Atacar a un Héroe (Envía el daño directo a su celular):
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <select
+                      value={monsterAttackHeroId || heroes[0]?.id || ''}
+                      onChange={(e) => setMonsterAttackHeroId(e.target.value)}
+                      className="flex-1 px-2 py-1.5 rounded-lg bg-stone-950 border border-rose-700/70 text-[11px] text-white font-bold"
+                    >
+                      {heroes.map((h) => (
+                        <option key={h.id} value={h.id}>
+                          {h.name} ({h.currentPC ?? h.maxPC}/{h.maxPC} PC)
+                        </option>
+                      ))}
+                    </select>
+                    {[1, 2, 3, 4].map((dmg) => (
+                      <button
+                        key={dmg}
+                        type="button"
+                        onClick={() => {
+                          const targetId = monsterAttackHeroId || heroes[0]?.id;
+                          if (!targetId) return;
+                          onDispatchHeroEvent(targetId, {
+                            kind: 'trap',
+                            icon: '⚔️',
+                            title: `¡Ataque de ${selectedMonsterObj.scaled.name}!`,
+                            badge: `Combate · Daño recibido: −${dmg} PC`,
+                            narrative: `${selectedMonsterObj.scaled.name} te acertó un golpe en combate y pierdes ${dmg} Punto${dmg > 1 ? 's' : ''} de Cuerpo.`,
+                            pcDelta: -dmg,
+                          });
+                        }}
+                        className="px-2.5 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-600 text-white font-black text-[11px] cursor-pointer"
+                      >
+                        −{dmg} PC
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Revisar Cuerpo del Monstruo Abatido (Resultado inline aquí mismo + Entrega Automática al Héroe) */}
               {selectedMonsterObj.currentPC <= 0 && (() => {
@@ -4357,26 +4511,29 @@ export default function TacticalBoard({
               {v7EventModal.narrative}
             </div>
 
-            {/* Selector de Héroe objetivo */}
-            {heroes.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2 text-xs">
-                <span className="font-bold text-slate-300">📲 Enviar resultado y ventana al celular de:</span>
-                <select
-                  value={v7HeroTarget}
-                  onChange={(e) => setV7HeroTarget(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl bg-slate-900 border border-amber-500/50 text-amber-200 font-bold"
-                >
-                  {heroes.map((h) => (
-                    <option key={h.id} value={h.id}>
-                      {h.name} ({h.className})
-                    </option>
-                  ))}
-                  <option value="ALL">Todo el Grupo</option>
-                </select>
-              </div>
-            )}
+            {/* Selector de Héroe objetivo (SOLO visible si hay algo que enviar/quitar) */}
+            {heroes.length > 0 &&
+              (hasHeroPayload(v7EventModal) ||
+                hasHeroPayload(v7EventModal.successOutcome) ||
+                hasHeroPayload(v7EventModal.failOutcome)) && (
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <span className="font-bold text-slate-300">🎯 Héroe que recibe/sufre el efecto:</span>
+                  <select
+                    value={v7HeroTarget}
+                    onChange={(e) => setV7HeroTarget(e.target.value)}
+                    className="px-3 py-1.5 rounded-xl bg-slate-900 border border-amber-500/50 text-amber-200 font-bold"
+                  >
+                    {heroes.map((h) => (
+                      <option key={h.id} value={h.id}>
+                        {h.name} ({h.className})
+                      </option>
+                    ))}
+                    <option value="ALL">Todo el Grupo</option>
+                  </select>
+                </div>
+              )}
 
-            {/* Botones de Acción: Qué Da / Qué Quita + Colocar en Tablero */}
+            {/* Botones de Acción Inteligentes: SOLO dice "Enviar al Celular" cuando SÍ hay oro/objetos/daño/estado */}
             <div className="flex flex-wrap gap-2 pt-1">
               {v7EventModal.successOutcome ? (
                 <>
@@ -4385,7 +4542,9 @@ export default function TacticalBoard({
                     onClick={() => dispatchV7Outcome(v7EventModal.successOutcome, false)}
                     className="flex-1 py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer shadow"
                   >
-                    ✅ Superaron / Aplicar Recompensa → Enviar al Celular
+                    {hasHeroPayload(v7EventModal.successOutcome)
+                      ? '✅ Superaron → Enviar Recompensa al Celular'
+                      : '✅ Superaron (Continuar)'}
                   </button>
                   {v7EventModal.failOutcome && (
                     <button
@@ -4393,7 +4552,9 @@ export default function TacticalBoard({
                       onClick={() => dispatchV7Outcome(v7EventModal.failOutcome, true)}
                       className="flex-1 py-3 px-4 rounded-2xl bg-rose-700 hover:bg-rose-600 text-white font-black text-xs cursor-pointer shadow"
                     >
-                      ❌ Fallaron / Aplicar Daño → Enviar al Celular
+                      {hasHeroPayload(v7EventModal.failOutcome)
+                        ? '❌ Fallaron → Aplicar Daño en Celular'
+                        : '❌ Fallaron (Continuar)'}
                     </button>
                   )}
                 </>
@@ -4403,7 +4564,7 @@ export default function TacticalBoard({
                   onClick={() => dispatchV7Outcome(v7EventModal, v7EventModal.kind === 'negative')}
                   className="flex-1 py-3 px-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer shadow"
                 >
-                  📲 Aplicar y Enviar al Celular
+                  {hasHeroPayload(v7EventModal) ? '📲 Aplicar y Enviar al Celular' : '✓ Entendido y Cerrar'}
                 </button>
               )}
 

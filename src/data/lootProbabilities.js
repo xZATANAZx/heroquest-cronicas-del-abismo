@@ -90,24 +90,24 @@ export function rollBodyLoot({ monsterName = 'Monstruo', isBoss = false, isElite
   let text = '';
 
   if (highTier) {
-    // JEFE / ÉLITE: 0% Vacío | 30% Oro + Mat Poco Común | 40% Mat Raro | 22% Objeto Raro | 8% Objeto Épico
-    if (rollPct <= 30) {
+    // JEFE / ÉLITE (Rebalanceado): 45% Oro + Mat Poco Común | 38% Mat Raro | 14% Objeto Raro | 3% Objeto Épico
+    if (rollPct <= 45) {
       rarityLabel = 'Poco Común';
-      rewardGold = Math.round((25 + partyLevel * 8) * heroBonuses.goldMultiplier);
+      rewardGold = Math.round((20 + partyLevel * 6) * heroBonuses.goldMultiplier);
       materialId = pick(UNCOMMON_MATS);
       materialQty = 1;
       const mat = getMaterialById(materialId);
       title = `Bolsa de Guerra de ${monsterName}`;
       text = `Entre su armadura encuentran ${rewardGold} MO y 1× ${mat.icon} ${mat.name}.`;
-    } else if (rollPct <= 70) {
+    } else if (rollPct <= 83) {
       rarityLabel = 'Raro';
       materialId = pick(RARE_MATS);
       materialQty = 1;
-      rewardGold = Math.round((15 + partyLevel * 5) * heroBonuses.goldMultiplier);
+      rewardGold = Math.round((12 + partyLevel * 4) * heroBonuses.goldMultiplier);
       const mat = getMaterialById(materialId);
       title = `Esencia Valiosa de ${monsterName}`;
       text = `Extraen un componente raro: 1× ${mat.icon} ${mat.name} y ${rewardGold} MO.`;
-    } else if (rollPct <= 92) {
+    } else if (rollPct <= 97) {
       rarityLabel = 'Objeto Raro';
       const rarePool = DIGITAL_LOOT_CATALOG.filter((it) => it.rarity === 'raro');
       rewardLoot = Math.random() < 0.5 && rarePool.length ? pick(rarePool) : generateProceduralLoot('raro', partyLevel);
@@ -121,24 +121,24 @@ export function rollBodyLoot({ monsterName = 'Monstruo', isBoss = false, isElite
       text = `¡Hallazgo excepcional! ${rewardLoot.name} (${rewardLoot.dice}). ${rewardLoot.upgrade || rewardLoot.special || ''}`;
     }
   } else {
-    // MONSTRUO NORMAL: 35% Vacío | 33% Oro pequeño | 22% Material Común/Poco Común | 8% Consumible | 2% Objeto Poco Común
-    if (rollPct <= 35) {
+    // MONSTRUO NORMAL (Rebalanceado): 45% Vacío | 30% Oro pequeño | 18% Material Común | 6% Consumible | 1% Objeto Poco Común
+    if (rollPct <= 45) {
       rarityLabel = 'Vacío';
       title = `Cuerpo Vacío (${monsterName})`;
       text = `Revisan el cuerpo, pero solo lleva harapos rotos y armas inservibles. No encuentran nada.`;
-    } else if (rollPct <= 68) {
+    } else if (rollPct <= 75) {
       rarityLabel = 'Común · Oro';
-      rewardGold = Math.round((6 + Math.floor(Math.random() * 10) + partyLevel * 2) * heroBonuses.goldMultiplier);
+      rewardGold = Math.round((5 + Math.floor(Math.random() * 8) + partyLevel * 2) * heroBonuses.goldMultiplier);
       title = `Monedas de ${monsterName}`;
       text = `En su cinturón rescatan ${rewardGold} Monedas de Oro.`;
-    } else if (rollPct <= 90) {
+    } else if (rollPct <= 93) {
       rarityLabel = 'Material';
-      materialId = rollPct > 83 ? pick(UNCOMMON_MATS) : pick(COMMON_MATS);
+      materialId = rollPct > 88 ? pick(UNCOMMON_MATS) : pick(COMMON_MATS);
       materialQty = 1;
       const mat = getMaterialById(materialId);
       title = `Material Rescatado de ${monsterName}`;
       text = `Aprovechan 1× ${mat.icon} ${mat.name} en buen estado.`;
-    } else if (rollPct <= 98) {
+    } else if (rollPct <= 99) {
       rarityLabel = 'Consumible';
       rewardLoot = {
         name: 'Poción de Curación Menor',
