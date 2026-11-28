@@ -42,6 +42,8 @@ import {
   FQ_SPELL_SCHOOLS,
   FQ_SCROLLS_DETAILED,
   FQ_RANK_PROGRESSION,
+  FQ_HERO_RANKS,
+  FQ_DECKS_GUIDE,
   FQ_CITY_EVENTS,
 } from '../data/fetenquestExtendedData';
 
@@ -88,7 +90,9 @@ function createDefaultSheet(hero) {
 // ==================== HOJA DE PERSONAJE MODERNA A4 (IMPRIMIBLE Y ESCALABLE) ====================
 function ModernPrintableHeroSheet({ hero, sheet }) {
   const rankMeta = FQ_RANK_PROGRESSION.find((r) => r.rank === Number(sheet.rank)) || FQ_RANK_PROGRESSION[0];
-  const maxTrack = Math.max(10, Number(sheet.pc || hero.pc) + 2, Number(sheet.pm || hero.pm) + 2);
+  const heroRankList = FQ_HERO_RANKS[hero.id] || [];
+  const currentRankBenefit = heroRankList[Number(sheet.rank) - 1] || 'Estadísticas y habilidades iniciales.';
+  const trackCount = Math.min(14, Math.max(10, Number(sheet.pc || hero.pc), Number(sheet.pm || hero.pm)));
 
   return (
     <div className="fq-print-sheet bg-white text-slate-950 border-2 border-slate-900 rounded-2xl p-5 sm:p-6 space-y-4 shadow-2xl print:shadow-none print:rounded-none">
@@ -157,8 +161,11 @@ function ModernPrintableHeroSheet({ hero, sheet }) {
               <div className="w-16 px-2 py-1.5 font-black bg-slate-900 text-white text-[10px] uppercase shrink-0 print:bg-slate-200 print:text-black">
                 Cuerpo
               </div>
-              <div className="flex-1 grid grid-cols-10 divide-x divide-slate-300 text-center">
-                {Array.from({ length: Math.min(10, maxTrack) }, (_, i) => (
+              <div
+                className="flex-1 grid divide-x divide-slate-300 text-center"
+                style={{ gridTemplateColumns: `repeat(${trackCount}, minmax(0, 1fr))` }}
+              >
+                {Array.from({ length: trackCount }, (_, i) => (
                   <div
                     key={i}
                     className={`py-1.5 font-bold ${
@@ -174,8 +181,11 @@ function ModernPrintableHeroSheet({ hero, sheet }) {
               <div className="w-16 px-2 py-1.5 font-black bg-slate-700 text-white text-[10px] uppercase shrink-0 print:bg-slate-200 print:text-black">
                 Mente
               </div>
-              <div className="flex-1 grid grid-cols-10 divide-x divide-slate-300 text-center">
-                {Array.from({ length: Math.min(10, maxTrack) }, (_, i) => (
+              <div
+                className="flex-1 grid divide-x divide-slate-300 text-center"
+                style={{ gridTemplateColumns: `repeat(${trackCount}, minmax(0, 1fr))` }}
+              >
+                {Array.from({ length: trackCount }, (_, i) => (
                   <div
                     key={i}
                     className={`py-1.5 font-bold ${
@@ -311,7 +321,7 @@ function ModernPrintableHeroSheet({ hero, sheet }) {
               Notas de Campaña y Escalado (Rango {sheet.rank}: {rankMeta.title})
             </div>
             <div className="text-[10px] text-slate-700">
-              <strong>Beneficio del Rango actual:</strong> {rankMeta.benefit}
+              <strong>Beneficio exacto de {hero.name.split('/')[0].trim()} en Rango {sheet.rank}:</strong> {currentRankBenefit}
             </div>
             {sheet.notes ? (
               <div className="text-slate-900 whitespace-pre-line border-t border-slate-200 pt-1">{sheet.notes}</div>
@@ -397,6 +407,7 @@ export default function FetenQuestHub({ showToast = null }) {
 
   // ==================== ESTADO: LA CIUDAD ====================
   const [cityTab, setCityTab] = useState('events'); // 'events' | 'armory' | 'alchemy' | 'ranks' | 'temple'
+  const [rankHeroId, setRankHeroId] = useState(FQ_HEROES[0].id);
   const [useHasbroHalfPrice, setUseHasbroHalfPrice] = useState(false);
   const [armoryCat, setArmoryCat] = useState('Todas');
   const [cityEventRoll, setCityEventRoll] = useState(null);
@@ -1365,29 +1376,69 @@ export default function FetenQuestHub({ showToast = null }) {
             </div>
           )}
 
-          {/* 4D. SALONES IMPERIALES (RANGOS 1–10) */}
-          {cityTab === 'ranks' && (
-            <div className="grimoire-panel rounded-2xl p-5 space-y-3 text-xs">
-              <div className="p-3 rounded-xl bg-amber-950/35 border border-amber-500/40 text-amber-100">
-                <strong>🏰 Cómo funciona el Escalado:</strong> Cada <strong>7 retos completados</strong>, el héroe puede pagar <strong>{useHasbroHalfPrice ? '300 MO' : '500 MO'}</strong> en los Salones Imperiales para subir 1 Rango (máx. 1 rango por visita a la ciudad). Todos los beneficios son acumulativos.
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {FQ_RANK_PROGRESSION.map((r) => (
-                  <div key={r.rank} className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <strong className="text-amber-200 text-sm">
-                        Rango {r.rank}: {r.title}
-                      </strong>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-sky-300 font-bold">
-                        {r.questsReq} retos
-                      </span>
+          {/* 4D. SALONES IMPERIALES (RANGOS 1–10 EXACTOS PARA CADA UNO DE LOS 25 HÉROES) */}
+          {cityTab === 'ranks' && (() => {
+            const selHero = FQ_HEROES.find((h) => h.id === rankHeroId) || FQ_HEROES[0];
+            const heroBenefits = FQ_HERO_RANKS[selHero.id] || [];
+            return (
+              <div className="grimoire-panel rounded-2xl p-5 space-y-4 text-xs">
+                <div className="p-3 rounded-xl bg-amber-950/35 border border-amber-500/40 text-amber-100">
+                  <strong>🏰 Salones Imperiales:</strong> Cada <strong>7 retos completados</strong>, el héroe puede pagar{' '}
+                  <strong>{useHasbroHalfPrice ? '300 MO' : '500 MO'}</strong> para subir 1 Rango (máx. 1 rango por visita). Cada héroe tiene su propia progresión exacta — elige un héroe abajo:
+                </div>
+
+                {/* Selector de los 25 Héroes */}
+                <div className="flex flex-wrap gap-1.5">
+                  {FQ_HEROES.map((h) => (
+                    <button
+                      key={h.id}
+                      type="button"
+                      onClick={() => setRankHeroId(h.id)}
+                      className={`px-2.5 py-1.5 rounded-lg font-bold cursor-pointer transition border ${
+                        h.id === selHero.id
+                          ? 'bg-amber-500 text-slate-950 border-amber-300 shadow'
+                          : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-amber-500/50'
+                      }`}
+                    >
+                      {h.name.split('/')[0].trim()}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                  <div>
+                    <strong className="font-display text-base text-amber-200">
+                      Tabla de Rangos de {selHero.name}
+                    </strong>
+                    <div className="text-[11px] text-slate-400">
+                      Inicio: AT {selHero.at} DC · DEF {selHero.def} DC · PC {selHero.pc} · PM {selHero.pm} · {selHero.role}
                     </div>
-                    <p className="text-slate-300 leading-snug">{r.benefit}</p>
                   </div>
-                ))}
+                  <span className="text-[11px] text-emerald-300 font-bold">
+                    Todos los beneficios de rango son acumulativos
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {FQ_RANK_PROGRESSION.map((r, idx) => (
+                    <div key={r.rank} className="p-3 rounded-xl bg-slate-950/85 border border-slate-800 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <strong className="text-amber-200 text-sm">
+                          Rango {r.rank}: {r.title}
+                        </strong>
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-sky-300 font-bold">
+                          {r.questsReq} retos
+                        </span>
+                      </div>
+                      <p className="text-slate-200 leading-snug">
+                        {heroBenefits[idx] || 'Beneficio de rango.'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* 4E. EL TEMPLO (RESURRECCIÓN Y CICATRICES DE BATALLA) */}
           {cityTab === 'temple' && (
@@ -1825,6 +1876,31 @@ export default function FetenQuestHub({ showToast = null }) {
                   <RotateCcw className="w-3.5 h-3.5" /> Barajar
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* GUÍA CLARA: TESOROS OFICIALES vs FETENQUEST + CUÁNDO Y CÓMO USAR CADA MAZO */}
+          <div className="grimoire-panel rounded-2xl p-5 border-amber-500/45 space-y-4">
+            <div className="border-b border-slate-800 pb-2.5">
+              <h3 className="font-display text-base font-black text-amber-200 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-amber-400" /> Guía de Mazos: Tesoros Oficiales vs FetenQuest (Cuándo y Cómo usar cada uno)
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Reglas claras para saber exactamente qué mazo elegir, en qué momento robar y qué NO mezclar para mantener el juego equilibrado.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-xs">
+              {FQ_DECKS_GUIDE.map((g) => (
+                <div key={g.id} className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1.5">
+                  <div className="font-display font-black text-sm text-amber-200">
+                    {g.icon} {g.title}
+                  </div>
+                  <div className="text-[11px] text-sky-300 font-semibold">
+                    ⏱️ Cuándo: {g.when}
+                  </div>
+                  <p className="text-slate-200 leading-relaxed whitespace-pre-line">{g.how}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
