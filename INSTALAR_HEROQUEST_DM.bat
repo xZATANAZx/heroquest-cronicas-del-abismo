@@ -78,8 +78,10 @@ try {
 
   $skip = @('.hq_data', 'node_modules', '.git', '.hq_version', 'campaign_heroes.json')
   Get-ChildItem -Force $inner.FullName | Where-Object { $skip -notcontains $_.Name } | ForEach-Object {
-    Copy-Item -Path $_.FullName -Destination (Join-Path $dest $_.Name) -Recurse -Force
+    Copy-Item -Path $_.FullName -Destination $dest -Recurse -Force
   }
+  if (Test-Path (Join-Path $dest 'src\src')) { Remove-Item (Join-Path $dest 'src\src') -Recurse -Force -ErrorAction SilentlyContinue }
+  if (Test-Path (Join-Path $dest 'public\public')) { Remove-Item (Join-Path $dest 'public\public') -Recurse -Force -ErrorAction SilentlyContinue }
 
   try {
     $c = Invoke-RestMethod -Uri ("https://api.github.com/repos/$repo/commits/main") -Headers $headers -TimeoutSec 10 -UseBasicParsing

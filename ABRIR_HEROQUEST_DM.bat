@@ -80,8 +80,10 @@ try {
     $oldPkg = if (Test-Path (Join-Path $root 'package.json')) { (Get-FileHash (Join-Path $root 'package.json')).Hash } else { '' }
     $skip = @('.hq_data', 'node_modules', '.git', '.hq_version', 'campaign_heroes.json')
     Get-ChildItem -Force $inner.FullName | Where-Object { $skip -notcontains $_.Name } | ForEach-Object {
-      Copy-Item -Path $_.FullName -Destination (Join-Path $root $_.Name) -Recurse -Force
+      Copy-Item -Path $_.FullName -Destination $root -Recurse -Force
     }
+    if (Test-Path (Join-Path $root 'src\src')) { Remove-Item (Join-Path $root 'src\src') -Recurse -Force -ErrorAction SilentlyContinue }
+    if (Test-Path (Join-Path $root 'public\public')) { Remove-Item (Join-Path $root 'public\public') -Recurse -Force -ErrorAction SilentlyContinue }
     Set-Content -Path $verFile -Value $remoteSha -NoNewline
     $newPkg = if (Test-Path (Join-Path $root 'package.json')) { (Get-FileHash (Join-Path $root 'package.json')).Hash } else { '' }
     if ($oldPkg -ne $newPkg) { Set-Content -Path (Join-Path $root '.hq_need_install') -Value '1' }

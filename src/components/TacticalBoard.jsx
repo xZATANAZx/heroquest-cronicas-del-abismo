@@ -1604,9 +1604,21 @@ export default function TacticalBoard({
                   </span>
                 )}
               </div>
-              <span className="text-[11px] font-bold text-amber-950">
-                Toca una sala, monstruo o trampa para inspeccionar
-              </span>
+              <div className="flex items-center gap-2">
+                {!isFullscreenMode && (
+                  <button
+                    type="button"
+                    onClick={toggleFullscreenMode}
+                    className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-[11px] font-black flex items-center gap-1 cursor-pointer shadow"
+                    title="Abrir tablero en Pantalla Completa (Modo Mesa DM)"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" /> Pantalla Completa
+                  </button>
+                )}
+                <span className="text-[11px] font-bold text-amber-950">
+                  Toca una sala, monstruo o trampa para inspeccionar
+                </span>
+              </div>
             </div>
 
             <div className={isFullscreenMode ? 'flex-1 min-h-0 flex items-center justify-center overflow-hidden' : ''}>
