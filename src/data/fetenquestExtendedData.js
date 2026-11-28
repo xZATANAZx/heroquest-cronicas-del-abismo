@@ -931,3 +931,119 @@ export const FQ_CITY_EVENTS = [
   { min: 58, max: 60, title: '58–60 · Balneario / Mercader Halfling', text: 'Por 10 MO te relajas en el balneario (+1 PC y +1 PM temporal) o trabajas en el puerto por 60 MO.' },
   { min: 61, max: 100, title: '61–100 · Jornada Tranquila', text: 'No te ocurre nada inusual. Puedes utilizar todos los servicios de La Ciudad con total normalidad.' },
 ];
+
+// ==================== SISTEMA DE TRAMPAS (Págs. 49–51 y 107–109) ====================
+export const FQ_TRAPS_RULES = [
+  {
+    id: 'tr_search',
+    icon: '🔍',
+    title: '1. Buscar Trampas (Acción Normal)',
+    badge: 'Sin monstruos en LdV',
+    text: 'Solo puedes buscar trampas si no hay monstruos en la sala o pasillo. Si hay trampas, el MB coloca el marcador genérico de "Trampa Detectada" SIN revelar todavía qué tipo de trampa es hasta que alguien intente desactivarla o caiga en ella.',
+  },
+  {
+    id: 'tr_disarm',
+    icon: '🛠️',
+    title: '2. Desactivar / Desarmar (Acción Normal)',
+    badge: '1 Dado de Combate',
+    text: 'Colócate sobre una trampa detectada (NO activada) y declara Desactivar: • Enano / Explorador: desactiva con Calavera o Escudo Blanco (falla solo con Escudo Negro → se activa y pierdes turno). • Otro héroe con Herramientas / Bandolera: desactiva con Escudo Blanco o Negro (falla solo con Calavera). Nota: Una trampa YA activada (ej. un foso abierto) NO puede desactivarse.',
+  },
+  {
+    id: 'tr_jump',
+    icon: '🏃',
+    title: '3. Saltar / Esquivar Trampa (Acción Gratuita)',
+    badge: '1 DC (falla con Calavera)',
+    text: 'Puedes intentar saltar un foso abierto o una trampa detectada durante tu movimiento (debes tener movimiento suficiente para llegar a la casilla de aterrizaje). Tira 1 DC: con Escudo Blanco o Negro la saltas y sigues tu turno; con Calavera caes/la activas, sufres el daño y tu turno termina. (Con Cuerda con garfio puedes repetir la tirada).',
+  },
+  {
+    id: 'tr_trigger',
+    icon: '💥',
+    title: '4. Caer en una Trampa Oculta',
+    badge: 'Termina tu turno al instante',
+    text: 'Si pisas una casilla con trampa no detectada, el MB la revela de inmediato, sufres todos sus efectos y tu turno TERMINA EN SECO (no puedes seguir moviendo ni realizar acciones normales ni gratuitas).',
+  },
+];
+
+export const FQ_BOARD_TRAPS = [
+  {
+    id: 'bt_pit',
+    icon: '🕳️',
+    name: 'Trampa de Abismo / Foso',
+    persistence: 'Permanente todo el reto',
+    damage: '1 PC (sin defensa)',
+    text: 'Al caer pierdes 1 PC y termina tu turno. El marcador de Foso queda en el tablero toda la partida y ya no puede desactivarse. Mientras estés dentro del foso atacas y defiendes con −1 DC (y puedes ser atacado desde casillas adyacentes). Salir del foso cuenta como movimiento normal en tu siguiente turno.',
+  },
+  {
+    id: 'bt_spear',
+    icon: '🗡️',
+    name: 'Trampa de Lanza',
+    persistence: '1 solo uso (sin marcador)',
+    damage: '1 PC (sin defensa)',
+    text: 'Una lanza oculta surge del suelo o pared: pierdes 1 PC (indefendible) y termina tu turno. Solo funciona una vez, por lo que tras activarse no queda marcador en el tablero. Si se detecta antes con Buscar Trampas, puede saltarse o desactivarse normalmente.',
+  },
+  {
+    id: 'bt_falling',
+    icon: '🪨',
+    name: 'Trampa de Roca Caída',
+    persistence: 'Bloque permanente en el mapa',
+    damage: '3 DC (1 PC por Calavera, sin defensa)',
+    text: 'Un enorme bloque cae del techo: el héroe tira 3 DC y pierde 1 PC por cada Calavera obtenida (sin defensa), y debe moverse a una casilla libre adyacente (si queda encerrado sin salida, muere). El MB coloca un marcador de Roca Caída que bloquea esa casilla para el resto del reto.',
+  },
+  {
+    id: 'bt_rolling',
+    icon: '☄️',
+    name: 'Trampa de Roca Rodante',
+    persistence: 'Solo desarmable antes de rodar',
+    damage: '3 DC (1 PC por Calavera, sin defensa)',
+    text: 'Una roca gigante rueda siguiendo la dirección del Libro de Retos. Toda miniatura en su trayectoria tira 3 DC y pierde 1 PC por cada Calavera sin posibilidad de defender. Una vez que empieza a rodar ya NO puede desarmarse y deja un bloque permanente al detenerse.',
+  },
+  {
+    id: 'bt_pendulum',
+    icon: '🪓',
+    name: 'Trampa de Hacha Pendular',
+    persistence: 'Reutilizable (área marcada)',
+    damage: '2 DC (SÍ se puede defender)',
+    text: 'Un hacha gigante oscila desde el techo barriendo las casillas marcadas. Al activarse, todas las miniaturas en dichas casillas sufren un ataque inmediato de 2 DC (pueden tirar Defensa normalmente) y el turno del jugador termina. Una vez detectada, puede desactivarse o saltarse con normalidad.',
+  },
+];
+
+export const FQ_TREASURE_TRAPS = [
+  { id: 'tt_arrow', icon: '🏹', name: 'Trampa de Flecha', text: 'Una flecha oculta se dispara: pierdes 1 PC (indefendible) y termina tu turno. (Carta Negativa 💀: vuelve al mazo).' },
+  { id: 'tt_pit', icon: '🕳️', name: 'Suelo Falso (Foso)', text: 'El suelo cede bajo tus pies: pierdes 1 PC y termina tu turno. (Carta Negativa 💀: vuelve al mazo).' },
+  { id: 'tt_gas', icon: '☠️', name: 'Gas Venenoso', text: 'Una nube tóxica llena la sala: TODOS los héroes en la habitación pierden 1 PC (evitable con Antídoto). (Carta Negativa 💀: vuelve al mazo).' },
+  { id: 'tt_collapse', icon: '🪨', name: 'Derrumbamiento', text: 'Tira 2 DC: pierdes 1 PC por cada Calavera (sin defensa) y termina tu turno. (Carta Negativa 💀: vuelve al mazo).' },
+  { id: 'tt_skull', icon: '💀', name: 'Calavera Encantada', text: 'Un chillido arcano golpea tu cordura: pierdes 1 Punto de Mente. (Carta Negativa 💀: vuelve al mazo).' },
+  { id: 'tt_chaos', icon: '🌀', name: 'Vientos del Caos', text: 'Una brecha disforme te envuelve: tira 2D6 inmediatamente en la tabla Vientos del Caos. (Carta Negativa 💀: vuelve al mazo).' },
+];
+
+// ==================== LOS 4 MAZOS EQUILIBRADOS OFICIALES DE FETENQUEST (Págs. 101–103) ====================
+export const FQ_BALANCED_DECK_PRESETS = [
+  {
+    id: 'deck_3',
+    recommended: true,
+    name: 'Mazo 3: FetenQuest con Eventos (Recomendado)',
+    cards: '35–36 cartas · ~800 MO',
+    breakdown: 'Oro (6×25, 4×50, 2×75, 2×100, 1×125) + Pociones/Objetos + 4 Monstruos Errantes + 6 Trampas + 5 Cartas ❓ Evento que disparan el Mazo de Eventos aparte.',
+  },
+  {
+    id: 'deck_2',
+    recommended: false,
+    name: 'Mazo 2: FetenQuest Clásico (Sin Aleatorización)',
+    cards: '37 cartas · ~815 MO',
+    breakdown: 'Mazo tradicional mazmorrero sin mazo de eventos separado: Oro, Gemas, Descanso, Grimorio, 4 Monstruos Errantes y las 6 Trampas de FetenQuest.',
+  },
+  {
+    id: 'deck_1',
+    recommended: false,
+    name: 'Mazo 1: Fanmade HeroQuest 2021',
+    cards: '29 cartas · ~575 MO',
+    breakdown: 'Mezcla muy estable de cartas oficiales HQ21 + fanmade (Oro 15–125 MO, 6 pociones, 4 Monstruos Errantes, 5 trampas/peligros, 2 Nada).',
+  },
+  {
+    id: 'deck_4',
+    recommended: false,
+    name: 'Mazo 4: Oficial de Hasbro HQ21 (Precios ÷2)',
+    cards: '24 cartas oficiales',
+    breakdown: 'Totalmente compatible con FetenQuest, pero al dar menos oro debes activar el botón "÷2 Hasbro" en La Ciudad y cobrar 300 MO (no 500 MO) al subir de Rango.',
+  },
+];

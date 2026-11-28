@@ -42,6 +42,10 @@ import {
   FQ_DECKS_GUIDE,
   FQ_CITY_EVENTS,
   FQ_HERO_SHOWCASE_META,
+  FQ_TRAPS_RULES,
+  FQ_BOARD_TRAPS,
+  FQ_TREASURE_TRAPS,
+  FQ_BALANCED_DECK_PRESETS,
 } from '../data/fetenquestExtendedData';
 
 const MB_STORAGE_KEY = 'hq_fetenquest_mb_v41';
@@ -197,6 +201,8 @@ export default function FetenQuestHub({ showToast = null }) {
   };
 
   // ==================== ESTADO: MAZOS FETENQUEST ====================
+  const [decksSubTab, setDecksSubTab] = useState('events'); // 'events' | 'potions' | 'traps' | 'compare'
+  const [lairUsedThisQuest, setLairUsedThisQuest] = useState(false);
   const [fqTreasureDeck, setFqTreasureDeck] = useState(() => shuffle(FQ_TREASURE_DECK));
   const [fqEventsDeck, setFqEventsDeck] = useState(() => shuffle(FQ_EVENTS_DECK));
   const [fqDiscardedCount, setFqDiscardedCount] = useState(0);
@@ -244,17 +250,78 @@ export default function FetenQuestHub({ showToast = null }) {
   };
 
   const drawFQEvent = (fromTreasure = false) => {
-    let deck = fqEventsDeck;
+    let deck = [...fqEventsDeck];
     if (deck.length === 0) deck = shuffle(FQ_EVENTS_DECK);
-    const [ev, ...rest] = deck;
-    setFqEventsDeck(rest);
+
+    let skippedLair = false;
+    let picked = null;
+    while (deck.length > 0) {
+      const candidate = deck.shift();
+      if (candidate.type === 'Guarida' && lairUsedThisQuest) {
+        skippedLair = true;
+        continue;
+      }
+      picked = candidate;
+      break;
+    }
+
+    if (!picked) {
+      deck = shuffle(FQ_EVENTS_DECK.filter((e) => !lairUsedThisQuest || e.type !== 'Guarida'));
+      picked = deck.shift();
+    }
+
+    setFqEventsDeck(deck);
+    if (picked.type === 'Guarida') setLairUsedThisQuest(true);
+
     setDeckModal({
-      kind: ev.type === 'Guarida' ? 'lair' : 'event',
-      header: fromTreasure ? '¡Carta ❓ Evento disparada desde Tesoros!' : 'Mazo de Sucesos y Guaridas (FetenQuest)',
-      badge: ev.type === 'Guarida' ? '⚔️ Evento (Guarida Opcional · Máx. 1 por reto)' : '✨ Suceso de Mazmorra',
-      icon: ev.icon,
-      title: ev.title,
-      text: ev.text,
+      kind: picked.type === 'Guarida' ? 'lair' : 'event',
+      header: fromTreasure
+        ? '¡Carta ❓ Evento disparada desde Tesoros!'
+        : skippedLair
+          ? 'Mazo de Eventos (Guarida extra saltada · máx. 1/reto)'
+          : 'Mazo de Eventos y Guaridas (FetenQuest)',
+      badge:
+        picked.type === 'Guarida'
+          ? '👹 Evento (Guarida Opcional · Máx. 1 por reto — Marcada como usada)'
+          : skippedLair
+            ? '✨ Evento (Suceso) · Se saltó otra Guarida automáticamente'
+            : '✨ Evento (Suceso de Mazmorra)',
+      icon: picked.icon,
+      title: picked.title,
+      text: picked.text,
+    });
+  };
+
+  const rollRandomPotion = (mode = 'all') => {
+    const commons = FQ_POTIONS_TABLE.filter((p) => p.tier === 'Común');
+    const uncommons = FQ_POTIONS_TABLE.filter((p) => p.tier === 'Infrecuente');
+    let pool = FQ_POTIONS_TABLE;
+    let diceLabel = '1D20';
+    if (mode === 'common') {
+      pool = commons;
+      diceLabel = '1D12 Común';
+    } else if (mode === 'uncommon') {
+      pool = uncommons;
+      diceLabel = '1D8 Infrecuente';
+    }
+    const idx = Math.floor(Math.random() * pool.length);
+    const p = pool[idx];
+    const rollNum = mode === 'uncommon' ? idx + 1 : p.d20;
+    setTableRollPopup({
+      title: `🧪 ${p.name} (${diceLabel} = ${rollNum})`,
+      badge: `${p.tier} · Valor: ${p.price} MO (Venta: ${Math.floor(p.price / 2)} MO) · Acción Gratuita al beber`,
+      text: p.effect,
+    });
+  };
+
+  const rollRandomTrap = (kind = 'board') => {
+    const pool = kind === 'board' ? FQ_BOARD_TRAPS : FQ_TREASURE_TRAPS;
+    const idx = Math.floor(Math.random() * pool.length);
+    const tr = pool[idx];
+    setTableRollPopup({
+      title: `${tr.icon} ${tr.name} (1D${pool.length} = ${idx + 1})`,
+      badge: kind === 'board' ? `Trampa de Tablero · ${tr.persistence} · Daño: ${tr.damage}` : 'Trampa del Mazo de Tesoros (Carta Negativa 💀)',
+      text: tr.text,
     });
   };
 
@@ -283,7 +350,7 @@ export default function FetenQuestHub({ showToast = null }) {
             { id: 'abilities_spells', label: '⚔️ Hab. y Magia', sub: 'Catálogo y Pergaminos' },
             { id: 'city', label: '🏛️ La Ciudad', sub: 'Armería, Rangos, Templo' },
             { id: 'mb_screen', label: '💀 Pantalla DM', sub: 'Grimorio MB y Tablas' },
-            { id: 'decks', label: '🃏 Mazos FQ', sub: 'Tesoros y Sucesos' },
+            { id: 'decks', label: '🃏 Mazos y Tablas', sub: 'Eventos, Pócimas, Trampas' },
           ].map((t) => (
             <button
               key={t.id}
@@ -1466,90 +1533,435 @@ export default function FetenQuestHub({ showToast = null }) {
         </div>
       )}
 
-      {/* ==================== TAB 6: MAZOS FETENQUEST (TESOROS + SUCESOS Y GUARIDAS) ==================== */}
+      {/* ==================== TAB 6: MAZOS, ALEATORIZACIÓN, PÓCIMAS AL AZAR Y TRAMPAS ==================== */}
       {subTab === 'decks' && (
         <div className="no-print space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="grimoire-panel rounded-2xl p-5 border-emerald-500/50 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-display text-base font-black text-emerald-300 flex items-center gap-2">
-                  <Layers className="w-5 h-5" /> Mazo de Tesoros FetenQuest
-                </h3>
-                <span className="text-xs font-bold text-slate-300">Quedan {fqTreasureDeck.length} · Desc. {fqDiscardedCount}</span>
-              </div>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Cartas Positivas (25–125 MO, Pociones, Pergaminos), Negativas 💀 (vuelven al mazo) y <strong>5 cartas ❓ Evento</strong> que disparan automáticamente el Mazo de Sucesos y Guaridas.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={() => drawFQTreasure(false)} className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer shadow">
-                  💎 Robar Carta de Tesoro
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFqTreasureDeck(shuffle(FQ_TREASURE_DECK));
-                    setFqDiscardedCount(0);
-                    showToast?.('🔄 Mazo de Tesoros FetenQuest barajado.');
-                  }}
-                  className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center gap-1 cursor-pointer"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" /> Barajar
-                </button>
-              </div>
-            </div>
-
-            <div className="grimoire-panel rounded-2xl p-5 border-purple-500/50 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-display text-base font-black text-purple-300 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5" /> Mazo de Sucesos y Guaridas
-                </h3>
-                <span className="text-xs font-bold text-slate-300">Quedan {fqEventsDeck.length}</span>
-              </div>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Sucesos narrativos y <strong>Guaridas opcionales</strong> (máx. 1 por reto, con puerta secreta hacia una sala vacía y recompensa de jefe).
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={() => drawFQEvent(false)} className="flex-1 py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs cursor-pointer shadow">
-                  ❓ Robar Suceso / Guarida
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFqEventsDeck(shuffle(FQ_EVENTS_DECK));
-                    showToast?.('🔄 Mazo de Sucesos barajado.');
-                  }}
-                  className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center gap-1 cursor-pointer"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" /> Barajar
-                </button>
-              </div>
-            </div>
+          {/* Sub-navegación limpia en 4 bloques */}
+          <div className="grimoire-panel rounded-2xl p-3.5 flex flex-wrap gap-1.5 text-xs">
+            {[
+              { id: 'events', label: '🎲 Aleatorización y Eventos' },
+              { id: 'potions', label: '🧪 Pócimas al Azar (20)' },
+              { id: 'traps', label: '⚠️ Sistema de Trampas' },
+              { id: 'compare', label: '⚖️ Oficial vs FetenQuest' },
+            ].map((dt) => (
+              <button
+                key={dt.id}
+                type="button"
+                onClick={() => setDecksSubTab(dt.id)}
+                className={`px-3.5 py-2 rounded-xl font-black cursor-pointer transition ${
+                  decksSubTab === dt.id
+                    ? 'bg-amber-500 text-slate-950 shadow'
+                    : 'bg-slate-900 text-slate-300 border border-slate-700 hover:border-amber-500/50'
+                }`}
+              >
+                {dt.label}
+              </button>
+            ))}
           </div>
 
-          {/* GUÍA CLARA: TESOROS OFICIALES vs FETENQUEST + CUÁNDO Y CÓMO USAR CADA MAZO */}
-          <div className="grimoire-panel rounded-2xl p-5 border-amber-500/45 space-y-4">
-            <div className="border-b border-slate-800 pb-2.5">
-              <h3 className="font-display text-base font-black text-amber-200 flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-amber-400" /> Guía de Mazos: Tesoros Oficiales vs FetenQuest (Cuándo y Cómo usar cada uno)
-              </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Reglas claras para saber exactamente qué mazo elegir, en qué momento robar y qué NO mezclar para mantener el juego equilibrado.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-xs">
-              {FQ_DECKS_GUIDE.map((g) => (
-                <div key={g.id} className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1.5">
-                  <div className="font-display font-black text-sm text-amber-200">
-                    {g.icon} {g.title}
+          {/* 6A. ALEATORIZACIÓN, MAZO DE TESOROS Y MAZO DE EVENTOS / GUARIDAS */}
+          {decksSubTab === 'events' && (
+            <div className="space-y-4">
+              {/* Simulador Interactivo de ambos mazos */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grimoire-panel rounded-2xl p-5 border-emerald-500/50 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-display text-base font-black text-emerald-300 flex items-center gap-2">
+                      <Layers className="w-5 h-5" /> 1. Mazo de Tesoros FetenQuest
+                    </h3>
+                    <span className="text-xs font-bold text-slate-300">
+                      Quedan {fqTreasureDeck.length} · Desc. {fqDiscardedCount}
+                    </span>
                   </div>
-                  <div className="text-[11px] text-sky-300 font-semibold">
-                    ⏱️ Cuándo: {g.when}
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Incluye <strong>Positivas</strong> (oro 25–125 MO, pócimas, pergaminos — se descartan),{' '}
+                    <strong>Negativas 💀</strong> (trampas y monstruos errantes — vuelven al mazo) y{' '}
+                    <strong>5 cartas ❓ Evento</strong> que disparan automáticamente el Mazo de Eventos.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => drawFQTreasure(false)}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer shadow"
+                    >
+                      💎 Robar Carta de Tesoro
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFqTreasureDeck(shuffle(FQ_TREASURE_DECK));
+                        setFqDiscardedCount(0);
+                        showToast?.('🔄 Mazo de Tesoros FetenQuest barajado.');
+                      }}
+                      className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center gap-1 cursor-pointer"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" /> Barajar
+                    </button>
                   </div>
-                  <p className="text-slate-200 leading-relaxed whitespace-pre-line">{g.how}</p>
                 </div>
-              ))}
+
+                <div className="grimoire-panel rounded-2xl p-5 border-purple-500/50 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-display text-base font-black text-purple-300 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5" /> 2. Mazo de Eventos y Guaridas
+                    </h3>
+                    <span className="text-xs font-bold text-slate-300">Quedan {fqEventsDeck.length}</span>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px]">
+                    <span className={lairUsedThisQuest ? 'text-amber-300 font-bold' : 'text-emerald-300 font-bold'}>
+                      {lairUsedThisQuest
+                        ? '👹 Guarida del reto: YA SALIÓ (las demás Guaridas se saltan solas)'
+                        : '👹 Guarida del reto: Disponible (máx. 1 por reto)'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setLairUsedThisQuest((v) => !v)}
+                      className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[10px] cursor-pointer"
+                    >
+                      {lairUsedThisQuest ? 'Reiniciar Guarida' : 'Marcar usada'}
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => drawFQEvent(false)}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs cursor-pointer shadow"
+                    >
+                      ❓ Robar Evento / Guarida
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFqEventsDeck(shuffle(FQ_EVENTS_DECK));
+                        setLairUsedThisQuest(false);
+                        showToast?.('🔄 Mazo de Eventos barajado y Guarida reiniciada para nuevo reto.');
+                      }}
+                      className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center gap-1 cursor-pointer"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" /> Nuevo Reto
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* EXPLICACIÓN ULTRA-CLARA: ALEATORIZACIÓN, EVENTOS Y EVENTOS (GUARIDA) */}
+              <div className="grimoire-panel rounded-2xl p-5 border-amber-500/50 space-y-4">
+                <div className="border-b border-slate-800 pb-2.5">
+                  <h3 className="font-display text-base font-black text-amber-200 flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-amber-400" /> Cómo Funciona: Aleatorización, Eventos y Eventos (Guarida) (Págs. 99–106)
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Explicado en 3 pasos simples para que nunca te confundas en mesa.
+                  </p>
+                </div>
+
+                {/* Paso 1: Los 3 tipos de cartas */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                  <div className="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-700/50 space-y-1">
+                    <div className="font-black text-emerald-300">🟢 1. Cartas Positivas</div>
+                    <p className="text-slate-200 leading-relaxed">
+                      Oro, pócimas, equipo o eventos favorables. <strong>Se descartan</strong> al jugarlas hasta terminar la misión.
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-rose-950/30 border border-rose-700/50 space-y-1">
+                    <div className="font-black text-rose-300">🔴 2. Cartas Negativas 💀</div>
+                    <p className="text-slate-200 leading-relaxed">
+                      Trampas, Monstruos Errantes, venenos o Vientos del Caos. <strong>Vuelven al mazo</strong> (se barajan) y son la “gasolina” del Malvado Brujo Supremo.
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-sky-950/30 border border-sky-700/50 space-y-1">
+                    <div className="font-black text-sky-300">❓ 3. Cartas Neutrales / Aleatorización</div>
+                    <p className="text-slate-200 leading-relaxed">
+                      Cartas “Nada” o cartas con interrogación <strong>❓ Evento</strong>. Se descartan al jugarse y sirven para meter variedad sin romper el equilibrio de oro ni trampas.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Paso 2: ¿Qué es la Aleatorización? */}
+                <div className="p-4 rounded-xl bg-indigo-950/30 border border-indigo-500/40 text-xs space-y-2">
+                  <div className="font-display text-sm font-black text-indigo-200">
+                    🎲 ¿Qué es la ALEATORIZACIÓN y por qué usar 2 mazos separados? (Pág. 104)
+                  </div>
+                  <p className="text-slate-200 leading-relaxed">
+                    Si metieras todas las cartas de Evento directo en el Mazo de Tesoros, el mazo pasaría de 40 cartas y se volvería impredecible o pobre en oro. La solución de FetenQuest es la <strong>Aleatorización</strong>:
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                    <div className="p-2.5 rounded-lg bg-slate-950/75 border border-slate-800">
+                      <strong className="text-amber-300">1) Armas tu Mazo de Tesoros (30–36 cartas, máx. 40):</strong> sustituyes 4 o 5 cartas neutrales (“Nada”) por cartas comodín <strong>❓ Evento</strong>. Así NO alteras el total de oro ni el porcentaje de trampas.
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-slate-950/75 border border-slate-800">
+                      <strong className="text-purple-300">2) Armas aparte el Mazo de Eventos:</strong> metes ahí todas tus cartas de <em>Evento (Suceso)</em> y <em>Evento (Guarida)</em> barajadas (puedes quitar las que no te gusten). Cuando alguien roba una <strong>❓</strong> en Tesoros, roba 1 carta de este mazo aparte.
+                    </div>
+                  </div>
+                </div>
+
+                {/* Paso 3: Diferencia EXACTA entre Evento (Suceso) y Evento (Guarida) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-xs">
+                  <div className="p-4 rounded-xl bg-slate-950/85 border border-sky-700/50 space-y-2">
+                    <div className="font-display text-sm font-black text-sky-300">
+                      ✨ Evento (Suceso) — Escena Rápida
+                    </div>
+                    <p className="text-slate-200 leading-relaxed">
+                      Plantea una situación narrativa corta en la sala actual con una decisión, tirada de dados o encuentro (ej. <em>Altar de Sigmar</em>, <em>Mercader Perdido</em>, <em>Fuente Arcana</em>, <em>Alijo de Contrabandistas</em>).
+                    </p>
+                    <ul className="space-y-1 text-slate-300">
+                      <li>• Se resuelve en el mismo turno del buscador.</li>
+                      <li>• Puede salir cualquier cantidad de Sucesos durante una misión.</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-slate-950/85 border border-purple-600/60 space-y-2">
+                    <div className="font-display text-sm font-black text-purple-300">
+                      👹 Evento (Guarida) — Mini-Jefe Opcional (5 Reglas de Oro)
+                    </div>
+                    <ul className="space-y-1.5 text-slate-200 leading-snug">
+                      <li><strong>1. Máximo 1 Guarida por reto:</strong> si ya salió una Guarida y vuelve a salir otra, <strong>se descarta y se roba la siguiente</strong> del Mazo de Eventos.</li>
+                      <li><strong>2. Puerta Secreta hacia Sala Vacía:</strong> el DM coloca una <strong>puerta secreta cerrada y accesible</strong> que conecte con una sala del tablero que NO tenga contenido del Libro de Retos (así tiene sentido lógico que nadie la viera antes).</li>
+                      <li><strong>3. Es 100% Opcional:</strong> los héroes deciden si abrir esa puerta secreta para retar al jefe o ignorarla y seguir la misión normal.</li>
+                      <li><strong>4. Jefe Legendario con Nombre Propio:</strong> dentro aguarda un monstruo poderoso + esbirros que escalan según la dificultad del grupo.</li>
+                      <li><strong>5. Recompensa Especial / Artefacto:</strong> al limpiar la Guarida obtienen su gran botín (oro alto, pócimas infrecuentes, pergaminos) o el DM puede entregar un <strong>Artefacto temático</strong> sustituyendo uno de los cofres (ej. <em>Filo de Disformidad de Arek</em> o <em>Sangre de Troll de Rockgut</em>).</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Paso 4: Los 4 Mazos Equilibrados Oficiales */}
+                <div className="space-y-2">
+                  <div className="text-xs font-black uppercase text-amber-300">
+                    📚 Los 4 Mazos Equilibrados Oficiales del Manual (Págs. 101–103)
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
+                    {FQ_BALANCED_DECK_PRESETS.map((pr) => (
+                      <div
+                        key={pr.id}
+                        className={`p-3 rounded-xl border space-y-1 ${
+                          pr.recommended
+                            ? 'bg-emerald-950/35 border-emerald-500/60'
+                            : 'bg-slate-950/80 border-slate-800'
+                        }`}
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-1.5">
+                          <strong className={pr.recommended ? 'text-emerald-300' : 'text-amber-200'}>
+                            {pr.name}
+                          </strong>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-sky-300 font-bold">
+                            {pr.cards}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-300 leading-snug">{pr.breakdown}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* 6B. SISTEMA DE PÓCIMAS AL AZAR (Pág. 134 — 12 Comunes + 8 Infrecuentes) */}
+          {decksSubTab === 'potions' && (
+            <div className="space-y-4">
+              <div className="grimoire-panel rounded-2xl p-5 border-emerald-500/50 space-y-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-display text-base font-black text-emerald-300">
+                      🧪 Sistema de Pócimas al Azar (Pág. 134 — FetenQuest 4.1)
+                    </h3>
+                    <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
+                      Cuando una carta de tesoro, evento o Banco del Alquimista otorgue una pócima al azar, usa estos botones. <strong>Beber una pócima es Acción Gratuita</strong> y se consume tras usarla. En La Ciudad solo se pueden comprar hasta <strong>3 Pócimas Comunes</strong> por reto; las <strong>8 Infrecuentes</strong> NO se venden en tienda (solo se hallan en mazmorra, aunque sí pueden venderse a mitad de precio).
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => rollRandomPotion('common')}
+                    className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer shadow"
+                  >
+                    🎲 Pócima Común (1D12)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => rollRandomPotion('uncommon')}
+                    className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs cursor-pointer shadow"
+                  >
+                    ✨ Pócima Infrecuente (1D8)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => rollRandomPotion('all')}
+                    className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer shadow"
+                  >
+                    🎰 Cualquier Pócima (1D20: 1–12 Común · 13–20 Infrec.)
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+                {/* 12 Comunes */}
+                <div className="grimoire-panel rounded-2xl p-4 border-emerald-800/50 space-y-2.5">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <strong className="font-display text-sm text-emerald-300">🧪 Pócimas Comunes (1D12 · 1–12 en 1D20)</strong>
+                    <span className="text-[10px] text-slate-400">Se compran en Alquimista</span>
+                  </div>
+                  <div className="space-y-2">
+                    {FQ_POTIONS_TABLE.filter((p) => p.tier === 'Común').map((p) => (
+                      <div key={p.d20} className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <strong className="text-emerald-200">
+                            [{p.d20}] {p.name}
+                          </strong>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-300 font-bold">
+                            {p.price} MO
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-300 leading-snug">{p.effect}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 8 Infrecuentes */}
+                <div className="grimoire-panel rounded-2xl p-4 border-purple-700/50 space-y-2.5">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <strong className="font-display text-sm text-purple-300">✨ Pócimas Infrecuentes (1D8 · 13–20 en 1D20)</strong>
+                    <span className="text-[10px] text-rose-300 font-bold">Solo hallazgo (NO en tienda)</span>
+                  </div>
+                  <div className="space-y-2">
+                    {FQ_POTIONS_TABLE.filter((p) => p.tier === 'Infrecuente').map((p, idx) => (
+                      <div key={p.d20} className="p-2.5 rounded-xl bg-slate-950/80 border border-purple-900/50 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <strong className="text-purple-200">
+                            [1D8: {idx + 1} · 1D20: {p.d20}] {p.name}
+                          </strong>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-300 font-bold">
+                            Valor {p.price} MO (Venta {Math.floor(p.price / 2)})
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-300 leading-snug">{p.effect}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 6C. SISTEMA COMPLETO DE TRAMPAS (Págs. 49–51 y 107–109) */}
+          {decksSubTab === 'traps' && (
+            <div className="space-y-4">
+              <div className="grimoire-panel rounded-2xl p-5 border-rose-500/50 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-display text-base font-black text-rose-300">
+                      ⚠️ Sistema Completo de Trampas (FetenQuest 4.1 — Págs. 49–51 y 107–109)
+                    </h3>
+                    <p className="text-xs text-slate-300 mt-0.5">
+                      Todas las reglas de cómo buscar, desactivar, saltar y resolver cada trampa del tablero y del mazo de tesoros, más tiradores al azar para el DM.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => rollRandomTrap('board')}
+                      className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs cursor-pointer shadow"
+                    >
+                      🎲 Trampa Tablero (1D5)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => rollRandomTrap('treasure')}
+                      className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer shadow"
+                    >
+                      💀 Trampa Tesoro (1D6)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Las 4 reglas clave */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  {FQ_TRAPS_RULES.map((r) => (
+                    <div key={r.id} className="p-3.5 rounded-xl bg-slate-950/85 border border-slate-800 space-y-1.5">
+                      <div className="flex flex-wrap items-center justify-between gap-1.5">
+                        <strong className="text-amber-200">
+                          {r.icon} {r.title}
+                        </strong>
+                        <span className="px-2 py-0.5 rounded-full bg-rose-950/80 border border-rose-600/50 text-rose-200 text-[10px] font-bold">
+                          {r.badge}
+                        </span>
+                      </div>
+                      <p className="text-slate-200 leading-relaxed">{r.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Las 5 Trampas Oficiales de Tablero */}
+              <div className="grimoire-panel rounded-2xl p-5 space-y-3">
+                <h4 className="font-display text-sm font-black text-amber-200 uppercase tracking-wider">
+                  🗺️ Los 5 Tipos Oficiales de Trampas de Tablero (Págs. 107–109)
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  {FQ_BOARD_TRAPS.map((bt) => (
+                    <div key={bt.id} className="p-3.5 rounded-xl bg-slate-950/85 border border-rose-800/40 space-y-1.5">
+                      <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-slate-800 pb-1.5">
+                        <strong className="text-sm text-rose-200">
+                          {bt.icon} {bt.name}
+                        </strong>
+                        <span className="px-2 py-0.5 rounded bg-slate-900 text-amber-300 text-[10px] font-bold">
+                          {bt.persistence}
+                        </span>
+                      </div>
+                      <div className="text-[11px] font-bold text-rose-300">💥 Daño: {bt.damage}</div>
+                      <p className="text-slate-200 leading-relaxed">{bt.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Las 6 Trampas de Cartas de Tesoro */}
+              <div className="grimoire-panel rounded-2xl p-5 space-y-3">
+                <h4 className="font-display text-sm font-black text-rose-300 uppercase tracking-wider">
+                  🃏 Las 6 Trampas del Mazo de Tesoros FetenQuest (Cartas Negativas 💀)
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs">
+                  {FQ_TREASURE_TRAPS.map((tt) => (
+                    <div key={tt.id} className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
+                      <strong className="text-amber-200">
+                        {tt.icon} {tt.name}
+                      </strong>
+                      <p className="text-[11px] text-slate-300 leading-snug">{tt.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 6D. GUÍA CLARA: TESOROS OFICIALES vs FETENQUEST */}
+          {decksSubTab === 'compare' && (
+            <div className="grimoire-panel rounded-2xl p-5 border-amber-500/45 space-y-4">
+              <div className="border-b border-slate-800 pb-2.5">
+                <h3 className="font-display text-base font-black text-amber-200 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-amber-400" /> Guía de Mazos: Tesoros Oficiales vs FetenQuest (Cuándo y Cómo usar cada uno)
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Reglas claras para saber exactamente qué mazo elegir, en qué momento robar y qué NO mezclar para mantener el juego equilibrado.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-xs">
+                {FQ_DECKS_GUIDE.map((g) => (
+                  <div key={g.id} className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1.5">
+                    <div className="font-display font-black text-sm text-amber-200">
+                      {g.icon} {g.title}
+                    </div>
+                    <div className="text-[11px] text-sky-300 font-semibold">
+                      ⏱️ Cuándo: {g.when}
+                    </div>
+                    <p className="text-slate-200 leading-relaxed whitespace-pre-line">{g.how}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
