@@ -36,13 +36,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "$raw = [System.IO.File]:
 
 if exist ".hq_need_install" (
   echo Actualizando paquetes nuevos...
-  call npm install
+  call npm install --no-audit --no-fund --ignore-scripts
   del /f /q ".hq_need_install" >nul 2>nul
 )
 
 if not exist "node_modules" (
   echo Instalando dependencias por primera vez, espera un momento...
-  call npm install
+  call npm install --no-audit --no-fund --ignore-scripts
 )
 
 echo.
