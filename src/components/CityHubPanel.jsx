@@ -38,6 +38,8 @@ import {
   resolveExperimentalMix,
   rollTonicSideEffect,
 } from '../data/craftingSystem';
+import { FQ_BATTLE_SCARS } from '../data/fetenquestData';
+import { FQ_WEAPON_PROPERTIES_GLOSSARY } from '../data/fetenquestExtendedData';
 import { MERCENARIES } from '../data/decks';
 import {
   EQUIPMENT_CATALOG,
@@ -1541,42 +1543,70 @@ export default function CityHubPanel({
       })()}
 
       {/* ==================================================================== */}
-      {/* DISTRITO 4: TEMPLO DE LA LUZ Y SANADOR                               */}
+      {/* DISTRITO 4: EL TEMPLO (RESURRECCIÓN Y CICATRICES DE BATALLA — FETENQUEST) */}
       {/* ==================================================================== */}
       {activeDistrict === 'templo' && (
-        <div className="grimoire-panel rounded-2xl p-6 space-y-4">
-          <h3 className="font-display text-xl font-bold text-sky-300 flex items-center gap-2">
-            <Heart className="w-5 h-5" /> Templo de la Luz y Sanador
-          </h3>
-          <p className="text-xs text-stone-400">
-            Cura maldiciones, recibe bendiciones antes de entrar a la mazmorra o resucita héroes caídos usando Oro, Fichas de Reputación o Deuda Imperial.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {TEMPLE_SERVICES.map((srv) => {
-              const price = calcPrice(srv.goldCost, 'templo');
-              return (
-                <div
-                  key={srv.id}
-                  className="p-4 rounded-2xl bg-stone-950/80 border border-stone-800 flex flex-col justify-between gap-3 text-xs"
-                >
-                  <div>
-                    <div className="font-display font-bold text-sm text-sky-200">{srv.name}</div>
-                    <p className="text-stone-300 mt-1">{srv.effect}</p>
-                  </div>
-                  <button
-                    onClick={() => handleTempleService(srv)}
-                    disabled={!activeHero}
-                    className="w-full py-2 rounded-xl bg-sky-700 hover:bg-sky-600 disabled:opacity-40 text-white font-bold cursor-pointer"
-                  >
-                    {srv.repCost > 0
-                      ? `Usar ${srv.repCost} Ficha de Reputación`
-                      : srv.addsDebt
-                      ? `Contraer Deuda (${srv.addsDebt} MO)`
-                      : `Aplicar (${price} MO)`}
-                  </button>
+        <div className="grimoire-panel rounded-2xl p-6 space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-800 pb-3">
+            <div>
+              <h3 className="font-display text-xl font-bold text-sky-300 flex items-center gap-2">
+                <Heart className="w-5 h-5" /> El Templo (Resurrección y Cicatrices de Batalla)
+              </h3>
+              <p className="text-xs text-stone-400 mt-0.5">
+                Resucitar a un héroe caído cuesta <strong>500 MO</strong> y requiere tirar <strong>2D6</strong> en la Tabla de Cicatrices de Batalla. También puedes purificar maldiciones por 100 MO.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={!activeHero || (activeHero.gold || 0) < 100}
+                onClick={() => {
+                  updateHeroById(activeHero.id, (h) => ({
+                    ...h,
+                    gold: (h.gold || 0) - 100,
+                    activeEffects: (h.activeEffects || []).filter((e) => e.type !== 'debuff'),
+                    currentPC: h.maxPC,
+                    currentPM: h.maxPM,
+                  }));
+                  showToast(`✨ ${activeHero.name} fue purificado en El Templo (−100 MO).`);
+                }}
+                className="px-3.5 py-2 rounded-xl bg-sky-700 hover:bg-sky-600 disabled:opacity-40 text-white font-bold text-xs cursor-pointer"
+              >
+                ✨ Purificar Maldiciones (100 MO)
+              </button>
+              <button
+                type="button"
+                disabled={!activeHero || (activeHero.gold || 0) < 500}
+                onClick={() => {
+                  const r = Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6) + 2;
+                  const scar =
+                    FQ_BATTLE_SCARS.find((s) =>
+                      s.roll === '6 u 8' ? r === 6 || r === 8 : s.roll === String(r)
+                    ) || FQ_BATTLE_SCARS[6];
+                  updateHeroById(activeHero.id, (h) => ({
+                    ...h,
+                    gold: (h.gold || 0) - 500,
+                    currentPC: h.maxPC,
+                    currentPM: h.maxPM,
+                  }));
+                  showToast(`⛪ Resurrección (2D6 = ${r} · ${scar.name}): ${scar.text}`);
+                }}
+                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-black text-xs cursor-pointer shadow"
+              >
+                🎲 Resucitar y Tirar Cicatrices 2D6 (500 MO)
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+            {FQ_BATTLE_SCARS.map((sc) => (
+              <div key={sc.roll} className="p-3 rounded-xl bg-stone-950/85 border border-stone-800 space-y-0.5">
+                <div className="font-bold text-amber-300">
+                  [{sc.roll}] {sc.name}
                 </div>
-              );
-            })}
+                <p className="text-[11px] text-stone-300 leading-snug">{sc.text}</p>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -1711,17 +1741,17 @@ export default function CityHubPanel({
       )}
 
       {/* ==================================================================== */}
-      {/* DISTRITO 6: BANCO DEL PRESTAMISTA IMPERIAL                           */}
+      {/* DISTRITO 6: BANCO IMPERIAL (SOLO DEPÓSITO Y RETIRO — SIN PRESTAMISTA) */}
       {/* ==================================================================== */}
       {activeDistrict === 'banco' && activeHero && (
         <div className="grimoire-panel rounded-2xl p-6 space-y-4 max-w-2xl">
           <h3 className="font-display text-xl font-bold text-amber-300 flex items-center gap-2">
-            <Landmark className="w-5 h-5" /> Banco del Prestamista Imperial
+            <Landmark className="w-5 h-5" /> Banco Imperial (Bóveda Segura)
           </h3>
           <p className="text-xs text-stone-300 leading-relaxed">
-            El oro guardado en el Banco está 100% protegido contra robos en la posada (Modo Supervivencia) y nunca se pierde si un héroe cae en la mazmorra.
+            Guarda aquí tu oro sobrante: el oro en la Bóveda está 100% protegido contra robos y nunca se pierde si caes en la mazmorra.
           </p>
-          <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="grid grid-cols-2 gap-3 text-center">
             <div className="p-3 rounded-xl bg-stone-900 border border-stone-800">
               <div className="text-[10px] text-stone-400 uppercase">En Bolsillo</div>
               <div className="font-display text-xl font-bold text-amber-300">{activeHero.gold || 0} MO</div>
@@ -1729,10 +1759,6 @@ export default function CityHubPanel({
             <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-800/60">
               <div className="text-[10px] text-emerald-300 uppercase">En Bóveda</div>
               <div className="font-display text-xl font-bold text-emerald-300">{activeHero.bankedGold || 0} MO</div>
-            </div>
-            <div className="p-3 rounded-xl bg-red-950/30 border border-red-800/60">
-              <div className="text-[10px] text-red-300 uppercase">Deuda Activa</div>
-              <div className="font-display text-xl font-bold text-red-300">{activeHero.debt || 0} MO</div>
             </div>
           </div>
 
@@ -1757,31 +1783,21 @@ export default function CityHubPanel({
             >
               Retirar a Bolsillo
             </button>
-            {activeHero.debt > 0 && (
-              <button
-                onClick={() => {
-                  const pay = Math.min(activeHero.gold || 0, activeHero.debt);
-                  if (pay <= 0) return;
-                  updateHeroById(activeHero.id, (h) => ({
-                    ...h,
-                    gold: (h.gold || 0) - pay,
-                    debt: Math.max(0, (h.debt || 0) - pay),
-                  }));
-                  showToast(`✅ ${activeHero.name} pagó ${pay} MO de su Deuda.`);
-                }}
-                className="px-4 py-2 rounded-xl bg-sky-700 hover:bg-sky-600 text-white font-bold text-xs cursor-pointer"
-              >
-                Pagar Deuda
-              </button>
-            )}
           </div>
 
-          {cityMode === 'survival' && (
-            <div className="p-3 rounded-xl bg-red-950/30 border border-red-700/50 text-xs text-red-200 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0" />
-              <span>Modo Supervivencia activo: guarda aquí tu oro sobrante antes de dormir en la posada.</span>
+          <div className="pt-3 border-t border-stone-800 space-y-2">
+            <div className="text-[11px] font-black uppercase text-amber-300">
+              📖 Referencia Rápida: Propiedades Especiales de Armas y Armaduras
             </div>
-          )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+              {FQ_WEAPON_PROPERTIES_GLOSSARY.map((gp) => (
+                <div key={gp.tag} className="p-2.5 rounded-xl bg-stone-950/80 border border-stone-800">
+                  <strong className="text-amber-200">{gp.icon} {gp.tag}:</strong>{' '}
+                  <span className="text-stone-300">{gp.desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

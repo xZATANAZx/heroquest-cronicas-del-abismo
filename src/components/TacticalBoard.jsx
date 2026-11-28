@@ -66,6 +66,7 @@ import {
   D20_SKILLS_EXTENDED,
   getHeroPillars,
 } from '../data/characterSystem';
+import { FQ_DUNGEON_ENCHANTMENTS } from '../data/fetenquestData';
 import { rollRandomSpellScroll } from '../data/magicWinds';
 import { QUESTS } from '../data/quests';
 import { FURNITURE_DECK, TREASURE_TRAP_DECK } from '../data/decks';
@@ -2265,6 +2266,23 @@ export default function TacticalBoard({
               </button>
               <button
                 type="button"
+                onClick={() => {
+                  const enc = FQ_DUNGEON_ENCHANTMENTS[Math.floor(Math.random() * FQ_DUNGEON_ENCHANTMENTS.length)];
+                  setV7EventModal({
+                    icon: '🌀',
+                    title: `Encantamiento de Mazmorra (${enc.roll}/20): ${enc.name}`,
+                    sourceLabel: '🌀 Encantamiento de Mazmorra (Activo todo el reto)',
+                    narrative: enc.text,
+                    modalKind: 'event',
+                  });
+                }}
+                className="px-2.5 py-1.5 rounded-lg bg-purple-800 hover:bg-purple-700 text-purple-100 font-black cursor-pointer"
+                title="Tira 1D20 en la tabla oficial de 20 Encantamientos de Mazmorra de FetenQuest"
+              >
+                🌀 Encantamiento
+              </button>
+              <button
+                type="button"
                 onClick={randomizeScenarioVariability}
                 className="px-2.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-slate-950 font-black cursor-pointer"
                 title="Agrega Misión NPC interactiva (📜) y Puerta Secreta aleatoria para que cada partida en este mapa sea distinta"
@@ -3052,10 +3070,10 @@ export default function TacticalBoard({
                       <button
                         onClick={() =>
                           setRoomDiscovery({
-                            source: 'Pasillo · Escuchar tras Puerta',
-                            title: '👂 Escuchar en la Puerta (Mente MEN CD 12)',
-                            badge: 'Acción Táctica',
-                            text: 'Si superan Mente MEN CD 12, el DM les dice cuántos enemigos escuchan dentro y si están Distraídos (Ventaja en 1ª ronda). Si fallan por 5+, hacen ruido (+1 Reloj del Caos).',
+                            source: 'Pasillo · Escuchar tras la Puerta',
+                            title: '👂 Escuchar tras la Puerta (Prueba D20: Mente CD 12)',
+                            badge: 'Acción Táctica · 1 Héroe junto a puerta cerrada',
+                            text: 'El héroe pega el oído a una puerta cerrada y tira 1D20 + su Pilar de Mente (CD 12). • Si SUPERA (12 o más): el DM le dice cuántos enemigos escucha dentro y el grupo ataca con Ventaja al abrir. • Si FALLA por 5 o más (7 o menos): hace ruido y los enemigos se preparan (+1 al Reloj del Caos).',
                           })
                         }
                         className="py-2 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-200 font-bold cursor-pointer"
@@ -4474,116 +4492,204 @@ export default function TacticalBoard({
         </div>
       )}
 
-      {/* ==================== MODAL UNIFICADO DE EVENTOS / TESOROS / GUARIDAS v7.0 (ENVÍA AL CELULAR + COLOCA EN TABLERO) ==================== */}
-      {v7EventModal && (
-        <div
-          className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4"
-          onClick={() => setV7EventModal(null)}
-        >
+      {/* ==================== MODAL UNIFICADO DE TESOROS / EVENTOS / PISTAS / GIROS (LIMPIO, ESPACIOSO Y COHERENTE) ==================== */}
+      {v7EventModal && (() => {
+        const formatDeltaSummary = (o) => {
+          if (!o) return 'Sin cambios de estado ni botín.';
+          const parts = [];
+          if (o.goldDelta) parts.push(`${o.goldDelta > 0 ? '+' : ''}${o.goldDelta} MO`);
+          if (o.pcDelta) parts.push(`${o.pcDelta > 0 ? '+' : ''}${o.pcDelta} PC`);
+          if (o.pmDelta) parts.push(`${o.pmDelta > 0 ? '+' : ''}${o.pmDelta} PM`);
+          if (o.fameDelta) parts.push(`+${o.fameDelta} Fama`);
+          if (o.items?.length) parts.push(...o.items.map((it) => `🎁 ${it.name}`));
+          if (o.materials?.length) parts.push(...o.materials.map((m) => `🎒 +${m.qty} Material`));
+          if (o.statusAdded) parts.push(`⚡ ${o.statusAdded.label}`);
+          return parts.length > 0 ? parts.join(' · ') : 'Solo narrativa (sin envío al celular).';
+        };
+        const hasD20 = !!v7EventModal.d20Check && !!v7EventModal.successOutcome;
+        const anyPayload =
+          hasHeroPayload(v7EventModal) ||
+          hasHeroPayload(v7EventModal.successOutcome) ||
+          hasHeroPayload(v7EventModal.failOutcome);
+
+        return (
           <div
-            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-gradient-to-b from-purple-950/95 via-slate-950 to-slate-950 border-2 border-amber-400/80 p-6 space-y-4 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4"
+            onClick={() => setV7EventModal(null)}
           >
-            <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3">
-              <div>
-                <div className="text-[11px] font-black uppercase tracking-widest text-amber-300">
-                  {v7EventModal.sourceLabel}
-                </div>
-                <h3 className="font-display text-2xl font-black text-white mt-0.5">
-                  {v7EventModal.icon} {v7EventModal.title}
-                </h3>
-                {v7EventModal.d20Check && (
-                  <div className="mt-1 inline-block px-2.5 py-0.5 rounded-full bg-indigo-950 border border-indigo-400/60 text-indigo-200 text-xs font-black">
-                    🎲 Prueba D20: {v7EventModal.d20Check.skill} [{v7EventModal.d20Check.pillar}] · CD {v7EventModal.d20Check.cd}
+            <div
+              className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 border-2 border-amber-400/80 p-6 space-y-4 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Cabecera */}
+              <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3">
+                <div>
+                  <div className="text-[11px] font-black uppercase tracking-widest text-amber-300">
+                    {v7EventModal.sourceLabel}
                   </div>
-                )}
+                  <h3 className="font-display text-2xl font-black text-white mt-0.5">
+                    {v7EventModal.icon} {v7EventModal.title}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setV7EventModal(null)}
+                  className="p-2 rounded-xl bg-slate-800 text-slate-200 hover:bg-slate-700 cursor-pointer shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setV7EventModal(null)}
-                className="p-2 rounded-xl bg-slate-900 text-slate-300 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            <div className="p-4 rounded-2xl bg-black/45 border border-white/10 text-base text-amber-50 leading-relaxed">
-              {v7EventModal.narrative}
-            </div>
+              {/* PRUEBA D20 GIGANTE Y MUY VISIBLE (Solo si el evento realmente pide tirada D20) */}
+              {v7EventModal.d20Check && (
+                <div className="p-4 rounded-2xl bg-indigo-950/75 border-2 border-indigo-400/80 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-indigo-300">
+                      🎲 Prueba D20 Requerida
+                    </div>
+                    <div className="text-base font-black text-white">
+                      {v7EventModal.d20Check.skill} ({v7EventModal.d20Check.pillar})
+                    </div>
+                  </div>
+                  <div className="px-4 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-base shadow">
+                    CD {v7EventModal.d20Check.cd}
+                  </div>
+                </div>
+              )}
 
-            {/* Selector de Héroe objetivo (SOLO visible si hay algo que enviar/quitar) */}
-            {heroes.length > 0 &&
-              (hasHeroPayload(v7EventModal) ||
-                hasHeroPayload(v7EventModal.successOutcome) ||
-                hasHeroPayload(v7EventModal.failOutcome)) && (
-                <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <span className="font-bold text-slate-300">🎯 Héroe que recibe/sufre el efecto:</span>
+              {/* Narrativa */}
+              <div className="p-4 rounded-2xl bg-black/45 border border-white/10 text-base text-amber-50 leading-relaxed">
+                {v7EventModal.narrative}
+              </div>
+
+              {/* Vista Previa Clara de Recompensas / Consecuencias ANTES de pulsar */}
+              {hasD20 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                  <div className="p-3 rounded-xl bg-emerald-950/35 border border-emerald-600/50 space-y-1">
+                    <div className="font-black text-emerald-300">✅ Si Superan (≥ CD {v7EventModal.d20Check.cd}):</div>
+                    <div className="text-emerald-100 font-bold">{formatDeltaSummary(v7EventModal.successOutcome)}</div>
+                    <p className="text-[11px] text-slate-300 leading-snug">{v7EventModal.successOutcome.narrative}</p>
+                  </div>
+                  {v7EventModal.failOutcome && (
+                    <div className="p-3 rounded-xl bg-rose-950/35 border border-rose-600/50 space-y-1">
+                      <div className="font-black text-rose-300">❌ Si Fallan (&lt; CD {v7EventModal.d20Check.cd}):</div>
+                      <div className="text-rose-100 font-bold">{formatDeltaSummary(v7EventModal.failOutcome)}</div>
+                      <p className="text-[11px] text-slate-300 leading-snug">{v7EventModal.failOutcome.narrative}</p>
+                    </div>
+                  )}
+                </div>
+              ) : anyPayload ? (
+                <div className="p-3.5 rounded-xl bg-emerald-950/35 border border-emerald-600/50 text-xs space-y-1.5">
+                  <div className="font-black text-emerald-300">🎁 Recompensa / Efecto Exacto:</div>
+                  <div className="text-sm font-black text-amber-200">{formatDeltaSummary(v7EventModal)}</div>
+                  {(v7EventModal.items || []).map((it, idx) => (
+                    <div key={idx} className="p-2.5 rounded-xl bg-slate-950/85 border border-amber-500/40 space-y-0.5 text-[11px]">
+                      <div className="font-black text-amber-200">{it.name} · <span className="text-sky-300">{it.type}</span></div>
+                      {it.usableBy && <div className="text-rose-300">👤 Quién puede usarlo: {it.usableBy}</div>}
+                      <div className="text-slate-200">{it.effect}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {/* Selector de Héroe objetivo (SOLO si hay algo que enviar/quitar) */}
+              {heroes.length > 0 && anyPayload && (
+                <div className="flex flex-wrap items-center gap-2 text-xs bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+                  <span className="font-bold text-slate-300">🎯 Destinatario:</span>
                   <select
-                    value={v7HeroTarget}
+                    value={v7EventModal.defaultAllHeroes ? 'ALL' : v7HeroTarget}
                     onChange={(e) => setV7HeroTarget(e.target.value)}
-                    className="px-3 py-1.5 rounded-xl bg-slate-900 border border-amber-500/50 text-amber-200 font-bold"
+                    className="flex-1 min-w-[180px] px-3 py-1.5 rounded-xl bg-slate-950 border border-amber-500/50 text-amber-200 font-bold"
                   >
+                    <option value="ALL">Todo el Grupo</option>
                     {heroes.map((h) => (
                       <option key={h.id} value={h.id}>
                         {h.name} ({h.className})
                       </option>
                     ))}
-                    <option value="ALL">Todo el Grupo</option>
                   </select>
                 </div>
               )}
 
-            {/* Botones de Acción Inteligentes: SOLO dice "Enviar al Celular" cuando SÍ hay oro/objetos/daño/estado */}
-            <div className="flex flex-wrap gap-2 pt-1">
-              {v7EventModal.successOutcome ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => dispatchV7Outcome(v7EventModal.successOutcome, false)}
-                    className="flex-1 py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer shadow"
-                  >
-                    {hasHeroPayload(v7EventModal.successOutcome)
-                      ? '✅ Superaron → Enviar Recompensa al Celular'
-                      : '✅ Superaron (Continuar)'}
-                  </button>
-                  {v7EventModal.failOutcome && (
+              {/* Botones Principales (Grid limpio, grande, NUNCA amontonado ni aplastado) */}
+              <div className="space-y-2 pt-1">
+                {hasD20 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <button
                       type="button"
-                      onClick={() => dispatchV7Outcome(v7EventModal.failOutcome, true)}
-                      className="flex-1 py-3 px-4 rounded-2xl bg-rose-700 hover:bg-rose-600 text-white font-black text-xs cursor-pointer shadow"
+                      onClick={() => dispatchV7Outcome(v7EventModal.successOutcome, false)}
+                      className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer shadow"
                     >
-                      {hasHeroPayload(v7EventModal.failOutcome)
-                        ? '❌ Fallaron → Aplicar Daño en Celular'
-                        : '❌ Fallaron (Continuar)'}
+                      {hasHeroPayload(v7EventModal.successOutcome)
+                        ? '✅ Superaron → Enviar Recompensa'
+                        : '✅ Superaron (Continuar)'}
+                    </button>
+                    {v7EventModal.failOutcome && (
+                      <button
+                        type="button"
+                        onClick={() => dispatchV7Outcome(v7EventModal.failOutcome, true)}
+                        className="w-full py-3 px-4 rounded-xl bg-rose-700 hover:bg-rose-600 text-white font-black text-xs cursor-pointer shadow"
+                      >
+                        {hasHeroPayload(v7EventModal.failOutcome)
+                          ? '❌ Fallaron → Aplicar Consecuencia'
+                          : '❌ Fallaron (Continuar)'}
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (v7EventModal.defaultAllHeroes) setV7HeroTarget('ALL');
+                      dispatchV7Outcome(v7EventModal, v7EventModal.kind === 'negative');
+                    }}
+                    className="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm cursor-pointer shadow"
+                  >
+                    {anyPayload ? '📲 Aplicar y Enviar al Celular' : '✓ Entendido y Cerrar'}
+                  </button>
+                )}
+
+                {/* Fila secundaria ordenada: Colocar en Tablero (solo si aplica) + Sacar Otro */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {v7EventModal.boardSpawn && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPendingBoardPlacement(v7EventModal.boardSpawn);
+                        setV7EventModal(null);
+                      }}
+                      className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs cursor-pointer"
+                    >
+                      📍 Colocar en Tablero ({v7EventModal.boardSpawn.label})
                     </button>
                   )}
-                </>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => dispatchV7Outcome(v7EventModal, v7EventModal.kind === 'negative')}
-                  className="flex-1 py-3 px-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer shadow"
-                >
-                  {hasHeroPayload(v7EventModal) ? '📲 Aplicar y Enviar al Celular' : '✓ Entendido y Cerrar'}
-                </button>
-              )}
-
-              {v7EventModal.boardSpawn && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPendingBoardPlacement(v7EventModal.boardSpawn);
-                    setV7EventModal(null);
-                  }}
-                  className="px-4 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs cursor-pointer shadow"
-                >
-                  📍 Colocar en Tablero ({v7EventModal.boardSpawn.label})
-                </button>
-              )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (v7EventModal.modalKind === 'treasure' || v7EventModal.modalKind === 'trap' || v7EventModal.modalKind === 'lair') {
+                        drawV7Treasure();
+                      } else if (v7EventModal.sourceLabel?.includes('Pasillo')) {
+                        openV7RandomFrom(ABISMO_HALLWAY_EVENTS_V7, '🚪 Evento de Pasillo', 'event');
+                      } else if (v7EventModal.sourceLabel?.includes('Bioma')) {
+                        openV7RandomFrom(ABISMO_BIOME_EVENTS_V7, '🌲 Evento de Bioma', 'event');
+                      } else if (v7EventModal.sourceLabel?.includes('Pista')) {
+                        openV7RandomFrom(ABISMO_CLUE_EVENTS_V7, '🔍 Pista de Mazmorra', 'event');
+                      } else {
+                        openV7RandomFrom(ABISMO_EPIC_TWISTS_V7, '⚡ Giro Épico', 'event');
+                      }
+                    }}
+                    className={`w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-200 font-bold text-xs cursor-pointer ${
+                      !v7EventModal.boardSpawn ? 'sm:col-span-2' : ''
+                    }`}
+                  >
+                    🎲 Sacar Otra Carta
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

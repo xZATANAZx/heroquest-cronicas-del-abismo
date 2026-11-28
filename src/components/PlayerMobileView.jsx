@@ -61,6 +61,7 @@ import {
 } from '../data/citySystem';
 import { OFFICIAL_ALCHEMY_DECK } from '../data/officialCards';
 import { rollWindsOfMagic } from '../data/magicWinds';
+import { FQ_WINDS_OF_MAGIC, FQ_WINDS_OF_CHAOS } from '../data/fetenquestData';
 
 // Enriquece automáticamente cualquier objeto (incluyendo equipo inicial de clase) para que SIEMPRE muestre tipo real, dados y efecto claro
 function enrichGearItem(raw) {
@@ -1066,30 +1067,61 @@ export default function PlayerMobileView({ initialPlayerParam }) {
 
   const castSpell = async (sp) => {
     if (usedSpells.includes(sp.id)) return;
-    const curPM = hero.currentPM ?? hero.maxPM;
+    const curPM = hero.currentPM ?? effectiveMaxPM;
     if ((sp.costPM || 0) > curPM) {
       showToast(`⚠️ Necesitas ${sp.costPM} PM para lanzar ${sp.name}.`);
       return;
+    }
+
+    // TIRADA AUTOMÁTICA DE VIENTOS DE LA MAGIA (2D6) Y VIENTOS DEL CAOS (SI PIFIA O HECHIZO DE CAOS)
+    const d1 = Math.floor(Math.random() * 6) + 1;
+    const d2 = Math.floor(Math.random() * 6) + 1;
+    const total2d6 = d1 + d2;
+    const isDoubles = d1 === d2;
+    const saberKey = (hero.magicSaber || '').toLowerCase().includes('divin')
+      ? 'divino'
+      : (hero.magicSaber || '').toLowerCase().includes('rún')
+        ? 'runico'
+        : 'arcano';
+    const isChaosSpell =
+      (sp.school || '').toLowerCase().includes('caos') ||
+      (hero.fqHeroId === 'fq_hechicero_caos' && isDoubles);
+
+    const windRow =
+      FQ_WINDS_OF_MAGIC.find((w) => total2d6 >= w.min && total2d6 <= w.max) || FQ_WINDS_OF_MAGIC[2];
+    const windText = windRow[saberKey] || windRow.arcano;
+    const isFumble = total2d6 === 2 || (hero.fqHeroId === 'fq_hechicero_caos' && total2d6 <= 3);
+    const isCrit = total2d6 === 12;
+
+    let chaosOutcome = null;
+    if ((isFumble && saberKey !== 'runico') || isChaosSpell) {
+      const cRoll = Math.max(
+        0,
+        Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6) + (isFumble ? 0 : 2)
+      );
+      chaosOutcome =
+        FQ_WINDS_OF_CHAOS.find((c) => (cRoll <= 0 ? c.roll === '≤0' : c.roll === String(cRoll))) ||
+        FQ_WINDS_OF_CHAOS[0];
     }
 
     // Si tiene Éter Canalizado activo y el hechizo es ofensivo, suma +1 DC y consume el buff
     const hasEtherBuff = activeEffects.some((e) => e.id === 'cls_eter');
     const spellDice = sp.dice > 0 ? sp.dice + (hasEtherBuff ? 1 : 0) : 0;
 
-    let nextPC = hero.currentPC ?? hero.maxPC;
-    let nextPM = Math.max(0, curPM - (sp.costPM || 0));
+    let nextPC = hero.currentPC ?? effectiveMaxPC;
+    let nextPM = isCrit ? curPM : Math.max(0, curPM - (sp.costPM || 0));
     let nextEffects = hasEtherBuff && sp.dice > 0
       ? activeEffects.filter((e) => e.id !== 'cls_eter')
       : [...activeEffects];
 
-    const effectiveHealPC = sp.effectiveHealPC ?? sp.healPC ?? 0;
-    const effectiveHealPM = sp.effectiveHealPM ?? sp.healPM ?? 0;
+    const effectiveHealPC = !isFumble ? (sp.effectiveHealPC ?? sp.healPC ?? 0) : 0;
+    const effectiveHealPM = !isFumble ? (sp.effectiveHealPM ?? sp.healPM ?? 0) : 0;
     const finalSpellDice = sp.effectiveDice ?? spellDice;
 
-    if (effectiveHealPC) nextPC = Math.min(hero.maxPC, nextPC + effectiveHealPC);
-    if (effectiveHealPM) nextPM = Math.min(hero.maxPM, nextPM + effectiveHealPM);
-    if (sp.cleansesDebuffs) nextEffects = nextEffects.filter((e) => e.type !== 'debuff');
-    if (sp.buff) {
+    if (effectiveHealPC) nextPC = Math.min(effectiveMaxPC, nextPC + effectiveHealPC);
+    if (effectiveHealPM) nextPM = Math.min(effectiveMaxPM, nextPM + effectiveHealPM);
+    if (!isFumble && sp.cleansesDebuffs) nextEffects = nextEffects.filter((e) => e.type !== 'debuff');
+    if (!isFumble && sp.buff) {
       nextEffects = [...nextEffects.filter((e) => e.id !== sp.buff.id), sp.buff];
     }
 
@@ -1097,20 +1129,35 @@ export default function PlayerMobileView({ initialPlayerParam }) {
       ...hero,
       currentPC: nextPC,
       currentPM: nextPM,
-      usedSpells: [...usedSpells, sp.id],
+      usedSpells: isCrit ? usedSpells : [...usedSpells, sp.id],
       activeEffects: nextEffects,
     });
 
     await notifyDMAction({
-      abilityName: `Hechizo [${sp.school} · Nv.${sp.spellLevel || 1}]: ${sp.name}`,
-      attackDice: finalSpellDice,
+      abilityName: `Hechizo [${sp.school}]: ${sp.name} (Vientos 2D6 = ${total2d6}${isCrit ? ' CRÍTICO' : isFumble ? ' PIFIA' : ''})`,
+      attackDice: isFumble ? 0 : finalSpellDice,
       damageType: sp.isFire ? 'Fuego' : 'Mágico',
       isMagic: true,
       isFire: Boolean(sp.isFire),
       isRanged: true,
-      description: `${sp.desc}${sp.upgradeBonusText ? ` | Mejora Nv.${sp.spellLevel}: ${sp.upgradeBonusText}` : ''}`,
+      description: `${isFumble ? '¡PIFIA! El hechizo falla.' : sp.desc} | Vientos (${total2d6}): ${windText}${chaosOutcome ? ` | 🌀 Vientos del Caos [${chaosOutcome.roll}]: ${chaosOutcome.text}` : ''}`,
     });
-    showToast(`✨ Lanzaste ${sp.name} (Nv.${sp.spellLevel || 1})${sp.costPM ? ` (-${sp.costPM} PM)` : ''} — Marcado como usado.`);
+
+    setMobileInboxQueue((q) => [
+      ...q,
+      {
+        uid: `wind-${Date.now()}`,
+        kind: isFumble || chaosOutcome ? 'trap' : 'event',
+        icon: isCrit ? '🌟' : isFumble ? '💀' : '✨',
+        title: `${sp.name} — Vientos de la Magia (2D6: ${d1}+${d2} = ${total2d6})`,
+        badge: isCrit
+          ? '¡CRÍTICO 12! Hechizo lanzado SIN gastar uso ni PM'
+          : isFumble
+            ? '¡PIFIA! El hechizo falla y se activan Vientos del Caos'
+            : `Saber ${saberKey.toUpperCase()}`,
+        narrative: `${windText}${chaosOutcome ? `\n\n🌀 VIENTOS DEL CAOS [${chaosOutcome.roll}]: ${chaosOutcome.text}` : ''}`,
+      },
+    ]);
   };
 
   const rechargeSpellWithEther = async (spellId) => {
