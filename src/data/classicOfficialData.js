@@ -322,3 +322,119 @@ export const DREAD_MOON_OFFICIAL_RULES = [
     text: 'Antes de iniciar una Misión de La Luna del Terror, los Héroes pueden contratar Mercenarios Élficos (Exploradora 50 MO, Ballestera 75 MO, Guja 75 MO, Taladora 100 MO) para acompañarlos durante esa misión.',
   },
 ];
+
+// ============================================================================
+// SISTEMA DE MOBILIARIO ORIGINAL (100% REGLAS CLÁSICAS DE HEROQUEST — SIN D20)
+// Solo usa Dados de Combate (DC), Dados Rojos, PC, PM, Oro, Pociones y Monstruos oficiales.
+// ============================================================================
+export const CLASSIC_FURNITURE_DECK = {
+  alchemy_bench: [
+    { id: 'cf_alc_1', title: 'Poción de Curación', kind: 'Tesoro', icon: '🧪', text: 'Entre los matraces hallas un frasco rojo brillante: restaura hasta 4 Puntos Corporales en cualquier momento.' },
+    { id: 'cf_alc_2', title: 'Poción de Fuerza', kind: 'Tesoro', icon: '💪', text: 'Encuentras un vial de líquido espeso: bébelo antes de atacar para lanzar +2 Dados de Combate adicionales en tu próximo ataque.' },
+    { id: 'cf_alc_3', title: 'Poción de Defensa', kind: 'Tesoro', icon: '🛡️', text: 'Encuentras un frasco cristalino: bébelo antes de defenderte para lanzar +2 Dados de Combate adicionales en tu próxima defensa.' },
+    { id: 'cf_alc_4', title: 'Poción de Velocidad', kind: 'Tesoro', icon: '💨', text: 'Vial dorado: bébelo para lanzar el doble de Dados Rojos en tu próximo movimiento.' },
+    { id: 'cf_alc_5', title: '¡Frasco de Veneno!', kind: 'Peligro', icon: '☠️', text: 'Al destapar un frasco se libera un vapor ácido. Tira 1 Dado de Combate: si sale Calavera pierdes 1 Punto Corporal.' },
+    { id: 'cf_alc_6', title: 'Frascos Vacíos', kind: 'Vacío', icon: '💨', text: 'Todos los frascos están secos o rotos. No encuentras nada útil en la mesa.' },
+  ],
+  bookcase: [
+    { id: 'cf_book_1', title: 'Pergamino de Hechizo', kind: 'Tesoro', icon: '📜', text: 'Entre los tomos encuentras un Pergamino con 1 Hechizo Elemental oficial al azar (cualquier Héroe puede lanzarlo una vez).' },
+    { id: 'cf_book_2', title: 'Mapa de la Mazmorra', kind: 'Beneficio', icon: '🗺️', text: 'Encuentras planos antiguos: Zargon te revela la ubicación de 1 puerta secreta o 1 trampa en esta sala o pasillo adyacente.' },
+    { id: 'cf_book_3', title: 'Oro entre Páginas (15 MO)', kind: 'Tesoro', icon: '🪙', text: 'Dentro de un libro ahuecado hallas 15 Monedas de Oro.' },
+    { id: 'cf_book_4', title: '¡Libro con Trampa de Aguja!', kind: 'Peligro', icon: '🏹', text: 'Al tirar del tomo se dispara una aguja oculta. Tira 1 Dado de Combate: si sale Calavera pierdes 1 Punto Corporal.' },
+    { id: 'cf_book_5', title: 'Libros Podridos', kind: 'Vacío', icon: '💨', text: 'Los pergaminos se deshacen al tocarlos. No encuentras nada de valor.' },
+  ],
+  weapon_rack: [
+    { id: 'cf_wr_1', title: 'Daga', kind: 'Tesoro', icon: '🗡️', text: 'Encuentras una Daga en buen estado (1 Dado de Combate; puede arrojarse a un monstruo visible).' },
+    { id: 'cf_wr_2', title: 'Espada Corta', kind: 'Tesoro', icon: '⚔️', text: 'Encuentras una Espada Corta lista para el combate (2 Dados de Combate; no usable por el Mago).' },
+    { id: 'cf_wr_3', title: 'Escudo', kind: 'Tesoro', icon: '🛡️', text: 'Encuentras un Escudo de madera reforzada (+1 Dado de Defensa; no usable por el Mago).' },
+    { id: 'cf_wr_4', title: 'Hacha de Mano', kind: 'Tesoro', icon: '🪓', text: 'Encuentras un Hacha de Mano (2 Dados de Combate; puede arrojarse; no usable por el Mago).' },
+    { id: 'cf_wr_5', title: 'Piedra de Afilar', kind: 'Beneficio', icon: '✨', text: 'Afilas tu arma: ganas +1 Dado de Combate en tu próximo ataque con arma.' },
+    { id: 'cf_wr_6', title: 'Armas Oxidadas', kind: 'Vacío', icon: '💨', text: 'Las armas del armero están completamente oxidadas y quebradizas. No sirven para combatir.' },
+  ],
+  cupboard: [
+    { id: 'cf_cup_1', title: 'Bolsa de Oro (20 MO)', kind: 'Tesoro', icon: '🪙', text: 'En el estante superior encuentras una bolsa escondida con 20 Monedas de Oro.' },
+    { id: 'cf_cup_2', title: 'Poción de Curación', kind: 'Tesoro', icon: '🧪', text: 'Oculta tras unos trapos viejos hallas una Poción de Curación (+4 Puntos Corporales).' },
+    { id: 'cf_cup_3', title: 'Objetos de Plata (15 MO)', kind: 'Tesoro', icon: '💍', text: 'Encuentras copas y cubiertos de plata por valor de 15 Monedas de Oro.' },
+    { id: 'cf_cup_4', title: '¡Bicho Venenoso!', kind: 'Peligro', icon: '🕷️', text: 'Al abrir las puertas algo te muerde la mano. Tira 1 Dado de Combate: con Calavera pierdes 1 Punto Corporal.' },
+    { id: 'cf_cup_5', title: 'Armario Vacío', kind: 'Vacío', icon: '💨', text: 'Solo encuentras polvo, telarañas y trapos rotos.' },
+  ],
+  fireplace: [
+    { id: 'cf_fp_1', title: 'Ladrillo Suelto (25 MO)', kind: 'Tesoro', icon: '💰', text: 'Tras un ladrillo flojo en la chimenea encuentras 25 Monedas de Oro.' },
+    { id: 'cf_fp_2', title: 'Gema entre Cenizas (35 MO)', kind: 'Tesoro', icon: '💎', text: 'Algo brilla entre el hollín: una Gema valorada en 35 Monedas de Oro.' },
+    { id: 'cf_fp_3', title: 'Calor Reconfortante', kind: 'Beneficio', icon: '🔥', text: 'El calor del fuego alivia tus heridas: recuperas 1 Punto Corporal (sin superar tu máximo).' },
+    { id: 'cf_fp_4', title: '¡Nube de Hollín!', kind: 'Peligro', icon: '💨', text: 'Un golpe de humo y cenizas te hace toser violentamente: tu turno termina de inmediato.' },
+    { id: 'cf_fp_5', title: 'Solo Cenizas', kind: 'Vacío', icon: '💨', text: 'Remueves las brasas frías, pero no hay nada escondido.' },
+  ],
+  tomb: [
+    { id: 'cf_tomb_1', title: 'Joyas Funerarias (50 MO)', kind: 'Tesoro', icon: '👑', text: 'Dentro del sarcófago hallas anillos y joyas antiguas por valor de 50 Monedas de Oro.' },
+    { id: 'cf_tomb_2', title: 'Agua Bendita', kind: 'Tesoro', icon: '✨', text: 'Encuentras un frasco de Agua Bendita: úsalo en lugar de atacar para destruir al instante 1 No Muerto.' },
+    { id: 'cf_tomb_3', title: '¡Esqueleto Alzado!', kind: 'Peligro', icon: '💀', text: '¡La tapa de piedra se desliza! Zargon coloca 1 Esqueleto adyacente a ti que ataca inmediatamente.' },
+    { id: 'cf_tomb_4', title: '¡Maldición de la Tumba!', kind: 'Peligro', icon: '👻', text: 'Un frío sobrenatural atraviesa tu mente. Tira 1 Dado de Combate: con Calavera pierdes 1 Punto Mental.' },
+    { id: 'cf_tomb_5', title: 'Tumba Vacía', kind: 'Vacío', icon: '💨', text: 'La tumba ya fue saqueada hace siglos. Solo quedan huesos antiguos.' },
+  ],
+  sorcerer_table: [
+    { id: 'cf_sor_1', title: 'Recarga Arcana', kind: 'Beneficio', icon: '✨', text: 'Si lanzas hechizos, recuperas 1 Hechizo Elemental que ya hayas usado en esta Misión. Si no lanzas hechizos, hallas 20 MO.' },
+    { id: 'cf_sor_2', title: 'Pergamino de Hechizo', kind: 'Tesoro', icon: '📜', text: 'Sobre la mesa hay un Pergamino con 1 Hechizo Elemental oficial al azar (1 uso para cualquier Héroe).' },
+    { id: 'cf_sor_3', title: '¡Descarga Mágica!', kind: 'Peligro', icon: '⚡', text: 'Una runa protectora estalla al tocar la mesa. Tira 1 Dado de Combate: con Calavera pierdes 1 Punto Corporal.' },
+    { id: 'cf_sor_4', title: 'Polvo de Plata (20 MO)', kind: 'Tesoro', icon: '🪙', text: 'Recoges componentes y monedas rituales valorados en 20 Monedas de Oro.' },
+    { id: 'cf_sor_5', title: 'Tinta Seca y Velas', kind: 'Vacío', icon: '💨', text: 'Solo hay notas ilegibles y velas derretidas.' },
+  ],
+  torture_rack: [
+    { id: 'cf_tr_1', title: 'Llaves del Carcelero', kind: 'Beneficio', icon: '🗝️', text: 'Encuentras un manojo de herramientas y llaves: puedes desarmar automáticamente la próxima trampa sin tirar dado (1 uso).' },
+    { id: 'cf_tr_2', title: 'Monedas Olvidadas (20 MO)', kind: 'Tesoro', icon: '🪙', text: 'Debajo del potro de madera hallas 20 Monedas de Oro.' },
+    { id: 'cf_tr_3', title: '¡Mecanismo Oxidado!', kind: 'Peligro', icon: '⚙️', text: 'Una palanca se suelta de golpe. Tira 1 Dado de Combate: con Calavera pierdes 1 Punto Corporal.' },
+    { id: 'cf_tr_4', title: 'Nada Útil', kind: 'Vacío', icon: '💨', text: 'Solo cadenas rotas y madera podrida.' },
+  ],
+  throne: [
+    { id: 'cf_th_1', title: 'Compartimento Real (50 MO)', kind: 'Tesoro', icon: '👑', text: 'Bajo el asiento del trono descubres un escondite con 50 Monedas de Oro.' },
+    { id: 'cf_th_2', title: 'Gema de la Corona (35 MO)', kind: 'Tesoro', icon: '💎', text: 'Desprendes una gema incrustada en el respaldo valorada en 35 Monedas de Oro.' },
+    { id: 'cf_th_3', title: '¡Trampa de Dardo en el Trono!', kind: 'Peligro', icon: '🏹', text: 'Un resorte oculto dispara un dardo: pierdes 1 Punto Corporal y tu turno termina.' },
+    { id: 'cf_th_4', title: 'Trono Vacío', kind: 'Vacío', icon: '💨', text: 'Revisas el trono entero, pero no esconde ningún secreto.' },
+  ],
+  table: [
+    { id: 'cf_tab_1', title: 'Monedas sobre la Mesa (15 MO)', kind: 'Tesoro', icon: '🪙', text: 'Recoges 15 Monedas de Oro dejadas tras una partida de dados de los monstruos.' },
+    { id: 'cf_tab_2', title: 'Provisiones Frescas', kind: 'Beneficio', icon: '🍞', text: 'Encuentras pan, queso y vino: recuperas 1 Punto Corporal (sin superar tu máximo).' },
+    { id: 'cf_tab_3', title: 'Poción de Curación Menor', kind: 'Tesoro', icon: '🧪', text: 'Bajo la mesa encuentras un frasco pequeño que restaura hasta 2 Puntos Corporales.' },
+    { id: 'cf_tab_4', title: 'Platos Vacíos', kind: 'Vacío', icon: '💨', text: 'Solo hay restos de comida vieja y jarras vacías.' },
+  ],
+  chest: [
+    { id: 'cf_ch_1', title: 'Tesoro del Cofre (50 MO)', kind: 'Tesoro', icon: '💰', text: 'Dentro del cofre encuentras 50 Monedas de Oro.' },
+    { id: 'cf_ch_2', title: 'Gema y Poción', kind: 'Tesoro', icon: '💎', text: 'Encuentras una Gema (35 MO) y una Poción de Curación (+4 Puntos Corporales).' },
+    { id: 'cf_ch_3', title: '¡Trampa de Aguja Venenosa!', kind: 'Peligro', icon: '☠️', text: '¡Al abrir la tapa se dispara una aguja! Pierdes 1 Punto Corporal y tu turno termina.' },
+    { id: 'cf_ch_4', title: '¡Monstruo Errante!', kind: 'Peligro', icon: '👹', text: '¡El ruido del cofre atrae peligro! Zargon coloca el Monstruo Errante de esta Misión adyacente y ataca al instante.' },
+    { id: 'cf_ch_5', title: 'Cofre Vacío', kind: 'Vacío', icon: '💨', text: 'El cofre está completamente vacío.' },
+  ],
+};
+
+// ============================================================================
+// MAZO CLÁSICO DEL MALVADO BRUJO (EVIL WIZARD DECK — 24 CARTAS ORIGINALES)
+// Regla Clásica: Cuando Zargon no tiene monstruos en el tablero (o al inicio de su turno),
+// roba 1 carta. Las cartas "Instantánea" se juegan al momento; las de "Guardar" quedan en la
+// Mano de Zargon para jugarlas durante el combate. 100% Dados de Combate y Dados Rojos.
+// ============================================================================
+export const CLASSIC_EVIL_WIZARD_DECK = [
+  { id: 'cew_1', title: 'Emboscada', timing: 'Instantánea', icon: '👹', text: 'Coloca el Monstruo Errante de esta Misión en cualquier pasillo o sala vacía fuera de la línea de visión de los Héroes. Mueve y ataca normalmente en el turno de Zargon.' },
+  { id: 'cew_2', title: 'Llamada de la Horda', timing: 'Instantánea', icon: '👺', text: 'Coloca 2 Goblins en una sala ya explorada o pasillo fuera de la línea de visión de los Héroes.' },
+  { id: 'cew_3', title: 'Tumba Profanada', timing: 'Instantánea', icon: '💀', text: 'Coloca 2 Esqueletos en un pasillo o sala vacía fuera de la línea de visión de los Héroes.' },
+  { id: 'cew_4', title: 'Oscuridad Repentina', timing: 'Guardar', icon: '🌑', text: 'Juégala al inicio de un turno de los Héroes: hasta el final de la ronda, todos los Héroes lanzan -1 Dado de Combate al atacar (mínimo 1).' },
+  { id: 'cew_5', title: 'Frenesí de Batalla', timing: 'Guardar', icon: '⚔️', text: 'Juégala antes de atacar con un Monstruo: ese Monstruo realiza DOS ataques este turno.' },
+  { id: 'cew_6', title: 'Armadura Oxidada', timing: 'Guardar', icon: '🛡️', text: 'Elige un Héroe visible: durante el resto de esta ronda lanza -1 Dado de Defensa (mínimo 1).' },
+  { id: 'cew_7', title: 'Terremoto', timing: 'Instantánea', icon: '🌋', text: 'La mazmorra tiembla: cada Héroe tira 1 Dado de Combate. Quien saque Calavera pierde 1 Punto Corporal y no puede moverse en su próximo turno.' },
+  { id: 'cew_8', title: 'Pánico', timing: 'Guardar', icon: '😱', text: 'Elige a un Héroe: el terror lo paraliza y solo puede tirar 1 Dado Rojo para moverse en su próximo turno.' },
+  { id: 'cew_9', title: 'Maldición de Zargon', timing: 'Guardar', icon: '🔮', text: 'Juégala justo después de que un Héroe lance sus dados de ataque o defensa: debe repetir toda la tirada y quedarse con el nuevo resultado.' },
+  { id: 'cew_10', title: 'Puerta Atrancada', timing: 'Guardar', icon: '🚪', text: 'Juégala cuando un Héroe intente abrir una puerta: la puerta se atasca. Debe tirar 1 Dado de Combate y sacar Calavera para abrirla (si falla, pierde su acción).' },
+  { id: 'cew_11', title: 'Veneno en la Hoja', timing: 'Guardar', icon: '☠️', text: 'Juégala cuando un Monstruo cause al menos 1 punto de daño a un Héroe: ese Héroe pierde 1 Punto Corporal adicional.' },
+  { id: 'cew_12', title: 'Piel de Piedra Oscura', timing: 'Guardar', icon: '🪨', text: 'Juégala antes de que un Monstruo se defienda: ese Monstruo lanza +2 Dados de Defensa contra ese ataque.' },
+  { id: 'cew_13', title: 'Golpe Traicionero', timing: 'Guardar', icon: '🗡️', text: 'Juégala antes de atacar con un Monstruo: ese Monstruo gana +2 Dados de Ataque en este golpe.' },
+  { id: 'cew_14', title: 'Espíritu Inquieto', timing: 'Instantánea', icon: '👻', text: 'El Héroe con menos Puntos Mentales sufre un ataque psíquico: tira 1 Dado Rojo por cada PM; si no saca ningún 6, pierde 1 Punto Mental.' },
+  { id: 'cew_15', title: 'Niebla Espesa', timing: 'Guardar', icon: '🌫️', text: 'Durante 1 ronda completa, ningún Héroe puede atacar a distancia (Ballesta, armas arrojadizas) ni lanzar hechizos a más de 3 casillas.' },
+  { id: 'cew_16', title: '¡Flecha Oculta!', timing: 'Guardar', icon: '🏹', text: 'Juégala mientras un Héroe se mueve por un pasillo: detén su paso y tira 1 Dado de Combate. Con Calavera pierde 1 Punto Corporal.' },
+  { id: 'cew_17', title: 'Sombra de la Muerte', timing: 'Guardar', icon: '🖤', text: 'Juégala cuando un Monstruo vaya a ser derrotado: ignora el último punto de daño y sobrevive con 1 Punto Corporal.' },
+  { id: 'cew_18', title: 'Contraataque', timing: 'Guardar', icon: '⚡', text: 'Juégala cuando un Héroe falle su ataque (0 Calaveras) contra un Monstruo adyacente: ese Monstruo ataca gratis de inmediato.' },
+  { id: 'cew_19', title: 'Muro de Escombros', timing: 'Guardar', icon: '🧱', text: 'Juégala sobre cualquier puerta abierta: queda bloqueada por magia oscura durante 1 ronda completa (nadie puede cruzarla hasta el próximo turno de Zargon).' },
+  { id: 'cew_20', title: 'Furia de Zargon', timing: 'Guardar', icon: '🔥', text: 'Juégala al inicio del turno de Zargon: todos los Monstruos en el tablero lanzan +1 Dado de Ataque este turno.' },
+  { id: 'cew_21', title: 'Agotamiento', timing: 'Instantánea', icon: '⛓️', text: 'Una fatiga oscura invade la mazmorra: en su próximo turno todos los Héroes tiran 1 Dado Rojo menos para moverse (mínimo 1 Dado Rojo).' },
+  { id: 'cew_22', title: 'Silencio Arcano', timing: 'Guardar', icon: '🤐', text: 'Elige a un Héroe lanzador de hechizos: no podrá lanzar ningún Hechizo durante su próximo turno.' },
+  { id: 'cew_23', title: 'Escudo Negro', timing: 'Guardar', icon: '🖤', text: 'Juégala al inicio del turno de los Héroes: durante toda esta ronda, los Monstruos defienden con Escudos Blancos en lugar de Escudos Negros.' },
+  { id: 'cew_24', title: 'Silencio en la Mazmorra', timing: 'Instantánea', icon: '💨', text: 'Un escalofrío recorre las paredes, pero nada ocurre... Zargon no obtiene ningún efecto en esta carta.' },
+];

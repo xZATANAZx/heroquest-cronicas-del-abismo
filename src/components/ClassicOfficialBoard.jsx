@@ -48,6 +48,8 @@ import {
   CLASSIC_ARMORY,
   CLASSIC_TRAP_RULES,
   DREAD_MOON_OFFICIAL_RULES,
+  CLASSIC_FURNITURE_DECK,
+  CLASSIC_EVIL_WIZARD_DECK,
 } from '../data/classicOfficialData';
 import {
   FurnitureSVG,
@@ -133,6 +135,14 @@ export default function ClassicOfficialBoard({ showToast = null }) {
   const [treasureDeck, setTreasureDeck] = useState(() => shuffleArray(CLASSIC_TREASURE_DECK));
   const [discardedTreasures, setDiscardedTreasures] = useState([]);
 
+  // Mazo Clásico del Malvado Brujo (24 cartas + Mano de Zargon para cartas "Guardar")
+  const [evilWizardDeck, setEvilWizardDeck] = useState(() => shuffleArray(CLASSIC_EVIL_WIZARD_DECK));
+  const [zargonHand, setZargonHand] = useState([]);
+
+  // Mobiliario Original examinado en esta misión (para no repetir cartas ni muebles)
+  const [examinedFurnitureKeys, setExaminedFurnitureKeys] = useState(() => new Set());
+  const [usedFurnitureCardIds, setUsedFurnitureCardIds] = useState(() => new Set());
+
   // Hechizos del Terror usados en esta misión
   const [usedDreadSpells, setUsedDreadSpells] = useState(() => new Set());
 
@@ -164,6 +174,10 @@ export default function ClassicOfficialBoard({ showToast = null }) {
     setMonsterHP({});
     setTreasureDeck(shuffleArray(CLASSIC_TREASURE_DECK));
     setDiscardedTreasures([]);
+    setEvilWizardDeck(shuffleArray(CLASSIC_EVIL_WIZARD_DECK));
+    setZargonHand([]);
+    setExaminedFurnitureKeys(new Set());
+    setUsedFurnitureCardIds(new Set());
     setUsedDreadSpells(new Set());
     setShowIntro(true);
   };
@@ -268,6 +282,58 @@ export default function ClassicOfficialBoard({ showToast = null }) {
       text: picked.text,
       onDrawAnother: drawOfficialDreadSpell,
       drawAnotherLabel: '💀 Robar Otro Hechizo del Terror',
+    });
+  };
+
+  // Robar Carta Clásica del Malvado Brujo (Evil Wizard Deck)
+  const drawClassicEvilWizard = () => {
+    let deck = evilWizardDeck;
+    if (deck.length === 0) {
+      deck = shuffleArray(CLASSIC_EVIL_WIZARD_DECK);
+    }
+    const [drawn, ...rest] = deck;
+    setEvilWizardDeck(rest);
+    setCardModal({
+      kind: 'evil_wizard',
+      header: 'Mazo Clásico del Malvado Brujo',
+      badge: drawn.timing === 'Guardar' ? '✋ Carta para Guardar en Mano de Zargon' : '⚡ Instantánea (Se juega ahora)',
+      icon: drawn.icon,
+      title: drawn.title,
+      text: drawn.text,
+      saveableCard: drawn.timing === 'Guardar' ? drawn : null,
+      onDrawAnother: drawClassicEvilWizard,
+      drawAnotherLabel: '🧙 Robar Otra del Malvado Brujo',
+    });
+  };
+
+  // Examinar Mueble Original (100% reglas clásicas HeroQuest sin D20)
+  const examineClassicFurniture = (item, fKey) => {
+    const poolAll = CLASSIC_FURNITURE_DECK[item.type] || CLASSIC_FURNITURE_DECK.table;
+    const fresh = poolAll.filter((c) => !usedFurnitureCardIds.has(c.id));
+    const list = fresh.length > 0 ? fresh : poolAll;
+    const drawn = list[Math.floor(Math.random() * list.length)];
+
+    setExaminedFurnitureKeys((prev) => {
+      const next = new Set(prev);
+      next.add(fKey);
+      return next;
+    });
+    setUsedFurnitureCardIds((prev) => {
+      const next = new Set(prev);
+      next.add(drawn.id);
+      return next;
+    });
+
+    const isWM = drawn.title.includes('Monstruo Errante');
+    setCardModal({
+      kind: drawn.kind === 'Peligro' ? 'danger' : 'treasure',
+      header: `Mobiliario Original · ${item.info?.label || 'Mueble'} (${item.coord})`,
+      badge: drawn.kind,
+      icon: drawn.icon,
+      title: isWM ? `¡Monstruo Errante: ${currentMap.wanderingMonster}!` : drawn.title,
+      text: drawn.text,
+      onDrawAnother: () => examineClassicFurniture(item, fKey),
+      drawAnotherLabel: `🪑 Volver a Tirar (${item.info?.label || 'Mueble'})`,
     });
   };
 
@@ -622,6 +688,14 @@ export default function ClassicOfficialBoard({ showToast = null }) {
                 className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-black cursor-pointer shadow"
               >
                 💎 Tesoro ({treasureDeck.length})
+              </button>
+              <button
+                type="button"
+                onClick={drawClassicEvilWizard}
+                className="px-3 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-600 text-white text-xs font-black cursor-pointer shadow"
+                title="Mazo Clásico del Malvado Brujo (24 cartas originales sin D20)"
+              >
+                🧙 Malvado Brujo ({evilWizardDeck.length})
               </button>
               <button
                 type="button"
@@ -1026,6 +1100,13 @@ export default function ClassicOfficialBoard({ showToast = null }) {
                 </button>
                 <button
                   type="button"
+                  onClick={drawClassicEvilWizard}
+                  className="px-3.5 py-1.5 rounded-lg bg-purple-700 hover:bg-purple-600 text-white text-xs font-black cursor-pointer shadow"
+                >
+                  🧙 Malvado Brujo ({evilWizardDeck.length})
+                </button>
+                <button
+                  type="button"
                   onClick={drawOfficialDreadSpell}
                   className="px-3.5 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-600 text-white text-xs font-black cursor-pointer shadow"
                 >
@@ -1065,7 +1146,7 @@ export default function ClassicOfficialBoard({ showToast = null }) {
           )}
         </div>
 
-        {/* PANEL DERECHO OFICIAL: MONSTRUO / TRAMPA / SALA / NOTAS / BESTIARIO OFICIAL */}
+        {/* PANEL DERECHO OFICIAL: MANO DE ZARGON / MONSTRUO / TRAMPA / SALA / NOTAS / BESTIARIO OFICIAL */}
         <div
           className={
             isFullscreenMode
@@ -1073,6 +1154,47 @@ export default function ClassicOfficialBoard({ showToast = null }) {
               : 'xl:col-span-4 space-y-4'
           }
         >
+          {/* Mano de Zargon (Cartas "Guardar" del Mazo del Malvado Brujo) */}
+          {zargonHand.length > 0 && (
+            <div className="p-3 rounded-2xl bg-purple-950/50 border border-purple-500/60 space-y-2 shadow-lg">
+              <div className="text-[10px] font-black uppercase tracking-wider text-purple-300 flex items-center justify-between">
+                <span>✋ Mano de Zargon ({zargonHand.length})</span>
+                <span className="text-purple-400">Listas para jugar</span>
+              </div>
+              <div className="space-y-1.5">
+                {zargonHand.map((card) => (
+                  <div
+                    key={card.handId}
+                    className="p-2 rounded-xl bg-slate-950/85 border border-purple-700/60 flex items-center justify-between gap-2 text-xs"
+                  >
+                    <div className="min-w-0">
+                      <div className="font-bold text-purple-100 truncate">
+                        {card.icon} {card.title}
+                      </div>
+                      <div className="text-[10px] text-slate-400 truncate">{card.text}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setZargonHand((prev) => prev.filter((c) => c.handId !== card.handId));
+                        setCardModal({
+                          kind: 'evil_wizard',
+                          header: '¡Zargon Juega Carta de su Mano!',
+                          badge: 'Mazo Clásico del Malvado Brujo',
+                          icon: card.icon,
+                          title: card.title,
+                          text: card.text,
+                        });
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-black text-[10px] cursor-pointer shrink-0"
+                    >
+                      ⚡ Jugar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {/* Tarjeta Oficial del Monstruo Seleccionado */}
           {selectedMonsterObj && (
             <div
@@ -1336,8 +1458,41 @@ export default function ClassicOfficialBoard({ showToast = null }) {
                       );
                     })}
 
-                    {/* Muebles, Puertas y Trampas */}
-                    {roomItems.filter((it) => !it.info?.monsterId).map((it, idx) => {
+                    {/* Muebles Originales (Con botón Examinar del Sistema de Mobiliario Original) */}
+                    {roomItems.filter((it) => it.info?.category === 'Mobiliario').map((it, idx) => {
+                      const fKey = `${currentMap.id}-furn-${it.type}-${it.x}-${it.y}`;
+                      const alreadyExamined = examinedFurnitureKeys.has(fKey);
+                      return (
+                        <div
+                          key={`f-${idx}`}
+                          className={`p-2.5 rounded-xl border text-xs flex items-center justify-between gap-2 ${
+                            alreadyExamined
+                              ? 'bg-stone-950/60 border-stone-800 opacity-75'
+                              : 'bg-amber-950/25 border-amber-800/60'
+                          }`}
+                        >
+                          <div className="min-w-0">
+                            <strong className="text-amber-100">{it.info?.label}</strong>
+                            <span className="font-mono text-[11px] text-amber-400 ml-1.5">{it.coord}</span>
+                            {it.note && <div className="text-[10px] text-amber-300/90 truncate">★ {it.note}</div>}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => examineClassicFurniture(it, fKey)}
+                            className={`px-2.5 py-1 rounded-lg text-[10px] font-black cursor-pointer shrink-0 ${
+                              alreadyExamined
+                                ? 'bg-stone-800 hover:bg-stone-700 text-stone-300'
+                                : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow'
+                            }`}
+                          >
+                            {alreadyExamined ? '✓ Revisado' : '🪑 Examinar'}
+                          </button>
+                        </div>
+                      );
+                    })}
+
+                    {/* Puertas, Trampas y Estructura */}
+                    {roomItems.filter((it) => !it.info?.monsterId && it.info?.category !== 'Mobiliario').map((it, idx) => {
                       const isTrap = it.type === 'trap_pit' || it.type === 'trap_spear' || it.type === 'trap_falling_rock';
                       const tKey = isTrap ? getTrapKey(it) : null;
                       const isDisarmed = tKey && disarmedTraps.has(tKey);
@@ -1372,20 +1527,27 @@ export default function ClassicOfficialBoard({ showToast = null }) {
                   </div>
                 )}
 
-                <div className="pt-2 border-t border-slate-800 grid grid-cols-2 gap-1.5">
+                <div className="pt-2 border-t border-slate-800 grid grid-cols-3 gap-1.5">
                   <button
                     type="button"
                     onClick={drawOfficialTreasure}
-                    className="py-2 px-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-black cursor-pointer"
+                    className="py-2 px-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-black cursor-pointer"
                   >
-                    💎 Tesoro ({treasureDeck.length})
+                    💎 Tesoro
+                  </button>
+                  <button
+                    type="button"
+                    onClick={drawClassicEvilWizard}
+                    className="py-2 px-1.5 rounded-xl bg-purple-700 hover:bg-purple-600 text-white text-[11px] font-black cursor-pointer"
+                  >
+                    🧙 Brujo
                   </button>
                   <button
                     type="button"
                     onClick={drawOfficialDreadSpell}
-                    className="py-2 px-2 rounded-xl bg-rose-700 hover:bg-rose-600 text-white text-xs font-black cursor-pointer"
+                    className="py-2 px-1.5 rounded-xl bg-rose-700 hover:bg-rose-600 text-white text-[11px] font-black cursor-pointer"
                   >
-                    💀 Hechizo Terror
+                    💀 Terror
                   </button>
                 </div>
               </div>
@@ -1538,6 +1700,8 @@ export default function ClassicOfficialBoard({ showToast = null }) {
             className={`w-full max-w-xl rounded-3xl bg-gradient-to-b border-2 p-6 sm:p-8 space-y-5 shadow-2xl ${
               cardModal.kind === 'danger' || cardModal.kind === 'dread'
                 ? 'from-rose-950/95 via-slate-950 to-slate-950 border-rose-500/80'
+                : cardModal.kind === 'evil_wizard'
+                ? 'from-purple-950/95 via-slate-950 to-slate-950 border-purple-400/80'
                 : cardModal.kind === 'alchemy'
                 ? 'from-indigo-950/95 via-slate-950 to-slate-950 border-indigo-400/80'
                 : 'from-emerald-950/95 via-slate-950 to-slate-950 border-amber-400/80'
@@ -1567,15 +1731,31 @@ export default function ClassicOfficialBoard({ showToast = null }) {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2">
-              {cardModal.onDrawAnother && (
-                <button
-                  type="button"
-                  onClick={cardModal.onDrawAnother}
-                  className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer"
-                >
-                  {cardModal.drawAnotherLabel}
-                </button>
-              )}
+              <div className="flex flex-wrap gap-2">
+                {cardModal.saveableCard && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const c = cardModal.saveableCard;
+                      setZargonHand((prev) => [...prev, { ...c, handId: `${c.id}-${Date.now()}` }]);
+                      showToast?.(`✋ Guardada en Mano de Zargon: ${c.title}`);
+                      setCardModal(null);
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs cursor-pointer shadow"
+                  >
+                    ✋ Guardar en Mano de Zargon
+                  </button>
+                )}
+                {cardModal.onDrawAnother && (
+                  <button
+                    type="button"
+                    onClick={cardModal.onDrawAnother}
+                    className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer"
+                  >
+                    {cardModal.drawAnotherLabel}
+                  </button>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => setCardModal(null)}
