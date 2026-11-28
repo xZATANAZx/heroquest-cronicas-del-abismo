@@ -267,6 +267,10 @@ export default function PlayerMobileView({ initialPlayerParam }) {
   const [mobileBankAmt, setMobileBankAmt] = useState(50);
   const [activePuzzle, setActivePuzzle] = useState(null);
   const dismissedPuzzleIdsRef = useRef(new Set());
+  const [mobileInboxQueue, setMobileInboxQueue] = useState([]);
+  const [inboxHistoryOpen, setInboxHistoryOpen] = useState(false);
+  const seenInboxIdsRef = useRef(new Set());
+  const inboxInitializedForHeroRef = useRef(null);
   const lastVersionRef = useRef(null);
   const prevStateRef = useRef({ level: null, invCount: null, gold: null, maxPC: null, maxPM: null });
   const mainScrollRef = useRef(null);
@@ -314,6 +318,52 @@ export default function PlayerMobileView({ initialPlayerParam }) {
           } else if (prev.gold !== null && found.gold > prev.gold) {
             setLiveAlert(`💰 ¡Recibiste +${found.gold - prev.gold} Monedas de Oro!`);
           }
+          // Detectar mensajes nuevos del DM en hero.inbox (Botín exacto, Tesoros, Eventos, Viajes, Trampas)
+          if (Array.isArray(found.inbox) && found.inbox.length > 0) {
+            if (inboxInitializedForHeroRef.current !== found.id) {
+              inboxInitializedForHeroRef.current = found.id;
+              let storedSeen = [];
+              try {
+                storedSeen = JSON.parse(localStorage.getItem(`hq_seen_inbox_${found.id}`) || '[]');
+              } catch {
+                storedSeen = [];
+              }
+              const sSet = new Set(storedSeen);
+              // Si es primera carga y no hay historial previo, solo mostrar mensajes recientes (<15s) y marcar antiguos como vistos
+              const now = Date.now();
+              const fresh = [];
+              found.inbox.forEach((msg) => {
+                if (!sSet.has(msg.uid)) {
+                  if (now - (msg.ts || 0) < 20000) {
+                    fresh.push(msg);
+                  }
+                  sSet.add(msg.uid);
+                }
+              });
+              seenInboxIdsRef.current = sSet;
+              try {
+                localStorage.setItem(`hq_seen_inbox_${found.id}`, JSON.stringify([...sSet].slice(-60)));
+              } catch {}
+              if (fresh.length > 0) {
+                setMobileInboxQueue((q) => [...q, ...fresh.reverse()]);
+              }
+            } else {
+              const unseen = found.inbox.filter((msg) => !seenInboxIdsRef.current.has(msg.uid));
+              if (unseen.length > 0) {
+                unseen.forEach((m) => seenInboxIdsRef.current.add(m.uid));
+                try {
+                  localStorage.setItem(
+                    `hq_seen_inbox_${found.id}`,
+                    JSON.stringify([...seenInboxIdsRef.current].slice(-60))
+                  );
+                } catch {}
+                setMobileInboxQueue((q) => [...q, ...unseen.reverse()]);
+              }
+            }
+          } else if (inboxInitializedForHeroRef.current !== found.id) {
+            inboxInitializedForHeroRef.current = found.id;
+          }
+
           prevStateRef.current = {
             level: found.level,
             invCount: found.inventory?.length || 0,
@@ -1242,6 +1292,13 @@ export default function PlayerMobileView({ initialPlayerParam }) {
           <div className="text-right shrink-0 flex flex-col items-end gap-1">
             <div className="flex items-center gap-1.5">
               <button
+                onClick={() => setInboxHistoryOpen(true)}
+                className="px-2 py-1 rounded-lg bg-amber-950/70 hover:bg-amber-900/70 border border-amber-500/60 text-amber-200 text-[10px] font-bold cursor-pointer"
+                title="Ver botines y eventos recibidos del DM"
+              >
+                📬 {(hero.inbox || []).length}
+              </button>
+              <button
                 onClick={() => {
                   const url = new URL(window.location.href);
                   url.searchParams.set('player', 'lobby');
@@ -1253,10 +1310,10 @@ export default function PlayerMobileView({ initialPlayerParam }) {
                 className="px-2 py-1 rounded-lg bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-300 text-[10px] font-bold cursor-pointer"
                 title="Cambiar a otro héroe"
               >
-                🔄 Cambiar
+                🔄
               </button>
               <div className="px-2.5 py-1 rounded-xl bg-amber-600/20 border border-amber-500/60 text-amber-300 font-display font-black text-xs">
-                Nivel {hero.level}
+                Rango {hero.level}
               </div>
             </div>
             <div className="text-[10px] text-stone-400">
@@ -3574,6 +3631,186 @@ export default function PlayerMobileView({ initialPlayerParam }) {
           );
         })}
       </nav>
+
+      {/* ==================== MODAL GRANDE DE BOTÍN / EVENTO RECIBIDO DEL DM ==================== */}
+      {mobileInboxQueue.length > 0 && (() => {
+        const msg = mobileInboxQueue[0];
+        const kindMap = {
+          loot: { label: '⚔️ Botín de Combate', border: 'border-emerald-400', bg: 'from-emerald-950 via-stone-950 to-stone-950' },
+          treasure: { label: '💎 Tesoro Encontrado', border: 'border-amber-400', bg: 'from-amber-950 via-stone-950 to-stone-950' },
+          lair: { label: '👹 Guarida Descubierta', border: 'border-purple-400', bg: 'from-purple-950 via-stone-950 to-stone-950' },
+          travel: { label: '🧭 Evento de Viaje', border: 'border-sky-400', bg: 'from-sky-950 via-stone-950 to-stone-950' },
+          city: { label: '🏛️ Suceso en La Ciudad', border: 'border-amber-400', bg: 'from-amber-950 via-stone-950 to-stone-950' },
+          trap: { label: '⚠️ Trampa / Peligro', border: 'border-rose-500', bg: 'from-rose-950 via-stone-950 to-stone-950' },
+          quest: { label: '🏆 Recompensa de Misión', border: 'border-amber-400', bg: 'from-amber-950 via-stone-950 to-stone-950' },
+          event: { label: '✨ Evento del Director', border: 'border-indigo-400', bg: 'from-indigo-950 via-stone-950 to-stone-950' },
+        };
+        const style = kindMap[msg.kind] || kindMap.event;
+        return (
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+            <div className={`w-full max-w-md max-h-[88vh] overflow-y-auto rounded-3xl bg-gradient-to-b ${style.bg} border-2 ${style.border} p-5 space-y-4 shadow-2xl`}>
+              <div className="space-y-1 border-b border-white/10 pb-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-amber-300">
+                    {style.label}
+                  </span>
+                  {mobileInboxQueue.length > 1 && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500 text-black font-black">
+                      +{mobileInboxQueue.length - 1} más
+                    </span>
+                  )}
+                </div>
+                <h3 className="font-display text-xl font-black text-white leading-tight">
+                  {msg.icon} {msg.title}
+                </h3>
+                {msg.badge && <div className="text-xs font-bold text-amber-200/90">{msg.badge}</div>}
+              </div>
+
+              {msg.narrative && (
+                <div className="p-3.5 rounded-2xl bg-black/45 border border-white/10 text-sm text-stone-100 leading-relaxed">
+                  {msg.narrative}
+                </div>
+              )}
+
+              {/* Qué Ganaste / Qué Perdiste */}
+              {(msg.goldDelta || msg.pcDelta || msg.pmDelta || msg.xpDelta || msg.fameDelta || msg.repDelta || (msg.materials?.length > 0) || msg.statusAdded) && (
+                <div className="space-y-1.5">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-stone-400">
+                    📊 Cambios Aplicados a tu Héroe:
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 text-xs font-black">
+                    {msg.goldDelta !== 0 && (
+                      <span className={`px-2.5 py-1 rounded-xl border ${msg.goldDelta > 0 ? 'bg-amber-950/80 border-amber-500 text-amber-200' : 'bg-rose-950/80 border-rose-500 text-rose-200'}`}>
+                        💰 {msg.goldDelta > 0 ? `+${msg.goldDelta}` : msg.goldDelta} MO
+                      </span>
+                    )}
+                    {msg.pcDelta !== 0 && (
+                      <span className={`px-2.5 py-1 rounded-xl border ${msg.pcDelta > 0 ? 'bg-emerald-950/80 border-emerald-500 text-emerald-200' : 'bg-rose-950/80 border-rose-500 text-rose-200'}`}>
+                        ❤️ {msg.pcDelta > 0 ? `+${msg.pcDelta}` : msg.pcDelta} PC
+                      </span>
+                    )}
+                    {msg.pmDelta !== 0 && (
+                      <span className={`px-2.5 py-1 rounded-xl border ${msg.pmDelta > 0 ? 'bg-sky-950/80 border-sky-500 text-sky-200' : 'bg-rose-950/80 border-rose-500 text-rose-200'}`}>
+                        🧠 {msg.pmDelta > 0 ? `+${msg.pmDelta}` : msg.pmDelta} PM
+                      </span>
+                    )}
+                    {msg.xpDelta > 0 && (
+                      <span className="px-2.5 py-1 rounded-xl bg-indigo-950/80 border border-indigo-500 text-indigo-200">
+                        ✨ +{msg.xpDelta} XP
+                      </span>
+                    )}
+                    {msg.fameDelta !== 0 && (
+                      <span className="px-2.5 py-1 rounded-xl bg-amber-950/80 border border-amber-500 text-amber-200">
+                        ⭐ {msg.fameDelta > 0 ? `+${msg.fameDelta}` : msg.fameDelta} Fama
+                      </span>
+                    )}
+                    {msg.repDelta !== 0 && (
+                      <span className="px-2.5 py-1 rounded-xl bg-emerald-950/80 border border-emerald-500 text-emerald-200">
+                        🏅 {msg.repDelta > 0 ? `+${msg.repDelta}` : msg.repDelta} Reputación
+                      </span>
+                    )}
+                    {(msg.materials || []).map((m, idx) => (
+                      <span key={idx} className="px-2.5 py-1 rounded-xl bg-purple-950/80 border border-purple-500 text-purple-200">
+                        {m.icon} +{m.qty} {m.name}
+                      </span>
+                    ))}
+                    {msg.statusAdded && (
+                      <span className="px-2.5 py-1 rounded-xl bg-rose-950/90 border border-rose-400 text-rose-100">
+                        ⚡ Estado: {msg.statusAdded.label}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Tarjetas Detalladas de Objetos Recibidos (1:1 con el DM) */}
+              {msg.items && msg.items.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-emerald-300">
+                    🎒 Objetos Guardados en tu Mochila ({msg.items.length}):
+                  </div>
+                  {msg.items.map((it, idx) => {
+                    const rm = getRarityMeta ? getRarityMeta(it.rarity) : null;
+                    return (
+                      <div key={it.id || idx} className="p-3 rounded-2xl bg-stone-950/95 border border-amber-500/50 space-y-1.5 text-xs">
+                        <div className="flex flex-wrap items-center justify-between gap-1.5">
+                          <strong className="text-sm text-amber-200">{it.name}</strong>
+                          {it.rarity && (
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${rm?.badge || 'bg-amber-900 text-amber-200'}`}>
+                              {rm?.label || it.rarity}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 text-[11px] font-bold">
+                          {it.type && <span className="px-2 py-0.5 rounded bg-stone-900 text-stone-300">{it.type}</span>}
+                          {it.attack ? <span className="px-2 py-0.5 rounded bg-red-950 text-red-200">⚔️ {it.attack} DC</span> : null}
+                          {it.defense ? <span className="px-2 py-0.5 rounded bg-amber-950 text-amber-200">🛡️ +{it.defense} Def</span> : null}
+                          {it.price ? <span className="px-2 py-0.5 rounded bg-stone-900 text-amber-300">💰 {it.price} MO</span> : null}
+                          {Array.isArray(it.properties) && it.properties.map((pr) => (
+                            <span key={pr} className="px-2 py-0.5 rounded bg-indigo-950 text-indigo-200">{pr}</span>
+                          ))}
+                        </div>
+                        {(it.effect || it.notes || it.description) && (
+                          <p className="text-stone-200 leading-snug pt-0.5">
+                            {it.effect || it.notes || it.description}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setMobileInboxQueue((q) => q.slice(1))}
+                className="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm cursor-pointer shadow-lg"
+              >
+                {mobileInboxQueue.length > 1 ? '✓ Entendido — Ver Siguiente →' : '✓ ¡Recibido y Guardado!'}
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ==================== MODAL HISTORIAL DEL BUZÓN (EVENTOS Y BOTINES RECIBIDOS) ==================== */}
+      {inboxHistoryOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setInboxHistoryOpen(false)}>
+          <div className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-3xl bg-stone-950 border border-amber-500/60 p-5 space-y-3 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-stone-800 pb-2.5">
+              <h3 className="font-display text-base font-black text-amber-200">
+                📬 Historial de Botines y Eventos ({(hero.inbox || []).length})
+              </h3>
+              <button onClick={() => setInboxHistoryOpen(false)} className="px-2.5 py-1 rounded-lg bg-stone-800 text-stone-200 text-xs font-bold cursor-pointer">✕</button>
+            </div>
+            {(hero.inbox || []).length === 0 ? (
+              <p className="text-xs text-stone-400 text-center py-6">
+                Todavía no has recibido botines ni eventos del Director de Juego en esta sesión.
+              </p>
+            ) : (
+              <div className="space-y-2.5">
+                {(hero.inbox || []).map((m) => (
+                  <button
+                    key={m.uid}
+                    type="button"
+                    onClick={() => {
+                      setInboxHistoryOpen(false);
+                      setMobileInboxQueue([m]);
+                    }}
+                    className="w-full text-left p-3 rounded-2xl bg-stone-900/90 border border-stone-800 hover:border-amber-500/50 space-y-1 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <strong className="text-xs text-amber-200">{m.icon} {m.title}</strong>
+                      <span className="text-[10px] text-stone-400">{m.badge}</span>
+                    </div>
+                    {m.narrative && <p className="text-[11px] text-stone-300 line-clamp-2">{m.narrative}</p>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

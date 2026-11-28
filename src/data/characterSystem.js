@@ -1292,17 +1292,116 @@ export const FLAWS = [
 ];
 
 export const LEVEL_TABLE = [
-  { level: 1, xp: 0, prof: 2, tier: 'Fácil (Iniciado)', reward: 'Creación de personaje + Habilidad Base' },
-  { level: 2, xp: 600, prof: 2, tier: 'Fácil (Aventurero)', reward: '+PC/PM de clase + Rasgo Nivel 2' },
-  { level: 3, xp: 1500, prof: 2, tier: 'Medio (Veterano)', reward: '+PC/PM + Elección de Subclase' },
-  { level: 4, xp: 2800, prof: 2, tier: 'Medio (Veterano)', reward: '+PC/PM + Mejora de Atributo (+2 pts) o 1 Ventaja' },
-  { level: 5, xp: 4600, prof: 3, tier: 'Medio-Alto (Campeón)', reward: '+PC/PM + Bono Competencia +3 + Poder Nivel 5' },
-  { level: 6, xp: 7000, prof: 3, tier: 'Difícil (Campeón)', reward: '+PC/PM + Rasgo Nivel 6' },
-  { level: 7, xp: 10000, prof: 3, tier: 'Difícil (Héroe del Reino)', reward: '+PC/PM + Rasgo Nivel 7' },
-  { level: 8, xp: 13800, prof: 3, tier: 'Difícil (Héroe del Reino)', reward: '+PC/PM + Mejora de Atributo (+2 pts) o 1 Ventaja' },
-  { level: 9, xp: 18500, prof: 4, tier: 'Legendario', reward: '+PC/PM + Bono Competencia +4 + Poder Nivel 9' },
-  { level: 10, xp: 24500, prof: 4, tier: 'Legendario (Mito)', reward: '+PC/PM + Habilidad Definitiva Nivel 10' },
+  { level: 1, rankTitle: 'Aprendiz', questsReq: 0, xp: 0, prof: 2, tier: 'Rango 1 · Aprendiz', reward: 'Creación de héroe + Equipo inicial + Habilidades Base' },
+  { level: 2, rankTitle: 'Aventurero', questsReq: 3, xp: 600, prof: 2, tier: 'Rango 2 · Aventurero', reward: '+PC/PM de clase + Rasgo de Rango 2' },
+  { level: 3, rankTitle: 'Veterano', questsReq: 6, xp: 1500, prof: 2, tier: 'Rango 3 · Veterano', reward: '+PC/PM + Elección de Especialización (Subclase)' },
+  { level: 4, rankTitle: 'Defensor', questsReq: 10, xp: 2800, prof: 2, tier: 'Rango 4 · Defensor', reward: '+PC/PM + Mejora de Pilar D20 (+1) o Ventaja' },
+  { level: 5, rankTitle: 'Renombrado', questsReq: 14, xp: 4600, prof: 3, tier: 'Rango 5 · Renombrado', reward: '+PC/PM + Bono D20 +3 + Poder de Rango 5' },
+  { level: 6, rankTitle: 'Héroe del Reino', questsReq: 19, xp: 7000, prof: 3, tier: 'Rango 6 · Héroe del Reino', reward: '+PC/PM + Rasgo de Rango 6' },
+  { level: 7, rankTitle: 'Campeón', questsReq: 25, xp: 10000, prof: 3, tier: 'Rango 7 · Campeón', reward: '+PC/PM + Rasgo de Rango 7' },
+  { level: 8, rankTitle: 'Señor', questsReq: 32, xp: 13800, prof: 3, tier: 'Rango 8 · Señor', reward: '+PC/PM + Mejora de Pilar D20 (+1) o Ventaja' },
+  { level: 9, rankTitle: 'Leyenda', questsReq: 40, xp: 18500, prof: 4, tier: 'Rango 9 · Leyenda', reward: '+PC/PM + Bono D20 +4 + Poder de Rango 9' },
+  { level: 10, rankTitle: 'Mito Inmortal', questsReq: 50, xp: 24500, prof: 4, tier: 'Rango 10 · Mito Inmortal', reward: '+PC/PM + Habilidad Definitiva de Rango 10' },
 ];
+
+// ============================================================================
+// TIRADAS D20 ESTILO D&D (Pruebas de Habilidad y Clases de Dificultad CD)
+// ============================================================================
+export const D20_DIFFICULTY_CLASSES = [
+  { id: 'facil', label: 'Fácil', cd: 10, color: 'text-emerald-300' },
+  { id: 'media', label: 'Media', cd: 13, color: 'text-amber-300' },
+  { id: 'dificil', label: 'Difícil', cd: 16, color: 'text-orange-300' },
+  { id: 'epica', label: 'Épica', cd: 19, color: 'text-rose-300' },
+];
+
+export const D20_SKILLS_EXTENDED = [
+  { id: 'atletismo', icon: '💪', name: 'Atletismo / Fuerza', pillar: 'FUE', desc: 'Derribar puertas, escalar, empujar, nadar o cargar peso.' },
+  { id: 'salv_fisica', icon: '🛡️', name: 'Salvación Física (CON)', pillar: 'FUE', desc: 'Resistir venenos, gas tóxico, derrumbes, frío o agotamiento.' },
+  { id: 'sigilo', icon: '🥷', name: 'Sigilo / Acrobacia', pillar: 'AGI', desc: 'Infiltrarse sin subir el Caos, esquivar hachas o saltar fosos.' },
+  { id: 'trampas', icon: '🛠️', name: 'Trampas y Cerraduras', pillar: 'AGI', desc: 'Abrir cofres sellados, desarmar trampas mecánicas o robar.' },
+  { id: 'percepcion', icon: '👁️', name: 'Percepción / Rastreo', pillar: 'MEN', desc: 'Detectar puertas secretas, emboscadas, huellas o trampas.' },
+  { id: 'arcano', icon: '✨', name: 'Arcano / Investigación', pillar: 'MEN', desc: 'Descifrar runas, puzzles, magia del Caos, alquimia y medicina.' },
+  { id: 'persuasion', icon: '🗣️', name: 'Persuasión / Intimidar', pillar: 'SUE', desc: 'Negociar con NPCs, convencer mercaderes o intimidar enemigos.' },
+  { id: 'fortuna', icon: '🍀', name: 'Fortuna / Salvación Destino', pillar: 'SUE', desc: 'Evitar desastres inesperados, hallar botín oculto o suerte pura.' },
+];
+
+// ============================================================================
+// RESTRICCIONES DE EQUIPO, TAMAÑO Y USOS POR CLASE (Inspirado en FetenQuest 4.1)
+// ============================================================================
+const SMALL_RACES = new Set(['enano', 'mediano', 'gnomo']);
+const LARGE_RACES = new Set(['goliat']);
+
+export function getClassDetailedMeta(classId, raceId = 'humano') {
+  const size = SMALL_RACES.has(raceId)
+    ? 'Pequeño'
+    : LARGE_RACES.has(raceId)
+      ? 'Grande'
+      : 'Normal';
+  const sizeNote =
+    size === 'Pequeño'
+      ? ' Tamaño Pequeño: NO puede usar Mandoble a dos manos.'
+      : size === 'Grande'
+        ? ' Tamaño Grande: inmune a empujones de enemigos pequeños.'
+        : '';
+
+  const map = {
+    barbaro: {
+      restrictions: 'Sin restricciones de armas ni armaduras marciales. No usa equipo exclusivo de Mago.' + sizeNote,
+      magicRule: 'Sin magia propia (puede leer Pergaminos con −1 por cada pieza de armadura metálica).',
+    },
+    caballero: {
+      restrictions: 'Todas las armas y armaduras (sin penalización de movimiento con Vigor). Sus habilidades de Escudo requieren escudo equipado.' + sizeNote,
+      magicRule: 'Sin magia propia (Pergaminos con −1 por metal).',
+    },
+    picaro: {
+      restrictions: 'NO puede usar armas pesadas a dos manos ni Armadura de Placas. Máximo rendimiento con Dagas, Espadas Cortas y Estoques.' + sizeNote,
+      magicRule: 'Sin magia propia (Pergaminos sin penalización con cuero).',
+    },
+    explorador: {
+      restrictions: 'NO puede usar Armadura de Placas ni Cota de Malla pesada. Domina Arcos, Ballestas y armas ligeras.' + sizeNote,
+      magicRule: 'Magia menor de rastreo / Pergaminos sin penalización en cuero.',
+    },
+    mago: {
+      restrictions: 'SOLO equipo de Mago: Daga, Bastón, Báculo Mágico, Varita, Armadura de Cuero y Capa Mágica. NO escudos ni armaduras metálicas.' + sizeNote,
+      magicRule: 'Saber Arcano: Hechizos Nv.1 = hasta 3 usos/reto (1 gratis + 2 por 1 PM) · Nv.2 = hasta 2 usos · Nv.3 = 1 único uso.',
+    },
+    brujo: {
+      restrictions: 'SOLO equipo de Mago, Varita y Dagas/Guadaña. NO escudos ni armaduras metálicas.' + sizeNote,
+      magicRule: 'Saber Arcano (Oscuro): Hechizos Nv.1 = 3 usos/reto · Nv.2 = 2 usos · Nv.3 = 1 uso.',
+    },
+    nigromante: {
+      restrictions: 'SOLO equipo de Mago, Daga, Bastón y Guadaña. NO escudos ni armaduras metálicas.' + sizeNote,
+      magicRule: 'Nigromancia (Saber Arcano): controla hasta 3 esbirros; Nv.1 = 3 usos/reto · Nv.2 = 2 usos.',
+    },
+    druida: {
+      restrictions: 'NO puede usar armaduras metálicas ni armas de pólvora (Pistola/Arcabuz). Sí Armadura de Cuero, Bastón y Escudo de madera.' + sizeNote,
+      magicRule: 'Magia Natural: Nv.1 = 3 usos/reto · Nv.2 = 2 usos · Nv.3 = 1 uso.',
+    },
+    bardo: {
+      restrictions: 'NO puede usar armas pesadas a dos manos. Sin armadura metálica conserva agilidad y magia sin penalización.' + sizeNote,
+      magicRule: 'Magia Bárdica: Nv.1 = 3 usos/reto · Nv.2 = 2 usos (recargable por inspiración).',
+    },
+    clerigo: {
+      restrictions: 'NO puede usar armas con filo largas ni armas de pólvora; especialista en Mazas, Martillos y Escudos.' + sizeNote,
+      magicRule: 'Saber Divino: sin penalización por armadura. Plegarias Nv.1 = 3 usos/reto · Nv.2 = 2 usos.',
+    },
+    paladin: {
+      restrictions: 'Todas las armas cuerpo a cuerpo y armaduras pesadas. NO armas de pólvora ni sigilo pesado.' + sizeNote,
+      magicRule: 'Saber Divino: sin penalización por armadura metálica. Nv.1 = 3 usos/reto.',
+    },
+    monje: {
+      restrictions: 'NO usa armaduras metálicas ni escudos (pierde agilidad marcial). Combate sin armas, Bastón y armas ligeras.' + sizeNote,
+      magicRule: 'Técnicas de Ki recargables por PM y descansos.',
+    },
+  };
+
+  const entry = map[classId] || {
+    restrictions: 'Equipo estándar de clase (evita armaduras pesadas si lanzas hechizos arcanos).' + sizeNote,
+    magicRule: 'Hechizos Nv.1 = hasta 3 usos/reto (1 gratis + 2 por 1 PM) · Nv.2 = hasta 2 usos · Nv.3 = 1 uso.',
+  };
+
+  return { size, ...entry };
+}
 
 export const EQUIPMENT_CATALOG = [
   // Armas (Armería Expandida Fetenquest — Contundentes, Alcance, Especiales y Pólvora)

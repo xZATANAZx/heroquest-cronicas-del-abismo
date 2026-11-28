@@ -169,7 +169,7 @@ export function BlockedWallSVG({ type, px, py, w, h }) {
 }
 
 // ============================================================================
-// 3. TRAMPAS OFICIALES (Foso, Lanza, Bloque Cayendo)
+// 3. TRAMPAS OFICIALES (Estilo Moderno HeroQuest 2021)
 // ============================================================================
 export function TrapSVG({ type, px, py, cell, isDisarmed, isSelected }) {
   const src =
@@ -181,15 +181,23 @@ export function TrapSVG({ type, px, py, cell, isDisarmed, isSelected }) {
 
   return (
     <g opacity={isDisarmed ? 0.35 : 1}>
-      {isSelected && (
-        <rect x={px + 1} y={py + 1} width={cell - 2} height={cell - 2} rx="3" fill="rgba(253,224,71,0.22)" stroke="#fde047" strokeWidth="2.6" />
-      )}
-      <image
-        href={src}
+      <rect
         x={px + 1.5}
         y={py + 1.5}
         width={cell - 3}
         height={cell - 3}
+        rx="4"
+        fill="rgba(185, 28, 28, 0.16)"
+        stroke={isSelected ? '#fde047' : '#b91c1c'}
+        strokeWidth={isSelected ? '2.4' : '1.3'}
+        strokeDasharray={isSelected ? undefined : '2.5,1.5'}
+      />
+      <image
+        href={src}
+        x={px + 2.5}
+        y={py + 2.5}
+        width={cell - 5}
+        height={cell - 5}
         preserveAspectRatio="xMidYMid meet"
       />
       {isDisarmed && (
@@ -205,25 +213,34 @@ export function TrapSVG({ type, px, py, cell, isDisarmed, isSelected }) {
 }
 
 // ============================================================================
-// 4. MONSTRUOS, JEFES Y NPCS (Iconos oficiales HeroScribe + expansiones HQ-D20)
+// 4. MONSTRUOS, JEFES Y NPCS (Medallones Modernos HeroQuest 2021)
 // ============================================================================
 export function MonsterIconSVG({ type, px, py, cell, info, isSelected, isDead }) {
   const cx = px + cell / 2;
   const cy = py + cell / 2;
   const src = MONSTER_ICONS[type];
+  const isBoss = !!info?.isBoss || type === 'gargoyle' || type === 'sorcerer' || type === 'dread_warrior';
+  const isFriendly = type === 'npc' || type === 'hero';
+  const ringStroke = isSelected ? '#fde047' : isFriendly ? '#0ea5e9' : isBoss ? '#d97706' : '#7f1d1d';
+  const ringBg = isFriendly ? 'rgba(14, 165, 233, 0.22)' : isBoss ? 'rgba(180, 83, 9, 0.26)' : 'rgba(127, 29, 29, 0.16)';
 
   return (
     <g opacity={isDead ? 0.32 : 1}>
-      {isSelected && (
-        <rect x={px + 1} y={py + 1} width={cell - 2} height={cell - 2} rx="4" fill="rgba(253, 224, 71, 0.28)" stroke="#fde047" strokeWidth="2.8" />
-      )}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={cell * 0.45}
+        fill={ringBg}
+        stroke={ringStroke}
+        strokeWidth={isSelected ? '2.8' : isBoss ? '2' : '1.4'}
+      />
       {src ? (
         <image
           href={src}
-          x={px + 1.5}
-          y={py + 1.5}
-          width={cell - 3}
-          height={cell - 3}
+          x={px + 2.5}
+          y={py + 2.5}
+          width={cell - 5}
+          height={cell - 5}
           preserveAspectRatio="xMidYMid meet"
         />
       ) : (

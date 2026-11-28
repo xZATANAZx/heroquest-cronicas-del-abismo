@@ -177,33 +177,23 @@ export default function App() {
       .catch(() => setIsCreator(false));
   }, []);
 
-  const handleApplyTravelOutcome = (outcome) => {
+  const handleApplyTravelOutcome = (outcome, targetHeroId = 'ALL') => {
     if (!outcome || heroes.length === 0) return;
-    updateHeroesSynced((prev) =>
-      prev.map((h) => {
-        const nextMats = { ...(h.materials || {}) };
-        if (outcome.materialId) {
-          nextMats[outcome.materialId] = Number(nextMats[outcome.materialId] || 0) + 1;
-        }
-        return {
-          ...h,
-          gold: Math.max(0, (h.gold || 0) + (outcome.goldPerHero || 0)),
-          currentPC: Math.max(
-            1,
-            Math.min(h.maxPC, (h.currentPC ?? h.maxPC) + (outcome.pcDelta || 0))
-          ),
-          currentPM: Math.max(
-            0,
-            Math.min(h.maxPM, (h.currentPM ?? h.maxPM) + (outcome.pmDelta || 0))
-          ),
-          fame: (h.fame || 0) + (outcome.fameDelta || 0),
-          reputation: (h.reputation || 0) + (outcome.repDelta || 0),
-          materials: nextMats,
-        };
-      })
-    );
-    if (outcome.fameDelta) setFame((f) => f + outcome.fameDelta);
-    if (outcome.repDelta) setReputation((r) => r + outcome.repDelta);
+    handleDispatchHeroEvent(targetHeroId || 'ALL', {
+      kind: 'travel',
+      icon: outcome.icon || '🧭',
+      title: outcome.title || 'Evento de Viaje',
+      badge: outcome.badge || 'Viajes: El Viejo Mundo',
+      narrative: outcome.text || '',
+      goldDelta: outcome.goldPerHero || outcome.goldDelta || 0,
+      pcDelta: outcome.pcDelta || 0,
+      pmDelta: outcome.pmDelta || 0,
+      fameDelta: outcome.fameDelta || 0,
+      repDelta: outcome.repDelta || 0,
+      items: outcome.item ? [outcome.item] : outcome.items || [],
+      materials: outcome.materialId ? [{ id: outcome.materialId, qty: outcome.materialQty || 1 }] : [],
+      statusAdded: outcome.statusAdded || null,
+    });
   };
 
   const handleArriveCityFromTravel = async () => {
@@ -445,52 +435,114 @@ export default function App() {
     );
   };
 
-  const handleSendLootToHero = (heroId, lootObj, goldAmount = 0) => {
-    const target = heroes.find((h) => h.id === heroId);
-    if (!target) return;
+  // ==================== DESPACHO ATÓMICO DM -> CELULAR (Botín, Tesoros, Eventos, Viajes, Trampas) ====================
+  const handleDispatchHeroEvent = (targetHeroIdOrAll, payload = {}) => {
+    if (!payload) return;
+    const isAll = !targetHeroIdOrAll || targetHeroIdOrAll === 'ALL';
+    const uid = `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const normalizedItems = (payload.items || []).filter(Boolean).map((it, idx) => ({
+      ...it,
+      id: it.id || `loot-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 5)}`,
+      equipped: false,
+      qty: it.qty || 1,
+    }));
+    const normalizedMats = (payload.materials || [])
+      .filter((m) => m && m.id && (m.qty || 1) > 0)
+      .map((m) => {
+        const info = getMaterialById(m.id);
+        return { id: m.id, qty: m.qty || 1, name: m.name || info.name, icon: m.icon || info.icon };
+      });
+
+    const inboxEntry = {
+      uid,
+      ts: Date.now(),
+      kind: payload.kind || 'event',
+      icon: payload.icon || '✨',
+      title: payload.title || 'Notificación del Director de Juego',
+      badge: payload.badge || '',
+      narrative: payload.narrative || '',
+      goldDelta: Number(payload.goldDelta || 0),
+      pcDelta: Number(payload.pcDelta || 0),
+      pmDelta: Number(payload.pmDelta || 0),
+      xpDelta: Number(payload.xpDelta || 0),
+      fameDelta: Number(payload.fameDelta || 0),
+      repDelta: Number(payload.repDelta || 0),
+      items: normalizedItems,
+      materials: normalizedMats,
+      statusAdded: payload.statusAdded || null,
+    };
+
     updateHeroesSynced((prev) =>
       prev.map((h) => {
-        if (h.id !== heroId) return h;
-        const nextInv = lootObj
+        if (!isAll && h.id !== targetHeroIdOrAll) return h;
+        const nextMats = { ...(h.materials || {}) };
+        normalizedMats.forEach((m) => {
+          nextMats[m.id] = Number(nextMats[m.id] || 0) + m.qty;
+        });
+        const nextInv =
+          normalizedItems.length > 0
+            ? [...(h.inventory || []), ...normalizedItems]
+            : h.inventory || [];
+        const nextEffects = payload.statusAdded
           ? [
-              ...(h.inventory || []),
-              {
-                ...lootObj,
-                id: `loot-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
-                equipped: false,
-                qty: 1,
-              },
+              ...(h.activeEffects || []).filter((e) => e.id !== payload.statusAdded.id),
+              payload.statusAdded,
             ]
-          : h.inventory || [];
+          : h.activeEffects || [];
+        const nextInbox = [inboxEntry, ...(h.inbox || [])].slice(0, 20);
         return {
           ...h,
-          gold: (h.gold || 0) + (goldAmount || 0),
+          gold: Math.max(0, (h.gold || 0) + inboxEntry.goldDelta),
+          currentPC: Math.max(
+            0,
+            Math.min(h.maxPC, (h.currentPC ?? h.maxPC) + inboxEntry.pcDelta)
+          ),
+          currentPM: Math.max(
+            0,
+            Math.min(h.maxPM, (h.currentPM ?? h.maxPM) + inboxEntry.pmDelta)
+          ),
+          xp: (h.xp || 0) + inboxEntry.xpDelta,
+          fame: (h.fame || 0) + inboxEntry.fameDelta,
+          reputation: (h.reputation || 0) + inboxEntry.repDelta,
           inventory: nextInv,
+          materials: nextMats,
+          activeEffects: nextEffects,
+          inbox: nextInbox,
         };
       })
     );
-    showToast(
-      `🎁 Enviado a ${target.name}: ${
-        lootObj ? lootObj.name : `+${goldAmount} Monedas de Oro`
-      }`
-    );
+
+    if (inboxEntry.fameDelta) setFame((f) => f + inboxEntry.fameDelta);
+    if (inboxEntry.repDelta) setReputation((r) => r + inboxEntry.repDelta);
+
+    const targetLabel = isAll
+      ? 'todo el grupo'
+      : heroes.find((h) => h.id === targetHeroIdOrAll)?.name || 'el héroe';
+    showToast(`📲 Enviado a ${targetLabel}: ${inboxEntry.icon} ${inboxEntry.title}`);
   };
 
-  const handleSendMaterialToHero = (heroId, materialId, qty = 1) => {
-    const target = heroes.find((h) => h.id === heroId);
-    if (!target) return;
+  const handleSendLootToHero = (heroId, lootObj, goldAmount = 0, meta = {}) => {
+    handleDispatchHeroEvent(heroId, {
+      kind: meta.kind || 'loot',
+      icon: meta.icon || (lootObj ? '🎁' : '💰'),
+      title: meta.title || (lootObj ? lootObj.name : `+${goldAmount} Monedas de Oro`),
+      badge: meta.badge || (lootObj?.rarity ? `Botín · ${lootObj.rarity}` : 'Tesoro recibido'),
+      narrative: meta.narrative || lootObj?.notes || lootObj?.effect || 'El Director de Juego te entregó este botín en la mazmorra.',
+      goldDelta: goldAmount || 0,
+      items: lootObj ? [lootObj] : [],
+    });
+  };
+
+  const handleSendMaterialToHero = (heroId, materialId, qty = 1, meta = {}) => {
     const mat = getMaterialById(materialId);
-    updateHeroesSynced((prev) =>
-      prev.map((h) => {
-        if (h.id !== heroId) return h;
-        const curr = Number(h.materials?.[materialId] || 0);
-        return {
-          ...h,
-          materials: { ...(h.materials || {}), [materialId]: curr + qty },
-        };
-      })
-    );
-    showToast(`🎒 +${qty} ${mat.icon} ${mat.name} enviado a ${target.name}.`);
+    handleDispatchHeroEvent(heroId, {
+      kind: meta.kind || 'loot',
+      icon: mat.icon || '🎒',
+      title: meta.title || `${qty}× ${mat.name}`,
+      badge: meta.badge || 'Material de Forja / Alquimia',
+      narrative: meta.narrative || `Has recogido ${qty}× ${mat.name} para usar en la Herrería o Alquimista de La Ciudad.`,
+      materials: [{ id: materialId, qty }],
+    });
   };
 
   const handleLaunchProceduralQuest = (questObj) => {
@@ -1062,6 +1114,7 @@ export default function App() {
                 heroes={heroes}
                 onSendLootToHero={handleSendLootToHero}
                 onSendMaterialToHero={handleSendMaterialToHero}
+                onDispatchHeroEvent={handleDispatchHeroEvent}
                 proceduralQuests={proceduralQuests}
                 activeProceduralQuest={activeProceduralMap}
                 activeOfficialMapRequest={activeOfficialMapRequest}

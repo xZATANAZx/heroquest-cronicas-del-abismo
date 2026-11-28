@@ -53,6 +53,19 @@ import {
 import { MONSTERS, scaleMonster } from '../data/bestiary';
 import { OFFICIAL_DREAD_SPELLS } from '../data/officialCards';
 import { rollBodyLoot, rollTreasureProbability } from '../data/lootProbabilities';
+import {
+  ABISMO_TREASURE_DECK_V7,
+  ABISMO_EVENTS_AND_LAIRS_V7,
+  ABISMO_HALLWAY_EVENTS_V7,
+  ABISMO_BIOME_EVENTS_V7,
+  ABISMO_CLUE_EVENTS_V7,
+  ABISMO_EPIC_TWISTS_V7,
+} from '../data/abismoEventsV7';
+import {
+  D20_DIFFICULTY_CLASSES,
+  D20_SKILLS_EXTENDED,
+  getHeroPillars,
+} from '../data/characterSystem';
 import { rollRandomSpellScroll } from '../data/magicWinds';
 import { QUESTS } from '../data/quests';
 import { FURNITURE_DECK, TREASURE_TRAP_DECK } from '../data/decks';
@@ -490,6 +503,7 @@ export default function TacticalBoard({
   heroes = [],
   onSendLootToHero,
   onSendMaterialToHero,
+  onDispatchHeroEvent = null,
   proceduralQuests = [],
   activeProceduralQuest = null,
   activeOfficialMapRequest = null,
@@ -547,6 +561,98 @@ export default function TacticalBoard({
   const [selectedRoomId, setSelectedRoomId] = useState(currentMap.startRoom || 'R14');
   const [selectedMonsterKey, setSelectedMonsterKey] = useState(null);
   const [selectedTrapKey, setSelectedTrapKey] = useState(null);
+
+  // ==================== MOTOR v7.0 EN TABLERO 2D: D20 D&D + EVENTOS/GUARIDAS + COLOCACIÓN LIBRE ====================
+  const [v7EventModal, setV7EventModal] = useState(null);
+  const [v7HeroTarget, setV7HeroTarget] = useState('ALL');
+  const [v7LairUsed, setV7LairUsed] = useState(false);
+  const [pendingBoardPlacement, setPendingBoardPlacement] = useState(null); // { kind, type, label }
+  const [dmPlacedTokens, setDmPlacedTokens] = useState([]); // [{ uid, x, y, kind, type, label }]
+  const [d20ModalOpen, setD20ModalOpen] = useState(false);
+  const [d20HeroId, setD20HeroId] = useState('');
+  const [d20SkillId, setD20SkillId] = useState('percepcion');
+  const [d20Cd, setD20Cd] = useState(13);
+  const [d20Mode, setD20Mode] = useState('normal'); // 'normal' | 'adv' | 'dis'
+  const [d20Result, setD20Result] = useState(null);
+
+  const openV7RandomFrom = (pool, sourceLabel, kind = 'event') => {
+    let candidates = pool;
+    if (pool === ABISMO_EVENTS_AND_LAIRS_V7 && v7LairUsed) {
+      candidates = pool.filter((e) => e.type !== 'Guarida');
+    }
+    const picked = candidates[Math.floor(Math.random() * candidates.length)];
+    if (!picked) return;
+    if (picked.type === 'Guarida') setV7LairUsed(true);
+    setV7HeroTarget(heroes[0]?.id || 'ALL');
+    setV7EventModal({
+      ...picked,
+      sourceLabel,
+      modalKind: picked.type === 'Guarida' ? 'lair' : kind,
+    });
+  };
+
+  const drawV7Treasure = () => {
+    const picked = ABISMO_TREASURE_DECK_V7[Math.floor(Math.random() * ABISMO_TREASURE_DECK_V7.length)];
+    if (!picked) return;
+    if (picked.kind === 'event') {
+      openV7RandomFrom(ABISMO_EVENTS_AND_LAIRS_V7, '❓ Carta Evento disparada desde Tesoros v7', 'event');
+      return;
+    }
+    setV7HeroTarget(heroes[0]?.id || 'ALL');
+    setV7EventModal({
+      ...picked,
+      sourceLabel: '💎 Mazo de Tesoros Renovado v7.0',
+      modalKind: picked.kind === 'negative' ? 'trap' : 'treasure',
+    });
+  };
+
+  const dispatchV7Outcome = (outcomeObj, isFail = false) => {
+    if (!v7EventModal || !onDispatchHeroEvent) return;
+    const base = outcomeObj || v7EventModal;
+    onDispatchHeroEvent(v7HeroTarget || 'ALL', {
+      kind: isFail ? 'trap' : v7EventModal.modalKind || 'event',
+      icon: v7EventModal.icon || '✨',
+      title: v7EventModal.title,
+      badge: v7EventModal.badge || v7EventModal.sourceLabel || 'Crónicas del Abismo v7',
+      narrative: base.narrative || v7EventModal.narrative || '',
+      goldDelta: base.goldDelta || 0,
+      pcDelta: base.pcDelta || 0,
+      pmDelta: base.pmDelta || 0,
+      fameDelta: base.fameDelta || 0,
+      repDelta: base.repDelta || 0,
+      items: base.items || [],
+      materials: base.materials || [],
+      statusAdded: base.statusAdded || null,
+    });
+    setV7EventModal(null);
+  };
+
+  const executeD20Check = () => {
+    const hero = heroes.find((h) => h.id === (d20HeroId || heroes[0]?.id)) || null;
+    const skill = D20_SKILLS_EXTENDED.find((s) => s.id === d20SkillId) || D20_SKILLS_EXTENDED[0];
+    const pillars = hero ? getHeroPillars(hero) : { FUE: 1, AGI: 1, MEN: 1, SUE: 1 };
+    const mod = Number(pillars[skill.pillar] || 0);
+    const r1 = Math.floor(Math.random() * 20) + 1;
+    const r2 = Math.floor(Math.random() * 20) + 1;
+    const die = d20Mode === 'adv' ? Math.max(r1, r2) : d20Mode === 'dis' ? Math.min(r1, r2) : r1;
+    const total = die + mod;
+    const isCrit = die === 20;
+    const isFumble = die === 1;
+    const passed = isCrit || (!isFumble && total >= d20Cd);
+    setD20Result({
+      heroName: hero?.name || 'Aventurero',
+      skill,
+      r1,
+      r2,
+      die,
+      mod,
+      total,
+      cd: d20Cd,
+      isCrit,
+      isFumble,
+      passed,
+    });
+  };
   const [rightTab, setRightTab] = useState('setup'); // 'setup' | 'actions' | 'notes'
   const [dynamicItems, setDynamicItems] = useState([]);
   const [disarmedTraps, setDisarmedTraps] = useState(() => new Set());
@@ -1448,6 +1554,16 @@ export default function TacticalBoard({
               >
                 <Maximize2 className="w-3.5 h-3.5" /> Pantalla Completa
               </button>
+              {onStartTravelToCity && (
+                <button
+                  type="button"
+                  onClick={onStartTravelToCity}
+                  className="px-3 py-1.5 rounded-xl bg-sky-700 hover:bg-sky-600 text-white text-xs font-black cursor-pointer shadow"
+                  title="Sistema de Viajes: El Viejo Mundo (Kemo & Heval) antes de cada misión"
+                >
+                  🧭 Viaje (K&H)
+                </button>
+              )}
               {missionIntroText && (
                 <button
                   onClick={() => setShowIntro((s) => !s)}
@@ -1925,7 +2041,158 @@ export default function TacticalBoard({
                 </g>
               );
             })}
+            {/* FICHAS COLOCADAS LIBREMENTE POR EL DM (Monstruos, Guaridas, Trampas Secretas, Puertas Secretas, NPCs) */}
+            {dmPlacedTokens.map((tk) => {
+              const px = MARGIN_LEFT + tk.x * CELL;
+              const py = MARGIN_TOP + tk.y * CELL;
+              return (
+                <g
+                  key={tk.uid}
+                  className="cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDmPlacedTokens((prev) => prev.filter((item) => item.uid !== tk.uid));
+                    showToast?.(`🗑️ Retirado del tablero: ${tk.label}`);
+                  }}
+                >
+                  <title>{`${tk.label} (Clic para retirar del tablero)`}</title>
+                  {tk.kind === 'trap' ? (
+                    <TrapSVG type={tk.type} px={px} py={py} cell={CELL} />
+                  ) : tk.kind === 'secret_door' ? (
+                    <DoorSVG type="secret_door" px={px} py={py} cell={CELL} edge="N" />
+                  ) : (
+                    <MonsterIconSVG type={tk.type} px={px} py={py} cell={CELL} info={{ isBoss: tk.label.includes('Jefe') }} />
+                  )}
+                </g>
+              );
+            })}
+
+            {/* CAPA DE CLIC LIBRE PARA COLOCAR EN CUALQUIER CASILLA DEL TABLERO */}
+            {pendingBoardPlacement && (
+              <rect
+                x={MARGIN_LEFT}
+                y={MARGIN_TOP}
+                width={BOARD_COLS * CELL}
+                height={BOARD_ROWS * CELL}
+                fill="rgba(245, 158, 11, 0.08)"
+                stroke="#f59e0b"
+                strokeWidth="2.5"
+                strokeDasharray="6,4"
+                className="cursor-crosshair"
+                onClick={(e) => {
+                  const svg = e.currentTarget.ownerSVGElement;
+                  const pt = svg.createSVGPoint();
+                  pt.x = e.clientX;
+                  pt.y = e.clientY;
+                  const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+                  const gx = Math.max(0, Math.min(BOARD_COLS - 1, Math.floor((loc.x - MARGIN_LEFT) / CELL)));
+                  const gy = Math.max(0, Math.min(BOARD_ROWS - 1, Math.floor((loc.y - MARGIN_TOP) / CELL)));
+                  setDmPlacedTokens((prev) => [
+                    ...prev,
+                    { uid: `dm-${Date.now()}`, x: gx, y: gy, ...pendingBoardPlacement },
+                  ]);
+                  showToast?.(`📍 Colocado "${pendingBoardPlacement.label}" en (${gx + 1}, ${gy + 1}).`);
+                  setPendingBoardPlacement(null);
+                }}
+              />
+            )}
             </svg>
+            </div>
+
+            {/* BANNER DE COLOCACIÓN LIBRE DEL DM (MONSTRUOS, TRAMPAS SECRETAS, PUERTAS SECRETAS, NPCS) */}
+            {pendingBoardPlacement && (
+              <div className="mb-2 p-2.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs flex flex-wrap items-center justify-between gap-2 shadow-lg animate-pulse">
+                <span>
+                  📍 MODO COLOCACIÓN LIBRE: Haz clic en CUALQUIER casilla del tablero para colocar → {pendingBoardPlacement.label}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPendingBoardPlacement(null)}
+                  className="px-2.5 py-1 rounded-lg bg-slate-950 text-amber-300 font-black text-[11px] cursor-pointer"
+                >
+                  ✕ Cancelar
+                </button>
+              </div>
+            )}
+
+            {/* BARRA RÁPIDA DEL DM v7.0 (SIEMPRE A LA MANO SOBRE EL TABLERO) */}
+            <div className="mb-2.5 p-2 rounded-xl bg-slate-950/90 border border-amber-500/40 flex flex-wrap items-center gap-1.5 text-[11px]">
+              <button
+                type="button"
+                onClick={() => setD20ModalOpen(true)}
+                className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-black cursor-pointer"
+              >
+                🎲 Tirada D20 D&D
+              </button>
+              <button
+                type="button"
+                onClick={drawV7Treasure}
+                className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black cursor-pointer"
+              >
+                💎 Tesoro v7
+              </button>
+              <button
+                type="button"
+                onClick={() => openV7RandomFrom(ABISMO_EVENTS_AND_LAIRS_V7, '❓ Mazo de Eventos y Guaridas v7.0', 'event')}
+                className="px-2.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-black cursor-pointer"
+              >
+                ❓ Evento / Guarida {v7LairUsed ? '(1/1)' : '(0/1)'}
+              </button>
+              <button
+                type="button"
+                onClick={() => openV7RandomFrom(ABISMO_HALLWAY_EVENTS_V7, '🚪 Evento de Pasillo v7.0', 'event')}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-200 font-bold cursor-pointer"
+              >
+                🚪 Pasillo
+              </button>
+              <button
+                type="button"
+                onClick={() => openV7RandomFrom(ABISMO_BIOME_EVENTS_V7, '🌲 Evento de Bioma v7.0', 'event')}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-200 font-bold cursor-pointer"
+              >
+                🌲 Bioma
+              </button>
+              <button
+                type="button"
+                onClick={() => openV7RandomFrom(ABISMO_CLUE_EVENTS_V7, '🔍 Pista Misteriosa v7.0', 'event')}
+                className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-200 font-bold cursor-pointer"
+              >
+                🔍 Pista
+              </button>
+              <button
+                type="button"
+                onClick={() => openV7RandomFrom(ABISMO_EPIC_TWISTS_V7, '⚡ Giro Épico v7.0', 'event')}
+                className="px-2.5 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-600 text-white font-black cursor-pointer"
+              >
+                ⚡ Giro Épico
+              </button>
+              <span className="text-slate-600">|</span>
+              <span className="text-[10px] font-bold text-slate-400">📍 Colocar:</span>
+              {[
+                { kind: 'monster', type: 'orc', label: 'Monstruo (Orco)' },
+                { kind: 'trap', type: 'trap_pit', label: 'Trampa Secreta' },
+                { kind: 'secret_door', type: 'secret_door', label: 'Puerta Secreta' },
+                { kind: 'npc', type: 'npc', label: 'NPC' },
+              ].map((pl) => (
+                <button
+                  key={pl.label}
+                  type="button"
+                  onClick={() => setPendingBoardPlacement(pl)}
+                  className="px-2 py-1 rounded-lg bg-amber-950/70 hover:bg-amber-900 border border-amber-600/50 text-amber-200 font-bold cursor-pointer"
+                >
+                  +{pl.label.split(' ')[0]}
+                </button>
+              ))}
+              {dmPlacedTokens.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setDmPlacedTokens([])}
+                  className="px-2 py-1 rounded-lg bg-rose-950 text-rose-300 font-bold cursor-pointer"
+                  title="Limpiar fichas colocadas manualmente"
+                >
+                  🗑️ ({dmPlacedTokens.length})
+                </button>
+              )}
             </div>
 
             {/* Leyenda Visual (oculta en Fullscreen para dar 100% de tamaño al tablero) */}
@@ -2370,11 +2637,27 @@ export default function TacticalBoard({
                             });
                             let deliveredTo = '';
                             if (searcher && !res.isEmpty) {
-                              if ((res.rewardLoot || res.rewardGold > 0) && onSendLootToHero) {
-                                onSendLootToHero(searcher.id, res.rewardLoot, res.rewardGold);
-                              }
-                              if (res.materialId && res.materialQty > 0 && onSendMaterialToHero) {
-                                onSendMaterialToHero(searcher.id, res.materialId, res.materialQty);
+                              if (onDispatchHeroEvent) {
+                                onDispatchHeroEvent(searcher.id, {
+                                  kind: 'loot',
+                                  icon: res.rewardLoot ? '⚔️' : '💰',
+                                  title: res.title,
+                                  badge: `Botín de ${selectedMonsterObj.scaled.name} · ${res.rarityLabel || 'Común'}`,
+                                  narrative: res.text,
+                                  goldDelta: res.rewardGold || 0,
+                                  items: res.rewardLoot ? [res.rewardLoot] : [],
+                                  materials:
+                                    res.materialId && res.materialQty > 0
+                                      ? [{ id: res.materialId, qty: res.materialQty }]
+                                      : [],
+                                });
+                              } else {
+                                if ((res.rewardLoot || res.rewardGold > 0) && onSendLootToHero) {
+                                  onSendLootToHero(searcher.id, res.rewardLoot, res.rewardGold);
+                                }
+                                if (res.materialId && res.materialQty > 0 && onSendMaterialToHero) {
+                                  onSendMaterialToHero(searcher.id, res.materialId, res.materialQty);
+                                }
                               }
                               deliveredTo = searcher.name;
                             }
@@ -3897,6 +4180,249 @@ export default function TacticalBoard({
           </div>
         );
       })()}
+
+      {/* ==================== MODAL TIRADA D20 ESTILO D&D (EN EL TABLERO 2D) ==================== */}
+      {d20ModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setD20ModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-xl rounded-3xl bg-slate-950 border-2 border-indigo-400/80 p-6 space-y-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="font-display text-xl font-black text-indigo-200 flex items-center gap-2">
+                <Dices className="w-5 h-5 text-indigo-400" /> Tirada de Habilidad D20 (Estilo D&D)
+              </h3>
+              <button
+                type="button"
+                onClick={() => setD20ModalOpen(false)}
+                className="p-1.5 rounded-xl bg-slate-900 text-slate-300 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div>
+                <label className="text-[10px] font-black uppercase text-slate-400">Héroe que tira:</label>
+                <select
+                  value={d20HeroId || heroes[0]?.id || ''}
+                  onChange={(e) => setD20HeroId(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold"
+                >
+                  {heroes.length === 0 ? (
+                    <option value="">Aventurero genérico (+1)</option>
+                  ) : (
+                    heroes.map((h) => (
+                      <option key={h.id} value={h.id}>
+                        {h.name} ({h.className})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase text-slate-400">Habilidad D20:</label>
+                <select
+                  value={d20SkillId}
+                  onChange={(e) => setD20SkillId(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-amber-200 font-bold"
+                >
+                  {D20_SKILLS_EXTENDED.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.icon} {s.name} [{s.pillar}]
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex flex-wrap gap-1.5">
+                {D20_DIFFICULTY_CLASSES.map((d) => (
+                  <button
+                    key={d.id}
+                    type="button"
+                    onClick={() => setD20Cd(d.cd)}
+                    className={`px-2.5 py-1.5 rounded-xl font-black cursor-pointer border ${
+                      d20Cd === d.cd
+                        ? 'bg-amber-500 text-slate-950 border-amber-300'
+                        : 'bg-slate-900 text-slate-300 border-slate-700'
+                    }`}
+                  >
+                    {d.label} (CD {d.cd})
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-1">
+                {[
+                  { id: 'normal', label: 'Normal' },
+                  { id: 'adv', label: 'Ventaja' },
+                  { id: 'dis', label: 'Desvent.' },
+                ].map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setD20Mode(m.id)}
+                    className={`px-2.5 py-1.5 rounded-xl font-bold cursor-pointer ${
+                      d20Mode === m.id ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400'
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={executeD20Check}
+              className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-sm cursor-pointer shadow-lg"
+            >
+              🎲 Lanzar 1D20 ahora
+            </button>
+
+            {d20Result && (
+              <div
+                className={`p-4 rounded-2xl border-2 text-center space-y-1 ${
+                  d20Result.isCrit
+                    ? 'bg-amber-950/60 border-amber-400'
+                    : d20Result.isFumble
+                      ? 'bg-rose-950/70 border-rose-500'
+                      : d20Result.passed
+                        ? 'bg-emerald-950/50 border-emerald-500'
+                        : 'bg-rose-950/50 border-rose-500'
+                }`}
+              >
+                <div className="text-xs font-bold text-slate-300">
+                  {d20Result.heroName} · {d20Result.skill.icon} {d20Result.skill.name} (CD {d20Result.cd})
+                </div>
+                <div className="text-3xl font-black text-white">
+                  {d20Result.total}{' '}
+                  <span className="text-sm font-bold text-amber-300">
+                    (Dado {d20Result.die} + {d20Result.mod})
+                  </span>
+                </div>
+                <div className="text-sm font-black uppercase">
+                  {d20Result.isCrit
+                    ? '🌟 ¡CRÍTICO NATURAL (20)! Éxito Épico'
+                    : d20Result.isFumble
+                      ? '💀 ¡PIFIA NATURAL (1)! Fallo Catastrófico'
+                      : d20Result.passed
+                        ? '✅ ¡PRUEBA SUPERADA!'
+                        : '❌ PRUEBA FALLADA'}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ==================== MODAL UNIFICADO DE EVENTOS / TESOROS / GUARIDAS v7.0 (ENVÍA AL CELULAR + COLOCA EN TABLERO) ==================== */}
+      {v7EventModal && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setV7EventModal(null)}
+        >
+          <div
+            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-gradient-to-b from-purple-950/95 via-slate-950 to-slate-950 border-2 border-amber-400/80 p-6 space-y-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3">
+              <div>
+                <div className="text-[11px] font-black uppercase tracking-widest text-amber-300">
+                  {v7EventModal.sourceLabel}
+                </div>
+                <h3 className="font-display text-2xl font-black text-white mt-0.5">
+                  {v7EventModal.icon} {v7EventModal.title}
+                </h3>
+                {v7EventModal.d20Check && (
+                  <div className="mt-1 inline-block px-2.5 py-0.5 rounded-full bg-indigo-950 border border-indigo-400/60 text-indigo-200 text-xs font-black">
+                    🎲 Prueba D20: {v7EventModal.d20Check.skill} [{v7EventModal.d20Check.pillar}] · CD {v7EventModal.d20Check.cd}
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setV7EventModal(null)}
+                className="p-2 rounded-xl bg-slate-900 text-slate-300 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-black/45 border border-white/10 text-base text-amber-50 leading-relaxed">
+              {v7EventModal.narrative}
+            </div>
+
+            {/* Selector de Héroe objetivo */}
+            {heroes.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="font-bold text-slate-300">📲 Enviar resultado y ventana al celular de:</span>
+                <select
+                  value={v7HeroTarget}
+                  onChange={(e) => setV7HeroTarget(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-900 border border-amber-500/50 text-amber-200 font-bold"
+                >
+                  {heroes.map((h) => (
+                    <option key={h.id} value={h.id}>
+                      {h.name} ({h.className})
+                    </option>
+                  ))}
+                  <option value="ALL">Todo el Grupo</option>
+                </select>
+              </div>
+            )}
+
+            {/* Botones de Acción: Qué Da / Qué Quita + Colocar en Tablero */}
+            <div className="flex flex-wrap gap-2 pt-1">
+              {v7EventModal.successOutcome ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => dispatchV7Outcome(v7EventModal.successOutcome, false)}
+                    className="flex-1 py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer shadow"
+                  >
+                    ✅ Superaron / Aplicar Recompensa → Enviar al Celular
+                  </button>
+                  {v7EventModal.failOutcome && (
+                    <button
+                      type="button"
+                      onClick={() => dispatchV7Outcome(v7EventModal.failOutcome, true)}
+                      className="flex-1 py-3 px-4 rounded-2xl bg-rose-700 hover:bg-rose-600 text-white font-black text-xs cursor-pointer shadow"
+                    >
+                      ❌ Fallaron / Aplicar Daño → Enviar al Celular
+                    </button>
+                  )}
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => dispatchV7Outcome(v7EventModal, v7EventModal.kind === 'negative')}
+                  className="flex-1 py-3 px-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer shadow"
+                >
+                  📲 Aplicar y Enviar al Celular
+                </button>
+              )}
+
+              {v7EventModal.boardSpawn && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingBoardPlacement(v7EventModal.boardSpawn);
+                    setV7EventModal(null);
+                  }}
+                  className="px-4 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs cursor-pointer shadow"
+                >
+                  📍 Colocar en Tablero ({v7EventModal.boardSpawn.label})
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

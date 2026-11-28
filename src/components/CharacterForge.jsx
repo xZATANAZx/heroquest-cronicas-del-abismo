@@ -31,6 +31,7 @@ import {
   computeClassRacePillars,
   getHeroPillars,
   formatMod,
+  getClassDetailedMeta,
 } from '../data/characterSystem';
 import { PROFESSIONS } from '../data/citySystem';
 import { getRarityMeta } from '../data/lootCatalog';
@@ -542,6 +543,52 @@ export default function CharacterForge({
               </div>
             </div>
           </div>
+
+          {/* Ficha FetenQuest-HQ: Restricciones, Usos de Magia y Progresión por Rangos (1–10) */}
+          {(() => {
+            const cMeta = getClassDetailedMeta(cls.id, race.id);
+            return (
+              <div className="grimoire-panel rounded-2xl p-5 border-sky-500/40 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                  <h3 className="text-base font-black text-sky-300">
+                    📜 Ficha Completa de {cls.name} ({race.name}) — Tamaño: {cMeta.size}
+                  </h3>
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-950 border border-amber-500/50 text-amber-200 text-[11px] font-bold">
+                    Inicia en Rango 1 · Aprendiz
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-rose-950/30 border border-rose-700/40 space-y-1">
+                    <div className="font-black text-rose-300 uppercase text-[10px]">🚫 Restricciones de Equipo y Tamaño</div>
+                    <p className="text-slate-200 leading-relaxed">{cMeta.restrictions}</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-purple-950/30 border border-purple-700/40 space-y-1">
+                    <div className="font-black text-purple-300 uppercase text-[10px]">✨ Regla de Magia y Usos por Reto</div>
+                    <p className="text-slate-200 leading-relaxed">{cMeta.magicRule}</p>
+                  </div>
+                </div>
+                {cls.progression && (
+                  <div className="space-y-1.5">
+                    <div className="text-[10px] font-black uppercase text-amber-300">
+                      🏰 Progresión por Rangos (1 al 10 — Salones Imperiales):
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-1.5 text-[11px]">
+                      {LEVEL_TABLE.map((r) => (
+                        <div key={r.level} className="p-2 rounded-lg bg-slate-950/80 border border-slate-800">
+                          <div className="font-black text-amber-200">
+                            R{r.level} · {r.rankTitle}
+                          </div>
+                          <div className="text-[10px] text-slate-300 leading-snug mt-0.5">
+                            {cls.progression[r.level] || r.reward}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Resumen y Botón Final */}
           <div className="grimoire-panel rounded-2xl p-6 flex flex-wrap items-center justify-between gap-4 border-amber-500/50">
