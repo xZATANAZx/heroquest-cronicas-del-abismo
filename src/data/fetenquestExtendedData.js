@@ -735,6 +735,110 @@ export const FQ_DECKS_GUIDE = [
   },
 ];
 
+// ==================== PRESENTACIÓN Y RAMAS DE HECHIZOS DE LOS 25 HÉROES ====================
+export const FQ_HERO_SHOWCASE_META = {
+  fq_barbaro: {
+    summary: 'El guerrero más resistente y directo del juego. Ideal para jugadores que quieren ir en primera línea, aguantar golpes y destrozar monstruos cuerpo a cuerpo sin complicaciones.',
+    schoolIds: [],
+  },
+  fq_enano: {
+    summary: 'Duro como la roca y el mejor desactivador de trampas del grupo. Imprescindible para abrir camino seguro en pasillos peligrosos y convertirse en un muro con armadura pesada.',
+    schoolIds: [],
+  },
+  fq_elfo: {
+    summary: 'Híbrido ágil y versátil que combina combate con espada/arco y magia elemental. En Rango 5 desbloquea los poderosos Hechizos Élficos para controlar el tiempo y el campo de batalla.',
+    schoolIds: ['agua', 'aire', 'tierra', 'fuego', 'elficos'],
+  },
+  fq_mago: {
+    summary: 'El maestro supremo de la magia arcana. Empieza con 9 hechizos elementales (3 grupos) que puede repetir gastando PM, y al subir de rango domina Protección, Detección y Oscuridad.',
+    schoolIds: ['agua', 'aire', 'tierra', 'fuego', 'proteccion', 'deteccion', 'oscuridad'],
+  },
+  fq_bardo: {
+    summary: 'Héroe de apoyo táctico y música mágica. Cura, inspira y duerme enemigos mientras esquiva golpes gracias a su agilidad sin armadura metálica.',
+    schoolIds: ['bardo'],
+  },
+  fq_berserker: {
+    summary: 'Pura furia cuerpo a cuerpo de alto riesgo y alta recompensa. Cuanto más herido está, más letal se vuelve con ataques dobles, contraataques y barridos contra grupos enteros.',
+    schoolIds: [],
+  },
+  fq_brujo: {
+    summary: 'Lanzador ofensivo oscuro que dispara con su Varita a cualquier enemigo visible y se transforma en forma demoníaca para recuperar hechizos al matar monstruos.',
+    schoolIds: ['brujeria', 'proteccion', 'deteccion', 'oscuridad'],
+  },
+  fq_caballero: {
+    summary: 'El protector definitivo del equipo. Comienza con el mejor equipo defensivo (Espada + Escudo), intercepta Monstruos Errantes y salva a aliados adyacentes de golpes mortales.',
+    schoolIds: [],
+  },
+  fq_cazador: {
+    summary: 'Tirador experto y rastreador. Busca trampas y puertas secretas a la vez, marca presas para lanzar dados extra y recarga gratis sus flechas al acabar cada reto.',
+    schoolIds: [],
+  },
+  fq_cazador_brujas: {
+    summary: 'Inquisidor letal contra lanzadores de hechizos y no muertos. Combina pistola ballesta y daga, empieza con Agua Bendita gratis y gasta Contadores de Fanatismo para asegurar golpes.',
+    schoolIds: [],
+  },
+  fq_druida: {
+    summary: 'Guardián de la naturaleza con magia curativa y cambio de forma animal. En Rango 5 añade hechizos elementales de Tierra o Agua para volverse un apoyo completísimo.',
+    schoolIds: ['druida', 'tierra', 'agua'],
+  },
+  fq_bloodbowl: {
+    summary: 'Un jugador estrella convertido en apisonadora de mazmorra. Combate a puño limpio, lanza su balón de Blood Bowl, embiste en carrera y empuja enemigos con juego sucio.',
+    schoolIds: [],
+  },
+  fq_explorador: {
+    summary: 'El rey del botín y los secretos. Suma +25 MO extra en cada carta de oro, esquiva y cambia cartas de trampa, detecta peligros antes de pisarlos y desarma como un Enano.',
+    schoolIds: [],
+  },
+  fq_guerrero_tumba: {
+    summary: 'Guerrero No Muerto implacable que no se detiene ni al caer a 0 PC: se recompone mágicamente en el turno siguiente. Inmune a veneno y sangrado, pero temido en la ciudad.',
+    schoolIds: [],
+  },
+  fq_guerrero_caos: {
+    summary: 'Campeón acorazado que jura lealtad a Khorne, Nurgle, Slaanesh o Tzeentch para recibir marcas, bendiciones aleatorias y artefactos oscuros de su Dios.',
+    schoolIds: [],
+  },
+  fq_hechicero_caos: {
+    summary: 'Mago impredecible y explosivo que tira 4D20 al empezar cada reto para recibir Hechizos del Caos al azar y puede conjurar los Vientos del Caos a voluntad.',
+    schoolIds: ['oscuridad'],
+  },
+  fq_herrero_runico: {
+    summary: 'Artesano enano que graba Runas mágicas en su martillo, armadura y equipo de aliados antes de cada reto. Su Saber Rúnico nunca provoca pifias del Caos.',
+    schoolIds: ['runas'],
+  },
+  fq_ladron: {
+    summary: 'Maestro del sigilo y el oro. Ignora áreas de influencia, roba monedas directamente a enemigos humanoides, cambia cartas de tesoro gastando PM y saca oro extra de pociones.',
+    schoolIds: [],
+  },
+  fq_matador: {
+    summary: 'Enano buscador de una muerte gloriosa que lucha sin armadura con dos armas y un Dado de Furia explosivo. Si muere, las Cicatrices de Batalla lo vuelven todavía más duro.',
+    schoolIds: [],
+  },
+  fq_nigromante: {
+    summary: 'Señor de los muertos que alza hasta 3 Esbirros no muertos para rodear enemigos, drena vida para curarse y en Rango 3 invoca un poderoso Necrófago y Danza Macabra.',
+    schoolIds: ['nigromancia1', 'nigromancia2'],
+  },
+  fq_ogro: {
+    summary: 'Gigante de 9 PC iniciales y tamaño Grande que arrolla enemigos pequeños al pasar por encima. Brutal e impredecible con su Dado de Brutalidad (1 = Olvido, 6 = Arrasar).',
+    schoolIds: [],
+  },
+  fq_orco: {
+    summary: 'Bruto pielverde expulsado de su clan armado con su Rebanadora de 3 DC. Desata el ¡Waaagh! para ganar una acción extra y repite tiradas de movimiento con Animosidad.',
+    schoolIds: [],
+  },
+  fq_picaro: {
+    summary: 'Asesino veloz que atraviesa casillas ocupadas por monstruos, realiza ataques de oportunidad cuando un aliado está cerca e inflige daño extra indefendible con Ambidiestro.',
+    schoolIds: [],
+  },
+  fq_sacerdote: {
+    summary: 'Sanador divino y paladín de Sigmar. Lanza Plegarias de Saber Divino (curación de PC y PM, furia sagrada contra No Muertos) y en Rango 5 desbloquea Plegarias Nivel 2.',
+    schoolIds: ['plegarias1', 'plegarias2'],
+  },
+  fq_vampiro: {
+    summary: 'Depredador nocturno que se cura al dar golpes de gracia, sacrifica sangre propia para ganar hasta +2 DC de ataque y puede dominar Nigromancia incluso con armadura metálica.',
+    schoolIds: ['nigromancia1', 'nigromancia2'],
+  },
+};
+
 // ==================== EVENTOS DE CIUDAD (1D100 — Págs. 117–127) ====================
 export const FQ_CITY_EVENTS = [
   { min: 1, max: 1, title: '01 · Pelea de Taberna', text: 'Combates contra un matón (At 3, Def 3, PC 3, sin magia ni distancia). Si pierdes te roban 2 objetos; si ganas te quedas con 50 MO. Recuperas PC al terminar.' },

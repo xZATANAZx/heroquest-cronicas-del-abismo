@@ -104,7 +104,7 @@ const NAV_GROUPS = [
     group: 'Juego Original (Sin Mods)',
     items: [
       { id: 'classic_board', label: 'HQ Clásico Oficial', subtitle: 'Juego Base + Luna del Terror (100% Oficial)', icon: Crown },
-      { id: 'fetenquest', label: 'FetenQuest 4.1', subtitle: '25 Hojas A4, Pantalla MB y Mazos', icon: ScrollText },
+      { id: 'fetenquest', label: 'FetenQuest 4.1', subtitle: '25 Héroes, Reglas, Ciudad y Pantalla DM', icon: ScrollText },
     ],
   },
   {

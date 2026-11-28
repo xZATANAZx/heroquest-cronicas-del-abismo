@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Printer,
   BookOpen,
   Skull,
   Sparkles,
-  CheckSquare,
-  Square,
   Dices,
   Plus,
   Minus,
@@ -15,12 +12,10 @@ import {
   ScrollText,
   Layers,
   Trash2,
-  Building2,
-  Swords,
   Search,
-  Edit3,
   HeartPulse,
   Crown,
+  Users,
 } from 'lucide-react';
 import {
   FQ_HEROES,
@@ -45,10 +40,10 @@ import {
   FQ_HERO_RANKS,
   FQ_DECKS_GUIDE,
   FQ_CITY_EVENTS,
+  FQ_HERO_SHOWCASE_META,
 } from '../data/fetenquestExtendedData';
 
 const MB_STORAGE_KEY = 'hq_fetenquest_mb_v41';
-const SHEETS_STORAGE_KEY = 'hq_fetenquest_custom_sheets_v41';
 
 function shuffle(arr) {
   const c = [...arr];
@@ -59,347 +54,14 @@ function shuffle(arr) {
   return c;
 }
 
-function createDefaultSheet(hero) {
-  return {
-    heroId: hero.id,
-    customName: '',
-    playerName: '',
-    rank: 1,
-    completedQuests: 0,
-    gold: 0,
-    at: hero.at,
-    def: hero.def,
-    pc: hero.pc,
-    pm: hero.pm,
-    rightHand: hero.startingGear,
-    leftHand: hero.id === 'fq_caballero' ? 'Escudo (+1 Def)' : '',
-    head: hero.id === 'fq_guerrero_caos' ? 'Yelmo (+1 Def)' : '',
-    armor: '',
-    accessories: '',
-    storedWeapons: '',
-    storedThrown: '',
-    storedPotions: '',
-    storedScrolls: '',
-    storedSupport: hero.id === 'fq_ladron' || hero.id === 'fq_picaro' ? 'Bandolera (Herramientas + Daga)' : '',
-    abilities: hero.abilities.map((a) => ({ ...a })),
-    spells: hero.startingSpells.map((s) => ({ ...s })),
-    notes: '',
-  };
-}
-
-// ==================== HOJA DE PERSONAJE MODERNA A4 (IMPRIMIBLE Y ESCALABLE) ====================
-function ModernPrintableHeroSheet({ hero, sheet }) {
-  const rankMeta = FQ_RANK_PROGRESSION.find((r) => r.rank === Number(sheet.rank)) || FQ_RANK_PROGRESSION[0];
-  const heroRankList = FQ_HERO_RANKS[hero.id] || [];
-  const currentRankBenefit = heroRankList[Number(sheet.rank) - 1] || 'Estadísticas y habilidades iniciales.';
-  const trackCount = Math.min(14, Math.max(10, Number(sheet.pc || hero.pc), Number(sheet.pm || hero.pm)));
-
-  return (
-    <div className="fq-print-sheet bg-white text-slate-950 border-2 border-slate-900 rounded-2xl p-5 sm:p-6 space-y-4 shadow-2xl print:shadow-none print:rounded-none">
-      {/* Cabecera Moderna de Alto Contraste */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-slate-900 pb-3.5">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl border-2 border-slate-900 bg-slate-900 text-white flex flex-col items-center justify-center shrink-0 print:bg-white print:text-black">
-            <span className="text-[9px] font-bold uppercase tracking-wider leading-none">Rango</span>
-            <span className="text-xl font-black leading-none mt-0.5">{sheet.rank}</span>
-          </div>
-          <div>
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-              FETENQUEST 4.1 · HOJA DE AVENTURERO
-            </div>
-            <div className="font-display text-2xl font-black tracking-tight leading-tight text-slate-950">
-              {sheet.customName || hero.name}
-            </div>
-            <div className="text-xs font-semibold text-slate-600">
-              {hero.name} · {hero.role} · Tamaño {hero.size} · {rankMeta.title}
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-x-5 gap-y-1.5 text-xs min-w-[260px] bg-slate-50 border border-slate-300 rounded-xl p-2.5">
-          <div>
-            <span className="text-[10px] font-bold uppercase text-slate-500 block">Jugador</span>
-            <span className="font-bold">{sheet.playerName || '__________________'}</span>
-          </div>
-          <div>
-            <span className="text-[10px] font-bold uppercase text-slate-500 block">Retos Completados</span>
-            <span className="font-black text-sm">{sheet.completedQuests} <span className="font-normal text-[10px] text-slate-500">(+Rango c/7)</span></span>
-          </div>
-          <div>
-            <span className="text-[10px] font-bold uppercase text-slate-500 block">Monedas de Oro</span>
-            <span className="font-black text-sm">{sheet.gold > 0 ? `${sheet.gold} MO` : '________ MO'}</span>
-          </div>
-          <div>
-            <span className="text-[10px] font-bold uppercase text-slate-500 block">Movimiento Base</span>
-            <span className="font-bold">2D6 (8 sin enemigos)</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Cuerpo en 2 Columnas Modernas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* COLUMNA IZQUIERDA: STATS + TRACKERS + EQUIPO + MOCHILA */}
-        <div className="space-y-3.5">
-          {/* 4 Tarjetas de Estadísticas Principales */}
-          <div className="grid grid-cols-4 gap-2 text-center">
-            {[
-              { label: 'Ataque', val: `${sheet.at} DC` },
-              { label: 'Defensa', val: `${sheet.def} DC` },
-              { label: 'Cuerpo (PC)', val: sheet.pc },
-              { label: 'Mente (PM)', val: sheet.pm },
-            ].map((st) => (
-              <div key={st.label} className="rounded-xl border-2 border-slate-900 p-2 bg-slate-50">
-                <div className="text-[9px] font-black uppercase tracking-wider text-slate-600">{st.label}</div>
-                <div className="text-xl font-black text-slate-950 mt-0.5">{st.val}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Casillas para marcar Cuerpo y Mente con lápiz */}
-          <div className="rounded-xl border-2 border-slate-900 overflow-hidden text-[11px]">
-            <div className="flex items-center border-b border-slate-900">
-              <div className="w-16 px-2 py-1.5 font-black bg-slate-900 text-white text-[10px] uppercase shrink-0 print:bg-slate-200 print:text-black">
-                Cuerpo
-              </div>
-              <div
-                className="flex-1 grid divide-x divide-slate-300 text-center"
-                style={{ gridTemplateColumns: `repeat(${trackCount}, minmax(0, 1fr))` }}
-              >
-                {Array.from({ length: trackCount }, (_, i) => (
-                  <div
-                    key={i}
-                    className={`py-1.5 font-bold ${
-                      i + 1 === Number(sheet.pc) ? 'bg-slate-200 font-black underline' : ''
-                    }`}
-                  >
-                    {i + 1}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="flex items-center">
-              <div className="w-16 px-2 py-1.5 font-black bg-slate-700 text-white text-[10px] uppercase shrink-0 print:bg-slate-200 print:text-black">
-                Mente
-              </div>
-              <div
-                className="flex-1 grid divide-x divide-slate-300 text-center"
-                style={{ gridTemplateColumns: `repeat(${trackCount}, minmax(0, 1fr))` }}
-              >
-                {Array.from({ length: trackCount }, (_, i) => (
-                  <div
-                    key={i}
-                    className={`py-1.5 font-bold ${
-                      i + 1 === Number(sheet.pm) ? 'bg-slate-200 font-black underline' : ''
-                    }`}
-                  >
-                    {i + 1}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Equipo Equipado (Editable y Actualizable) */}
-          <div className="rounded-xl border-2 border-slate-900 p-3 space-y-2">
-            <div className="text-[11px] font-black uppercase tracking-wider border-b border-slate-300 pb-1">
-              Equipo Equipado (En Uso)
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              <div className="rounded-lg border border-slate-400 p-2 min-h-[42px]">
-                <div className="text-[9px] font-bold uppercase text-slate-500">Mano Derecha (Arma)</div>
-                <div className="font-bold text-slate-950">{sheet.rightHand || '__________________'}</div>
-              </div>
-              <div className="rounded-lg border border-slate-400 p-2 min-h-[42px]">
-                <div className="text-[9px] font-bold uppercase text-slate-500">Mano Izquierda / Escudo</div>
-                <div className="font-bold text-slate-950">{sheet.leftHand || '__________________'}</div>
-              </div>
-              <div className="rounded-lg border border-slate-400 p-2 min-h-[38px]">
-                <div className="text-[9px] font-bold uppercase text-slate-500">Cabeza (Yelmo)</div>
-                <div className="font-bold text-slate-950">{sheet.head || '__________________'}</div>
-              </div>
-              <div className="rounded-lg border border-slate-400 p-2 min-h-[38px]">
-                <div className="text-[9px] font-bold uppercase text-slate-500">Armadura (Torso)</div>
-                <div className="font-bold text-slate-950">{sheet.armor || '__________________'}</div>
-              </div>
-              <div className="rounded-lg border border-slate-400 p-2 col-span-2 min-h-[34px]">
-                <div className="text-[9px] font-bold uppercase text-slate-500">Accesorios (Anillos / Amuletos / Capas)</div>
-                <div className="font-bold text-slate-950">{sheet.accessories || '__________________________________________'}</div>
-              </div>
-            </div>
-            <div className="text-[10px] bg-slate-100 border border-slate-300 rounded-lg px-2 py-1 text-slate-700">
-              <strong>Restricciones de Clase:</strong> {hero.restrictions}
-            </div>
-          </div>
-
-          {/* Inventario / Objetos Guardados con Límites Oficiales */}
-          <div className="rounded-xl border-2 border-slate-900 p-3 space-y-1.5 text-[10.5px]">
-            <div className="text-[11px] font-black uppercase tracking-wider border-b border-slate-300 pb-1">
-              Mochila / Objetos Guardados (Límites FetenQuest)
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div className="border border-slate-300 rounded-lg p-1.5 min-h-[42px]">
-                <strong className="text-[9.5px] uppercase text-slate-600 block">Armas / Escudos (Máx. 2)</strong>
-                <div>{sheet.storedWeapons || '1. ____________  2. ____________'}</div>
-              </div>
-              <div className="border border-slate-300 rounded-lg p-1.5 min-h-[42px]">
-                <strong className="text-[9.5px] uppercase text-slate-600 block">Arrojadizas (Máx. 3)</strong>
-                <div>{sheet.storedThrown || '1. _______ 2. _______ 3. _______'}</div>
-              </div>
-              <div className="border border-slate-300 rounded-lg p-1.5 min-h-[44px]">
-                <strong className="text-[9.5px] uppercase text-slate-600 block">Pociones (Máx. 3)</strong>
-                <div>{sheet.storedPotions || '1. ____________  2. ____________'}</div>
-              </div>
-              <div className="border border-slate-300 rounded-lg p-1.5 min-h-[44px]">
-                <strong className="text-[9.5px] uppercase text-slate-600 block">Pergaminos (Máx. 3)</strong>
-                <div>{sheet.storedScrolls || '1. ____________  2. ____________'}</div>
-              </div>
-              <div className="border border-slate-300 rounded-lg p-1.5 sm:col-span-2 min-h-[36px]">
-                <strong className="text-[9.5px] uppercase text-slate-600 block">Equipo de Apoyo (Herramientas, Bandolera, Cuerda — Máx. 3)</strong>
-                <div>{sheet.storedSupport || '1. ___________________  2. ___________________  3. ___________________'}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* COLUMNA DERECHA: HABILIDADES + HECHIZOS + ESCALADO DE RANGO + NOTAS */}
-        <div className="space-y-3.5">
-          {/* Habilidades */}
-          <div className="rounded-xl border-2 border-slate-900 p-3 space-y-2">
-            <div className="text-[11px] font-black uppercase tracking-wider border-b border-slate-300 pb-1">
-              Habilidades Especiales ({sheet.abilities.length})
-            </div>
-            <div className="space-y-2 text-[11px]">
-              {sheet.abilities.map((ab, idx) => (
-                <div key={idx} className="border-b border-slate-200 last:border-b-0 pb-1.5 last:pb-0">
-                  <div className="font-black text-slate-950">• {ab.name}</div>
-                  <div className="text-slate-700 leading-snug">{ab.text}</div>
-                </div>
-              ))}
-            </div>
-            <div className="pt-1 border-t border-dashed border-slate-400 text-[10px] text-slate-500">
-              Espacio para nuevas habilidades de Rango / Cicatrices de Batalla:
-              <div className="mt-1">_____________________________________________________________</div>
-              <div>_____________________________________________________________</div>
-            </div>
-          </div>
-
-          {/* Hechizos y Fases de Uso */}
-          <div className="rounded-xl border-2 border-slate-900 p-3 space-y-2">
-            <div className="flex items-center justify-between border-b border-slate-300 pb-1">
-              <span className="text-[11px] font-black uppercase tracking-wider">Hechizos y Fases de Uso</span>
-              <span className="text-[10px] font-bold text-slate-600">
-                {hero.magicSaber || 'Sin magia inicial'}
-              </span>
-            </div>
-            {sheet.spells.length > 0 ? (
-              <div className="space-y-1.5 text-[11px]">
-                {sheet.spells.map((sp, idx) => (
-                  <div key={idx} className="flex items-start justify-between gap-2 border-b border-slate-200 last:border-b-0 pb-1">
-                    <div>
-                      <strong className="text-slate-950">[Nv.{sp.level}] {sp.name}:</strong>{' '}
-                      <span className="text-slate-700">{sp.note}</span>
-                    </div>
-                    <span className="font-mono text-xs shrink-0 font-bold">
-                      {sp.level === 1 ? '☐ ☐ ☐' : sp.level === 2 ? '☐ ☐' : '☐'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-[10.5px] text-slate-600 italic">
-                Sin hechizos propios. Puede lanzar Pergaminos tirando 2D6 en Vientos de la Magia (−1 por cada armadura metálica).
-              </div>
-            )}
-            <div className="text-[9.5px] bg-slate-100 rounded-lg px-2 py-1 text-slate-600">
-              <strong>Repeticiones:</strong> Nv.1 repite 2 veces (-1 PM) · Nv.2 repite 1 vez (-1 PM) · Nv.3 no se repite.
-            </div>
-          </div>
-
-          {/* Notas de Progresión / Rango / Diario */}
-          <div className="rounded-xl border-2 border-slate-900 p-3 space-y-1.5 text-[10.5px]">
-            <div className="text-[11px] font-black uppercase tracking-wider border-b border-slate-300 pb-1">
-              Notas de Campaña y Escalado (Rango {sheet.rank}: {rankMeta.title})
-            </div>
-            <div className="text-[10px] text-slate-700">
-              <strong>Beneficio exacto de {hero.name.split('/')[0].trim()} en Rango {sheet.rank}:</strong> {currentRankBenefit}
-            </div>
-            {sheet.notes ? (
-              <div className="text-slate-900 whitespace-pre-line border-t border-slate-200 pt-1">{sheet.notes}</div>
-            ) : (
-              <div className="text-slate-400 space-y-1 pt-1">
-                <div>_____________________________________________________________</div>
-                <div>_____________________________________________________________</div>
-              </div>
-            )}
-          </div>
-
-          {/* Chuleta Rápida de Turno FetenQuest */}
-          <div className="rounded-xl border border-slate-400 bg-slate-100 p-2 text-[9.5px] text-slate-800 leading-snug">
-            <strong>Turno:</strong> 1 Mov (2D6 u 8 sin enemigos) + 1 Acción Normal + Acciones Gratuitas (beber poción, abrir puerta +1 mov, revisar mueble 1D6, saltar foso 1DC). · <strong>Shock (0 PM):</strong> mueve 1D6, ataca 1DC, defiende 2DC, Vientos 1D6.
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function FetenQuestHub({ showToast = null }) {
-  // 6 Pestañas principales ultra-organizadas
-  const [subTab, setSubTab] = useState('rules'); // 'rules' | 'sheets' | 'abilities_spells' | 'city' | 'mb_screen' | 'decks'
+  // 6 Pestañas principales ultra-organizadas (empieza en Galería de los 25 Héroes)
+  const [subTab, setSubTab] = useState('heroes'); // 'heroes' | 'rules' | 'abilities_spells' | 'city' | 'mb_screen' | 'decks'
 
-  // ==================== ESTADO: EDITOR DE HOJAS A4 (25 HÉROES) ====================
-  const loadSavedSheets = () => {
-    try {
-      const raw = localStorage.getItem(SHEETS_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch {
-      return {};
-    }
-  };
-  const [customSheets, setCustomSheets] = useState(loadSavedSheets);
-  const [heroFilter, setHeroFilter] = useState('Todos');
+  // ==================== ESTADO: GALERÍA DE PRESENTACIÓN DE LOS 25 HÉROES ====================
+  const [heroFilter, setHeroFilter] = useState('Todos'); // 'Todos' | 'Clásico' | 'Extra'
   const [activeHeroId, setActiveHeroId] = useState(FQ_HEROES[0].id);
-  const [selectedForPrint, setSelectedForPrint] = useState(() => new Set(['fq_barbaro', 'fq_enano', 'fq_elfo', 'fq_mago']));
-  const [printMode, setPrintMode] = useState('single'); // 'single' | 'batch'
-  const [editorOpen, setEditorOpen] = useState(true);
-  const [newAbilityName, setNewAbilityName] = useState('');
-  const [newAbilityText, setNewAbilityText] = useState('');
-  const [newSpellLevel, setNewSpellLevel] = useState(1);
-  const [newSpellName, setNewSpellName] = useState('');
-  const [newSpellNote, setNewSpellNote] = useState('');
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(SHEETS_STORAGE_KEY, JSON.stringify(customSheets));
-    } catch {
-      // ignore
-    }
-  }, [customSheets]);
-
   const activeHero = FQ_HEROES.find((h) => h.id === activeHeroId) || FQ_HEROES[0];
-  const getSheetForHero = (hero) => customSheets[hero.id] || createDefaultSheet(hero);
-  const activeSheet = getSheetForHero(activeHero);
-
-  const updateActiveSheet = (patch) => {
-    setCustomSheets((prev) => ({
-      ...prev,
-      [activeHero.id]: { ...getSheetForHero(activeHero), ...patch },
-    }));
-  };
-
-  const resetActiveSheet = () => {
-    setCustomSheets((prev) => {
-      const next = { ...prev };
-      delete next[activeHero.id];
-      return next;
-    });
-    showToast?.(`↺ Hoja de ${activeHero.name} restaurada a Rango 1 inicial.`);
-  };
-
-  const triggerPrint = (mode) => {
-    setPrintMode(mode);
-    setTimeout(() => window.print(), 120);
-  };
 
   // ==================== ESTADO: HABILIDADES, HECHIZOS Y PERGAMINOS ====================
   const [catalogTab, setCatalogTab] = useState('abilities'); // 'abilities' | 'spells' | 'scrolls'
@@ -589,16 +251,16 @@ export default function FetenQuestHub({ showToast = null }) {
               <ScrollText className="w-5 h-5 text-amber-400" /> FetenQuest 4.1 Legacy — Centro Completo del DM
             </h2>
             <p className="text-xs text-slate-400">
-              Reglas ordenadas paso a paso, Editor de Hojas A4 escalables, Habilidades/Hechizos/Pergaminos, La Ciudad (con Templo y Salones), Pantalla DM y Mazos.
+              Presentación completa de los 25 Héroes (Clásicos y Extra), Reglas paso a paso, Habilidades/Hechizos/Pergaminos, La Ciudad (con Templo y Salones), Pantalla DM y Mazos.
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5">
           {[
+            { id: 'heroes', label: '🛡️ Héroes (25)', sub: '4 Clásicos + 21 Extra' },
             { id: 'rules', label: '📖 Reglas y Orden', sub: 'Qué y cuándo usar' },
-            { id: 'sheets', label: '🖨️ Hojas A4 (25)', sub: 'Editables y escalables' },
-            { id: 'abilities_spells', label: '⚔️ Hab. y Magia', sub: 'Habilidades y Pergaminos' },
+            { id: 'abilities_spells', label: '⚔️ Hab. y Magia', sub: 'Catálogo y Pergaminos' },
             { id: 'city', label: '🏛️ La Ciudad', sub: 'Armería, Rangos, Templo' },
             { id: 'mb_screen', label: '💀 Pantalla DM', sub: 'Grimorio MB y Tablas' },
             { id: 'decks', label: '🃏 Mazos FQ', sub: 'Tesoros y Sucesos' },
@@ -625,27 +287,27 @@ export default function FetenQuestHub({ showToast = null }) {
       {/* ==================== TAB 1: REGLAS ORDENADAS (QUÉ USAR, CUÁNDO Y CÓMO CREAR HOJAS) ==================== */}
       {subTab === 'rules' && (
         <div className="no-print space-y-4">
-          {/* Guía Rápida: Cómo crear y escalar la Hoja de cada Aventurero */}
+          {/* Guía Rápida: Cómo presentar y llevar el control de cada Aventurero en mesa */}
           <div className="grimoire-panel rounded-2xl p-5 border-emerald-500/40 space-y-3">
             <h3 className="font-display text-base font-black text-emerald-300 flex items-center gap-2">
-              <Crown className="w-5 h-5" /> Cómo Crear y Escalar la Hoja de Cada Aventurero (Paso a Paso)
+              <Crown className="w-5 h-5" /> Cómo Presentar y Escalar a los Aventureros en Mesa
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs text-slate-200">
               <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                <div className="font-black text-amber-300">1. Elige el Héroe</div>
-                <p>Ve a <strong>Hojas A4 (25)</strong> y selecciona uno de los 4 clásicos o 21 extra. La hoja carga automáticamente sus dados, PC, PM, arma inicial y habilidades.</p>
+                <div className="font-black text-amber-300">1. Presenta los 25 Héroes</div>
+                <p>Abre <strong>🛡️ Héroes (25)</strong> y muéstrale a cada amigo su clase: ahí viene de qué va, sus dados, PC, PM, arma inicial, habilidades y ramas de hechizos.</p>
               </div>
               <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                <div className="font-black text-amber-300">2. Personaliza e Imprime</div>
-                <p>Escribe el nombre del jugador y personaje, imprime la hoja A4 y dásela a tu aventurero con un lápiz para marcar PC, PM, oro y fases de uso de hechizos (☐☐☐).</p>
+                <div className="font-black text-amber-300">2. Anota en su Ficha Física</div>
+                <p>Cada jugador apunta en su hoja física (o libreta) sus 4 stats, su arma inicial y sus habilidades/hechizos con casillas de uso (☐☐☐).</p>
               </div>
               <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                <div className="font-black text-amber-300">3. Al Cambiar Arma o Equipo</div>
-                <p>Cuando compren en <strong>La Ciudad</strong>, puedes apuntarlo a lápiz O abrir el <strong>Editor de la Hoja A4</strong> aquí, elegir la nueva arma/armadura del catálogo y reimprimir la hoja actualizada.</p>
+                <div className="font-black text-amber-300">3. Equipo en La Ciudad</div>
+                <p>Al terminar una misión, abren <strong>🏛️ La Ciudad</strong> para tirar Evento 1D100 y comprar nuevas armas, armaduras o pociones.</p>
               </div>
               <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                <div className="font-black text-amber-300">4. Al Escalar de Rango</div>
-                <p>Cada <strong>7 retos completados</strong> acuden a los <strong>Salones Imperiales</strong> (500 MO / 300 MO con mazo Hasbro): sube su Rango en el Editor, suma el +PC/+PM y añade su nueva habilidad o escuela de hechizos.</p>
+                <div className="font-black text-amber-300">4. Sube de Rango (c/7 Retos)</div>
+                <p>Cada <strong>7 retos completados</strong> pagan 500 MO (300 MO con mazo Hasbro) y revisas la tabla exacta de Rangos 1–10 de su héroe.</p>
               </div>
             </div>
           </div>
@@ -679,408 +341,239 @@ export default function FetenQuestHub({ showToast = null }) {
         </div>
       )}
 
-      {/* ==================== TAB 2: EDITOR INTERACTIVO DE HOJAS A4 MODERNAS (25 HÉROES) ==================== */}
-      {subTab === 'sheets' && (
-        <div className="space-y-4">
-          {/* Selector de los 25 Héroes + Botones de Impresión (no-print) */}
-          <div className="no-print grimoire-panel rounded-2xl p-4 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-1.5">
-                {['Todos', 'Clásico', 'Extra'].map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setHeroFilter(cat)}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold cursor-pointer ${
-                      heroFilter === cat ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-300 border border-slate-700'
-                    }`}
-                  >
-                    {cat} ({cat === 'Todos' ? FQ_HEROES.length : FQ_HEROES.filter((h) => h.category === cat).length})
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setEditorOpen((v) => !v)}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer border ${
-                    editorOpen ? 'bg-sky-600 border-sky-400 text-white' : 'bg-slate-900 border-slate-700 text-sky-300'
-                  }`}
-                >
-                  <Edit3 className="w-3.5 h-3.5" /> {editorOpen ? 'Ocultar Editor' : 'Editar Equipo / Escalado'}
-                </button>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => triggerPrint('single')}
-                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-1.5 cursor-pointer shadow"
-                >
-                  <Printer className="w-4 h-4" /> Imprimir Esta Hoja (A4)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => triggerPrint('batch')}
-                  disabled={selectedForPrint.size === 0}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-black text-xs flex items-center gap-1.5 cursor-pointer shadow"
-                >
-                  <Printer className="w-4 h-4" /> Imprimir Paquete ({selectedForPrint.size})
-                </button>
-              </div>
-            </div>
+      {/* ==================== TAB 1: GALERÍA DE PRESENTACIÓN DE LOS 25 HÉROES (CLÁSICOS + EXTRA) ==================== */}
+      {subTab === 'heroes' && (() => {
+        const meta = FQ_HERO_SHOWCASE_META[activeHero.id] || { summary: '', schoolIds: [] };
+        const heroSchools = (meta.schoolIds || [])
+          .map((sid) => FQ_SPELL_SCHOOLS.find((s) => s.id === sid))
+          .filter(Boolean);
+        const heroRanks = FQ_HERO_RANKS[activeHero.id] || [];
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5 max-h-48 overflow-y-auto pr-1">
-              {filteredHeroes.map((h) => {
-                const isViewing = h.id === activeHeroId;
-                const isChecked = selectedForPrint.has(h.id);
-                const sh = getSheetForHero(h);
-                return (
-                  <div
-                    key={h.id}
-                    className={`p-2 rounded-xl border text-xs flex items-center justify-between gap-1.5 transition ${
-                      isViewing
-                        ? 'bg-amber-500/20 border-amber-400 text-amber-100'
-                        : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-600'
-                    }`}
-                  >
+        return (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+            {/* COLUMNA IZQUIERDA: LISTA DE LOS 25 HÉROES (CLÁSICOS Y EXTRA) */}
+            <div className="lg:col-span-4 grimoire-panel rounded-2xl p-4 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-display text-sm font-black text-amber-200 flex items-center gap-1.5">
+                  <Users className="w-4 h-4 text-amber-400" /> Elige un Héroe ({filteredHeroes.length})
+                </span>
+                <div className="flex gap-1 text-[11px]">
+                  {['Todos', 'Clásico', 'Extra'].map((cat) => (
                     <button
+                      key={cat}
                       type="button"
-                      onClick={() => setActiveHeroId(h.id)}
-                      className="text-left min-w-0 flex-1 cursor-pointer"
+                      onClick={() => setHeroFilter(cat)}
+                      className={`px-2.5 py-1 rounded-lg font-bold cursor-pointer ${
+                        heroFilter === cat
+                          ? 'bg-amber-500 text-slate-950'
+                          : 'bg-slate-900 text-slate-300 border border-slate-700'
+                      }`}
                     >
-                      <div className="font-bold truncate">{h.name.split('/')[0].trim()}</div>
-                      <div className="text-[10px] text-slate-400">
-                        Rg.{sh.rank} · AT {sh.at} · DF {sh.def} · PC {sh.pc}
-                      </div>
+                      {cat}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSelectedForPrint((prev) => {
-                          const next = new Set(prev);
-                          if (next.has(h.id)) next.delete(h.id);
-                          else next.add(h.id);
-                          return next;
-                        })
-                      }
-                      className="text-amber-300 cursor-pointer shrink-0"
-                    >
-                      {isChecked ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4 text-slate-500" />}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* EDITOR INTERACTIVO DE EQUIPO, ESCALADO, INVENTARIO, HABILIDADES Y HECHIZOS (no-print) */}
-          {editorOpen && (
-            <div className="no-print grimoire-panel rounded-2xl p-4 border-sky-500/40 space-y-4 text-xs">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
-                <div className="font-display font-black text-sky-300 text-sm flex items-center gap-2">
-                  <Edit3 className="w-4 h-4" /> Editor en Vivo de la Hoja: {activeHero.name}
-                </div>
-                <button
-                  type="button"
-                  onClick={resetActiveSheet}
-                  className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold flex items-center gap-1 cursor-pointer"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" /> Restaurar a Rango 1
-                </button>
-              </div>
-
-              {/* Fila 1: Identidad, Rango y Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
-                <label className="col-span-2 space-y-1">
-                  <span className="text-[10px] text-slate-400 font-bold">Nombre del Héroe</span>
-                  <input
-                    type="text"
-                    value={activeSheet.customName}
-                    onChange={(e) => updateActiveSheet({ customName: e.target.value })}
-                    placeholder={activeHero.name}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white"
-                  />
-                </label>
-                <label className="col-span-2 space-y-1">
-                  <span className="text-[10px] text-slate-400 font-bold">Jugador</span>
-                  <input
-                    type="text"
-                    value={activeSheet.playerName}
-                    onChange={(e) => updateActiveSheet({ playerName: e.target.value })}
-                    placeholder="Nombre del jugador"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white"
-                  />
-                </label>
-                <label className="space-y-1">
-                  <span className="text-[10px] text-amber-300 font-bold">Rango (1–10)</span>
-                  <select
-                    value={activeSheet.rank}
-                    onChange={(e) => updateActiveSheet({ rank: Number(e.target.value) })}
-                    className="w-full px-2 py-1.5 rounded-lg bg-slate-950 border border-amber-600/70 text-amber-200 font-bold"
-                  >
-                    {FQ_RANK_PROGRESSION.map((r) => (
-                      <option key={r.rank} value={r.rank}>
-                        Rg.{r.rank} {r.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="space-y-1">
-                  <span className="text-[10px] text-slate-400 font-bold">Retos</span>
-                  <input
-                    type="number"
-                    min={0}
-                    value={activeSheet.completedQuests}
-                    onChange={(e) => updateActiveSheet({ completedQuests: Number(e.target.value) })}
-                    className="w-full px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white font-bold"
-                  />
-                </label>
-                <label className="space-y-1">
-                  <span className="text-[10px] text-amber-300 font-bold">Oro (MO)</span>
-                  <input
-                    type="number"
-                    min={0}
-                    value={activeSheet.gold}
-                    onChange={(e) => updateActiveSheet({ gold: Number(e.target.value) })}
-                    className="w-full px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-amber-200 font-bold"
-                  />
-                </label>
-                <div className="grid grid-cols-4 gap-1 col-span-2 sm:col-span-4 lg:col-span-1">
-                  {[
-                    ['AT', 'at'],
-                    ['DF', 'def'],
-                    ['PC', 'pc'],
-                    ['PM', 'pm'],
-                  ].map(([lbl, key]) => (
-                    <label key={key} className="space-y-1">
-                      <span className="text-[9px] text-slate-400 font-bold block text-center">{lbl}</span>
-                      <input
-                        type="number"
-                        min={1}
-                        max={15}
-                        value={activeSheet[key]}
-                        onChange={(e) => updateActiveSheet({ [key]: Number(e.target.value) })}
-                        className="w-full px-1 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-center font-black"
-                      />
-                    </label>
                   ))}
                 </div>
               </div>
 
-              {/* Fila 2: Cambiar Arma / Armadura en 1 clic desde la Armería FetenQuest */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 pt-2 border-t border-slate-800">
-                <label className="space-y-1">
-                  <span className="text-[10px] text-amber-300 font-bold">Mano Derecha (Cambiar Arma)</span>
-                  <input
-                    type="text"
-                    list="fq-weapons-list"
-                    value={activeSheet.rightHand}
-                    onChange={(e) => updateActiveSheet({ rightHand: e.target.value })}
-                    placeholder="Escribe o elige arma..."
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white"
-                  />
-                  <datalist id="fq-weapons-list">
-                    {FQ_ARMORY_CATALOG.filter((x) => x.cat === 'Arma' || x.cat === 'Distancia').map((w) => (
-                      <option key={w.id} value={`${w.name} (${w.dc})`} />
-                    ))}
-                  </datalist>
-                </label>
-                <label className="space-y-1">
-                  <span className="text-[10px] text-slate-400 font-bold">Mano Izquierda / Escudo</span>
-                  <input
-                    type="text"
-                    list="fq-shields-list"
-                    value={activeSheet.leftHand}
-                    onChange={(e) => updateActiveSheet({ leftHand: e.target.value })}
-                    placeholder="Ej. Escudo (+1 Def)"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white"
-                  />
-                  <datalist id="fq-shields-list">
-                    <option value="Escudo (+1 Def)" />
-                    <option value="Daga (1 DC)" />
-                    <option value="Espada corta (2 DC)" />
-                  </datalist>
-                </label>
-                <label className="space-y-1">
-                  <span className="text-[10px] text-slate-400 font-bold">Cabeza</span>
-                  <input
-                    type="text"
-                    value={activeSheet.head}
-                    onChange={(e) => updateActiveSheet({ head: e.target.value })}
-                    placeholder="Ej. Yelmo (+1 Def)"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white"
-                  />
-                </label>
-                <label className="space-y-1">
-                  <span className="text-[10px] text-slate-400 font-bold">Armadura</span>
-                  <input
-                    type="text"
-                    list="fq-armors-list"
-                    value={activeSheet.armor}
-                    onChange={(e) => updateActiveSheet({ armor: e.target.value })}
-                    placeholder="Ej. Cota de malla (+1 Def)"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white"
-                  />
-                  <datalist id="fq-armors-list">
-                    {FQ_ARMORY_CATALOG.filter((x) => x.cat === 'Armadura').map((a) => (
-                      <option key={a.id} value={`${a.name} (${a.dc})`} />
-                    ))}
-                  </datalist>
-                </label>
-                <label className="space-y-1">
-                  <span className="text-[10px] text-slate-400 font-bold">Accesorios</span>
-                  <input
-                    type="text"
-                    value={activeSheet.accessories}
-                    onChange={(e) => updateActiveSheet({ accessories: e.target.value })}
-                    placeholder="Anillos / Amuletos..."
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white"
-                  />
-                </label>
-              </div>
-
-              {/* Fila 3: Inventario Guardado */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
-                {[
-                  ['Armas Guardadas (Máx. 2)', 'storedWeapons', 'Ej. Hacha de mano'],
-                  ['Arrojadizas (Máx. 3)', 'storedThrown', 'Ej. 2× Daga'],
-                  ['Pociones (Máx. 3)', 'storedPotions', 'Ej. Pócima Curación'],
-                  ['Pergaminos (Máx. 3)', 'storedScrolls', 'Ej. Bola de Fuego'],
-                  ['Equipo Apoyo (Máx. 3)', 'storedSupport', 'Ej. Herramientas, Cuerda'],
-                ].map(([lbl, key, ph]) => (
-                  <label key={key} className="space-y-1">
-                    <span className="text-[10px] text-slate-400 font-bold">{lbl}</span>
-                    <input
-                      type="text"
-                      value={activeSheet[key]}
-                      onChange={(e) => updateActiveSheet({ [key]: e.target.value })}
-                      placeholder={ph}
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white"
-                    />
-                  </label>
-                ))}
-              </div>
-
-              {/* Fila 4: Añadir / Quitar Habilidades y Hechizos al escalar */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-2 border-t border-slate-800">
-                <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2">
-                  <div className="font-bold text-amber-200">+ Añadir Habilidad Nueva (al subir de Rango)</div>
-                  <div className="flex gap-1.5">
-                    <input
-                      type="text"
-                      value={newAbilityName}
-                      onChange={(e) => setNewAbilityName(e.target.value)}
-                      placeholder="Nombre (ej. Pericia en Ataque)"
-                      className="w-1/3 px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-white"
-                    />
-                    <input
-                      type="text"
-                      value={newAbilityText}
-                      onChange={(e) => setNewAbilityText(e.target.value)}
-                      placeholder="Efecto (ej. Repite 1 dado al atacar)"
-                      className="flex-1 px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-white"
-                    />
+              <div className="space-y-1.5 max-h-[640px] overflow-y-auto pr-1">
+                {filteredHeroes.map((h) => {
+                  const isSel = h.id === activeHero.id;
+                  return (
                     <button
+                      key={h.id}
                       type="button"
-                      onClick={() => {
-                        if (!newAbilityName.trim()) return;
-                        updateActiveSheet({
-                          abilities: [...activeSheet.abilities, { name: newAbilityName.trim(), text: newAbilityText.trim() || 'Habilidad de rango.' }],
-                        });
-                        setNewAbilityName('');
-                        setNewAbilityText('');
-                      }}
-                      className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black cursor-pointer"
+                      onClick={() => setActiveHeroId(h.id)}
+                      className={`w-full text-left p-2.5 rounded-xl border transition cursor-pointer flex items-center justify-between gap-2 ${
+                        isSel
+                          ? 'bg-gradient-to-r from-amber-500/25 to-amber-600/10 border-amber-400 text-amber-100 shadow'
+                          : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-600'
+                      }`}
                     >
-                      +
-                    </button>
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {activeSheet.abilities.map((ab, i) => (
-                      <span key={i} className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-[10px] flex items-center gap-1">
-                        {ab.name}
-                        <button
-                          type="button"
-                          onClick={() => updateActiveSheet({ abilities: activeSheet.abilities.filter((_, idx) => idx !== i) })}
-                          className="text-rose-400 hover:text-rose-300 cursor-pointer"
+                      <div className="min-w-0">
+                        <div className="font-bold text-xs truncate">{h.name}</div>
+                        <div className="text-[10px] text-slate-400 truncate">{h.role}</div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span
+                          className={`text-[9px] px-1.5 py-0.5 rounded font-black uppercase ${
+                            h.category === 'Clásico'
+                              ? 'bg-amber-500/20 text-amber-300'
+                              : 'bg-purple-500/20 text-purple-300'
+                          }`}
                         >
-                          ✕
-                        </button>
+                          {h.category}
+                        </span>
+                        <div className="font-mono text-[10px] text-slate-400 mt-0.5">
+                          AT{h.at} DF{h.def} PC{h.pc} PM{h.pm}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* COLUMNA DERECHA: FICHA DE PRESENTACIÓN COMPLETA DEL HÉROE */}
+            <div className="lg:col-span-8 space-y-4">
+              {/* Encabezado + De qué va + Estadísticas + Equipo Inicial */}
+              <div className="grimoire-panel rounded-2xl p-5 border-amber-500/50 space-y-4">
+                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-800 pb-3">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                          activeHero.category === 'Clásico'
+                            ? 'bg-amber-500 text-slate-950'
+                            : 'bg-purple-600 text-white'
+                        }`}
+                      >
+                        Héroe {activeHero.category}
                       </span>
-                    ))}
+                      <span className="px-2.5 py-0.5 rounded-full bg-slate-800 text-sky-300 text-[10px] font-bold">
+                        {activeHero.role}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold">
+                        Tamaño: {activeHero.size}
+                      </span>
+                      {activeHero.magicSaber && (
+                        <span className="px-2.5 py-0.5 rounded-full bg-indigo-950 border border-indigo-500/60 text-indigo-200 text-[10px] font-bold">
+                          ✨ {activeHero.magicSaber}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-display text-2xl font-black text-amber-100 mt-2">
+                      {activeHero.name}
+                    </h3>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2">
-                  <div className="font-bold text-purple-200">+ Añadir Hechizo / Escuela Nueva (al subir de Rango)</div>
-                  <div className="flex gap-1.5">
-                    <select
-                      value={newSpellLevel}
-                      onChange={(e) => setNewSpellLevel(Number(e.target.value))}
-                      className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-amber-200 font-bold"
-                    >
-                      <option value={1}>Nv.1</option>
-                      <option value={2}>Nv.2</option>
-                      <option value={3}>Nv.3</option>
-                    </select>
-                    <input
-                      type="text"
-                      value={newSpellName}
-                      onChange={(e) => setNewSpellName(e.target.value)}
-                      placeholder="Nombre (ej. Protección)"
-                      className="w-1/3 px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-white"
-                    />
-                    <input
-                      type="text"
-                      value={newSpellNote}
-                      onChange={(e) => setNewSpellNote(e.target.value)}
-                      placeholder="Resumen del efecto"
-                      className="flex-1 px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-white"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!newSpellName.trim()) return;
-                        updateActiveSheet({
-                          spells: [...activeSheet.spells, { level: newSpellLevel, name: newSpellName.trim(), note: newSpellNote.trim() || 'Hechizo aprendido.' }],
-                        });
-                        setNewSpellName('');
-                        setNewSpellNote('');
-                      }}
-                      className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-black cursor-pointer"
-                    >
-                      +
-                    </button>
+                {/* Resumen "De qué va este personaje" para leerle al jugador */}
+                <div className="p-3.5 rounded-xl bg-amber-950/30 border-l-4 border-amber-400 text-sm text-amber-50 leading-relaxed">
+                  {meta.summary}
+                </div>
+
+                {/* 4 Estadísticas Iniciales + Movimiento */}
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
+                  <div className="p-2.5 rounded-xl bg-red-950/45 border border-red-800/60">
+                    <div className="text-[10px] text-slate-400 font-bold uppercase">Ataque</div>
+                    <div className="text-xl font-black text-red-300">{activeHero.at} DC</div>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    {activeSheet.spells.map((sp, i) => (
-                      <span key={i} className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-[10px] flex items-center gap-1">
-                        [Nv.{sp.level}] {sp.name}
-                        <button
-                          type="button"
-                          onClick={() => updateActiveSheet({ spells: activeSheet.spells.filter((_, idx) => idx !== i) })}
-                          className="text-rose-400 hover:text-rose-300 cursor-pointer"
-                        >
-                          ✕
-                        </button>
-                      </span>
-                    ))}
+                  <div className="p-2.5 rounded-xl bg-amber-950/45 border border-amber-800/60">
+                    <div className="text-[10px] text-slate-400 font-bold uppercase">Defensa</div>
+                    <div className="text-xl font-black text-amber-200">{activeHero.def} DC</div>
                   </div>
+                  <div className="p-2.5 rounded-xl bg-emerald-950/45 border border-emerald-700/60">
+                    <div className="text-[10px] text-slate-400 font-bold uppercase">Cuerpo (PC)</div>
+                    <div className="text-xl font-black text-emerald-300">{activeHero.pc}</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-sky-950/45 border border-sky-700/60">
+                    <div className="text-[10px] text-slate-400 font-bold uppercase">Mente (PM)</div>
+                    <div className="text-xl font-black text-sky-300">{activeHero.pm}</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-700 col-span-2 sm:col-span-1">
+                    <div className="text-[10px] text-slate-400 font-bold uppercase">Movimiento</div>
+                    <div className="text-base font-black text-white mt-0.5">2D6 (8)</div>
+                  </div>
+                </div>
+
+                {/* Equipo Inicial y Restricciones */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                  <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+                    <div className="text-[10px] font-black uppercase text-emerald-400 mb-1">⚔️ Equipo Inicial (Qué lleva al empezar)</div>
+                    <div className="font-bold text-white">{activeHero.startingGear}</div>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+                    <div className="text-[10px] font-black uppercase text-rose-400 mb-1">🚫 Restricciones de Equipo</div>
+                    <div className="text-slate-200">{activeHero.restrictions}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Habilidades Especiales del Héroe */}
+              <div className="grimoire-panel rounded-2xl p-5 space-y-3">
+                <h4 className="font-display text-sm font-black text-emerald-300 uppercase tracking-wider">
+                  ⚡ Habilidades Especiales de {activeHero.name.split('/')[0].trim()} ({activeHero.abilities.length})
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
+                  {activeHero.abilities.map((ab, idx) => (
+                    <div key={idx} className="p-3 rounded-xl bg-slate-950/80 border border-emerald-800/40 space-y-1">
+                      <div className="font-black text-emerald-200">• {ab.name}</div>
+                      <p className="text-slate-200 leading-relaxed">{ab.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Rama y Escuelas de Hechizos de Este Héroe (si usa magia) */}
+              {(heroSchools.length > 0 || activeHero.startingSpells.length > 0) && (
+                <div className="grimoire-panel rounded-2xl p-5 border-purple-500/40 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="font-display text-sm font-black text-purple-300 uppercase tracking-wider">
+                      ✨ Ramas y Hechizos de {activeHero.name.split('/')[0].trim()}
+                    </h4>
+                    <span className="text-[11px] text-purple-200 font-bold">
+                      {activeHero.magicSaber || 'Magia Especial'}
+                    </span>
+                  </div>
+                  {activeHero.startingSpells.length > 0 && (
+                    <div className="p-3 rounded-xl bg-purple-950/35 border border-purple-700/50 text-xs space-y-1">
+                      <div className="text-[10px] font-black uppercase text-amber-300">Cómo empieza:</div>
+                      {activeHero.startingSpells.map((sp, i) => (
+                        <div key={i} className="text-purple-100">
+                          <strong>[Nv.{sp.level}] {sp.name}:</strong> {sp.note}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {heroSchools.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
+                      {heroSchools.map((sc) => (
+                        <div key={sc.id} className="p-3 rounded-xl bg-slate-950/85 border border-purple-800/50 space-y-1.5">
+                          <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-1">
+                            <strong className="text-purple-200">{sc.name}</strong>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-950 text-amber-300 font-bold">
+                              Nv.{sc.level} · {sc.saber}
+                            </span>
+                          </div>
+                          {sc.spells.map((sp) => (
+                            <div key={sp.name} className="text-[11px] leading-snug">
+                              <strong className="text-sky-300">{sp.name}:</strong>{' '}
+                              <span className="text-slate-300">{sp.text}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Progresión Completa de Rangos (1 al 10) de Este Héroe */}
+              <div className="grimoire-panel rounded-2xl p-5 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="font-display text-sm font-black text-amber-300 uppercase tracking-wider">
+                    🏰 Evolución por Rangos (1 al 10) — Cada 7 Retos
+                  </h4>
+                  <span className="text-[11px] text-slate-400">500 MO (300 MO con mazo Hasbro)</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  {FQ_RANK_PROGRESSION.map((r, idx) => (
+                    <div key={r.rank} className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-0.5">
+                      <div className="flex items-center justify-between">
+                        <strong className="text-amber-200">
+                          Rango {r.rank}: {r.title}
+                        </strong>
+                        <span className="text-[10px] text-sky-300 font-bold">{r.questsReq} retos</span>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-snug">{heroRanks[idx]}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
-          )}
-
-          {/* Vista Previa / Área de Impresión A4 Moderna */}
-          <div className="space-y-6">
-            {printMode === 'batch' ? (
-              FQ_HEROES.filter((h) => selectedForPrint.has(h.id)).map((h) => (
-                <ModernPrintableHeroSheet key={h.id} hero={h} sheet={getSheetForHero(h)} />
-              ))
-            ) : (
-              <ModernPrintableHeroSheet hero={activeHero} sheet={activeSheet} />
-            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ==================== TAB 3: HABILIDADES DE LOS 25 HÉROES + 16 ESCUELAS + 20 PERGAMINOS ==================== */}
       {subTab === 'abilities_spells' && (
