@@ -1038,6 +1038,13 @@ export default function App() {
                 partySize={4}
                 cityMode={cityMode}
                 setCityMode={setCityMode}
+                chaosClock={chaosClock}
+                setChaosClock={setChaosClock}
+                onTriggerChaosCrisis={(lvl) => setChaosCrisisModal(rollChaosCrisis(lvl ?? Math.max(5, chaosClock)))}
+                onOpenDice={() => setDiceModalOpen(true)}
+                onOpenConnect={() => setConnectModalOpen(true)}
+                cityOpenToPhones={cityOpenToPhones}
+                onToggleCityForPhones={toggleCityForPhones}
                 onAwardXP={handleAwardXP}
                 onAwardQuestRewards={handleAwardQuestRewards}
                 onStartTravelToCity={() => setTravelModalOpen(true)}

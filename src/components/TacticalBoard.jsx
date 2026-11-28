@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Compass,
   Package,
@@ -16,6 +16,14 @@ import {
   Armchair,
   Gem,
   Gift,
+  Maximize2,
+  Minimize2,
+  Dices,
+  QrCode,
+  Building2,
+  Minus,
+  Plus,
+  X,
 } from 'lucide-react';
 import {
   BOARD_COLS,
@@ -469,6 +477,13 @@ export default function TacticalBoard({
   setPartyLevel,
   partySize = 4,
   setPartySize = null,
+  chaosClock = 0,
+  setChaosClock = null,
+  onTriggerChaosCrisis = null,
+  onOpenDice = null,
+  onOpenConnect = null,
+  cityOpenToPhones = false,
+  onToggleCityForPhones = null,
   onAwardXP,
   onAwardQuestRewards = null,
   onStartTravelToCity = null,
@@ -552,6 +567,56 @@ export default function TacticalBoard({
   const [showIntro, setShowIntro] = useState(true);
   // Oleada actual si la misión es de Defensa por Oleadas
   const [currentWave, setCurrentWave] = useState(1);
+  // Modo Pantalla Completa (Mesa de Juego DM) + Modal Grande de Descubrimientos/Eventos
+  const [isFullscreenMode, setIsFullscreenMode] = useState(false);
+
+  const toggleFullscreenMode = () => {
+    setIsFullscreenMode((prev) => {
+      const next = !prev;
+      if (next) {
+        setShowIntro(false);
+        try {
+          if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          }
+        } catch {
+          // ignore
+        }
+      } else {
+        try {
+          if (document.fullscreenElement && document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+          }
+        } catch {
+          // ignore
+        }
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const onFsChange = () => {
+      if (!document.fullscreenElement) {
+        setIsFullscreenMode(false);
+      }
+    };
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (roomDiscovery) {
+          setRoomDiscovery(null);
+        } else if (isFullscreenMode && !document.fullscreenElement) {
+          setIsFullscreenMode(false);
+        }
+      }
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFsChange);
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [roomDiscovery, isFullscreenMode]);
 
   const effectiveHeroId = targetHeroId || heroes[0]?.id || '';
 
@@ -1153,18 +1218,19 @@ export default function TacticalBoard({
       : linkedOfficialQuest?.objectives || [];
 
   return (
-    <div className="space-y-3">
-      {/* Barra Superior Compacta y Profesional del Tablero */}
-      <div className="grimoire-panel rounded-2xl p-3 space-y-2.5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-sm font-display font-bold text-amber-300 pr-1">
-              <Compass className="w-4 h-4 text-amber-400" /> Tablero
+    <div className={isFullscreenMode ? 'fixed inset-0 z-40 bg-[#0b0f17] flex flex-col overflow-hidden' : 'space-y-3'}>
+      {/* ==================== BARRA SUPERIOR: MODO PANTALLA COMPLETA vs MODO NORMAL ==================== */}
+      {isFullscreenMode ? (
+        <div className="shrink-0 bg-[#111827]/95 border-b border-slate-800 px-3 py-2 flex flex-wrap items-center justify-between gap-2 text-xs shadow-lg">
+          {/* Izquierda: Misión, Nivel y Modo */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 text-xs font-display font-black text-amber-300 pr-1">
+              <Compass className="w-4 h-4 text-amber-400" /> MESA DM
             </span>
             <select
               value={selectedMapId}
               onChange={(e) => switchQuestMap(e.target.value)}
-              className="px-3 py-1.5 rounded-xl bg-stone-950 border border-amber-500/70 text-amber-200 font-bold text-xs cursor-pointer"
+              className="max-w-[230px] px-2.5 py-1 rounded-lg bg-stone-950 border border-amber-500/70 text-amber-200 font-bold text-xs cursor-pointer truncate"
             >
               {allAvailableMaps.map((m) => (
                 <option key={m.id} value={m.id} className="bg-stone-900">
@@ -1173,182 +1239,386 @@ export default function TacticalBoard({
               ))}
             </select>
             {setPartyLevel && (
-              <label className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-stone-950 border border-stone-700 text-xs">
-                <span className="text-stone-400">Nv:</span>
-                <select
-                  value={partyLevel}
-                  onChange={(e) => setPartyLevel(Number(e.target.value))}
-                  className="bg-transparent text-amber-300 font-bold cursor-pointer focus:outline-none"
-                >
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((l) => (
-                    <option key={l} value={l} className="bg-stone-900">
-                      Nv.{l}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <select
+                value={partyLevel}
+                onChange={(e) => setPartyLevel(Number(e.target.value))}
+                className="px-2 py-1 rounded-lg bg-stone-950 border border-stone-700 text-amber-300 font-bold text-xs cursor-pointer"
+                title="Nivel del Grupo"
+              >
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((l) => (
+                  <option key={l} value={l} className="bg-stone-900">
+                    Nv.{l}
+                  </option>
+                ))}
+              </select>
             )}
             {setCityMode && (
               <button
                 type="button"
                 onClick={() => setCityMode(isSurvivalMode ? 'relaxed' : 'survival')}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-extrabold border cursor-pointer transition ${
+                className={`px-2 py-1 rounded-lg text-[11px] font-extrabold border cursor-pointer ${
                   isSurvivalMode
-                    ? 'bg-red-950/70 border-red-500 text-red-200 shadow'
-                    : 'bg-sky-950/60 border-sky-600/60 text-sky-200 hover:border-sky-400'
+                    ? 'bg-red-950/80 border-red-500 text-red-200'
+                    : 'bg-sky-950/70 border-sky-600/60 text-sky-200'
                 }`}
-                title={
-                  isSurvivalMode
-                    ? 'Modo Supervivencia: Monstruos +1 PC, Jefes Élite, Trampas +2 CD, +25% XP y +20% Oro'
-                    : 'Modo Relajado: Balance estándar HQ-D20 v2 (clic para activar Supervivencia)'
-                }
               >
-                {isSurvivalMode ? '🔥 Supervivencia (+25% XP)' : '🛡️ Relajado'}
+                {isSurvivalMode ? '🔥 Supervivencia' : '🛡️ Relajado'}
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => setShowFogOverlay((v) => !v)}
+              className={`px-2 py-1 rounded-lg text-[11px] font-bold border flex items-center gap-1 cursor-pointer ${
+                showFogOverlay
+                  ? 'bg-slate-900 border-slate-700 text-slate-300'
+                  : 'bg-emerald-900/60 border-emerald-500 text-emerald-200'
+              }`}
+              title="Mostrar u ocultar sombreado de salas sin revelar"
+            >
+              {showFogOverlay ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              Niebla
+            </button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          {/* Derecha: Reloj del Caos + Accesos Rápidos DM + Salir Fullscreen */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {setChaosClock && (
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-950/70 border border-purple-500/50">
+                <span className="font-bold text-purple-200 text-[11px]">Caos</span>
+                <button
+                  onClick={() => setChaosClock(Math.max(0, chaosClock - 1))}
+                  className="p-0.5 hover:text-amber-300 cursor-pointer"
+                >
+                  <Minus className="w-3 h-3" />
+                </button>
+                <span className={`font-black min-w-[28px] text-center ${chaosClock >= 8 ? 'text-rose-400 animate-pulse' : chaosClock >= 5 ? 'text-amber-300' : 'text-purple-200'}`}>
+                  {chaosClock}/10
+                </span>
+                <button
+                  onClick={() => {
+                    const next = Math.min(10, chaosClock + 1);
+                    setChaosClock(next);
+                    if ((next === 5 || next === 10) && onTriggerChaosCrisis) {
+                      onTriggerChaosCrisis(next);
+                    }
+                  }}
+                  className="p-0.5 hover:text-rose-400 cursor-pointer"
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+                {onTriggerChaosCrisis && (
+                  <button
+                    onClick={() => onTriggerChaosCrisis(Math.max(5, chaosClock))}
+                    className={`ml-1 px-1.5 py-0.5 rounded font-black text-[10px] cursor-pointer ${
+                      chaosClock >= 5 ? 'bg-rose-600 hover:bg-rose-500 text-white' : 'bg-purple-900 hover:bg-purple-800 text-purple-200'
+                    }`}
+                  >
+                    ⚡ Crisis
+                  </button>
+                )}
+              </div>
+            )}
+
             {missionIntroText && (
               <button
                 onClick={() => setShowIntro((s) => !s)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border flex items-center gap-1 cursor-pointer ${
                   showIntro
-                    ? 'bg-amber-600 text-slate-950 border-amber-300'
-                    : 'bg-stone-900 border-amber-700/60 hover:border-amber-400 text-amber-200'
+                    ? 'bg-amber-500 text-slate-950 border-amber-300'
+                    : 'bg-slate-900 border-amber-700/60 hover:border-amber-400 text-amber-200'
                 }`}
-                title="Mostrar u ocultar la narrativa inicial que el DM lee en voz alta antes de empezar"
               >
                 <BookOpen className="w-3.5 h-3.5" /> Narrativa
               </button>
             )}
+
+            {onOpenDice && (
+              <button
+                onClick={onOpenDice}
+                className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-[11px] flex items-center gap-1 cursor-pointer"
+              >
+                <Dices className="w-3.5 h-3.5" /> Dados
+              </button>
+            )}
+
+            {onOpenConnect && (
+              <button
+                onClick={onOpenConnect}
+                className="px-2.5 py-1 rounded-lg bg-purple-700 hover:bg-purple-600 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+              >
+                <QrCode className="w-3.5 h-3.5" /> QR
+              </button>
+            )}
+
+            {onToggleCityForPhones && (
+              <button
+                onClick={onToggleCityForPhones}
+                className={`px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1 cursor-pointer border ${
+                  cityOpenToPhones
+                    ? 'bg-emerald-600 border-emerald-400 text-white'
+                    : 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700'
+                }`}
+                title="Abrir o cerrar pestaña Ciudad en los celulares"
+              >
+                <Building2 className="w-3.5 h-3.5" />
+                {cityOpenToPhones ? 'Ciudad ON' : 'Ciudad'}
+              </button>
+            )}
+
             {onStartTravelToCity && (
               <button
                 onClick={onStartTravelToCity}
-                className="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-extrabold flex items-center gap-1.5 cursor-pointer shadow"
-                title="Inicia un encuentro interactivo de rol en el camino de regreso a la Ciudad"
+                className="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-[11px] cursor-pointer"
+                title="Iniciar viaje narrativo de regreso a la Ciudad"
               >
-                🧭 Viajar a la Ciudad
+                🧭 Viajar
               </button>
             )}
-          </div>
-        </div>
 
-        {/* Barra de Oleadas (Solo aparece en misiones de Defensa del Bastión / Caravana) */}
-        {currentMap._questRef?.plot?.id === 'defensa_oleadas' && (
-          <div className="p-2.5 rounded-xl bg-rose-950/40 border border-rose-500/50 flex flex-wrap items-center justify-between gap-2 text-xs">
-            <div>
-              <span className="font-display font-black text-rose-300">
-                🛡️ DEFENSA POR OLEADAS — Oleada {currentWave}/5
-              </span>
-              <span className="text-slate-300 ml-2">
-                {currentWave <= 2
-                  ? 'Exploradores y hostigadores por 1 puerta.'
-                  : currentWave <= 4
-                  ? 'Élite y flanqueo por 2 puertas simultáneas.'
-                  : '¡OLEADA FINAL! Llega el Comandante con Fase 2.'}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setCurrentWave((w) => Math.max(1, w - 1))}
-                className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-bold cursor-pointer"
-              >
-                -1
-              </button>
-              <button
-                onClick={() => setCurrentWave((w) => Math.min(5, w + 1))}
-                className="px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-black cursor-pointer"
-              >
-                Siguiente Oleada →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Narrativa de Inicio de Misión (Visible y clara para leer en voz alta) */}
-        {showIntro && missionIntroText && (
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-950/50 via-slate-900/90 to-slate-900/90 border border-amber-500/60 shadow-lg space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-display text-sm font-black text-amber-300 flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-amber-400" />
-                Leer en voz alta — {currentMap.title}
-              </span>
-              <button
-                onClick={() => setShowIntro(false)}
-                className="text-xs px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold cursor-pointer"
-              >
-                Ocultar ✕
-              </button>
-            </div>
-            <p className="text-sm sm:text-[15px] text-amber-50 italic leading-relaxed">“{missionIntroText}”</p>
-            {missionObjectives.length > 0 && (
-              <div className="pt-2 border-t border-amber-800/40 flex flex-wrap gap-x-4 gap-y-1 text-xs text-amber-200 font-medium">
-                {missionObjectives.map((obj, i) => (
-                  <span key={i}>• {obj}</span>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Cinta Táctica Compacta (Solo datos esenciales de mesa) */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-stone-950/80 border border-stone-800 text-[11px]">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <span className="text-red-300 font-bold">
-              👹 Errante: <span className="text-stone-100">{currentMap.wanderingMonster}</span>
-            </span>
-            {partySize === 1 && (
-              <span className="px-2 py-0.5 rounded-md bg-emerald-950/70 border border-emerald-600/50 text-emerald-300 font-bold">
-                🛡️ Solitario: +1 PC al limpiar sala · Trampas -1 daño
-              </span>
-            )}
-            {currentMap.hazardRooms?.[selectedRoomId] && (
-              <span className="px-2 py-0.5 rounded-md bg-red-950/80 border border-red-600/60 text-red-200 font-bold">
-                ⚠️ Peligro ({selectedRoomId}): {currentMap.hazardRooms[selectedRoomId].icon}{' '}
-                {currentMap.hazardRooms[selectedRoomId].name} — {currentMap.hazardRooms[selectedRoomId].rule}
-              </span>
-            )}
-          </div>
-          {onRegisterNemesis && currentMap._questRef?.bossName && (
             <button
-              onClick={() =>
-                onRegisterNemesis(
-                  currentMap._questRef.bossName,
-                  currentMap._questRef.biome?.name || currentMap.title
-                )
-              }
-              className="px-2.5 py-1 rounded-lg bg-red-900/60 border border-red-600/60 hover:bg-red-800 text-red-100 text-[11px] font-bold cursor-pointer shrink-0"
-              title="Registra al Jefe como Némesis recurrente si logra escapar"
+              type="button"
+              onClick={toggleFullscreenMode}
+              className="px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-black text-[11px] flex items-center gap-1 cursor-pointer shadow"
+              title="Salir de Pantalla Completa (ESC)"
             >
-              💨 Jefe Escapó (Némesis)
+              <Minimize2 className="w-3.5 h-3.5" /> Salir
             </button>
-          )}
+          </div>
         </div>
-      </div>
-
-      {/* Cuerpo Principal: Plano Pergamino SVG + Guía de Montaje por Sala (items-start evita espacio vacío debajo del tablero) */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
-        {/* PLANO PERGAMINO ESTILO LIBRO DE MISIONES MODERNO 2021 */}
-        <div className="xl:col-span-8 parchment-sheet rounded-2xl p-3 sm:p-4 overflow-x-auto shadow-2xl">
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-2 px-1">
-            <div className="flex items-center gap-2">
-              <span className="font-display font-black text-sm text-stone-900 uppercase tracking-wider">
-                {currentMap.title}
+      ) : (
+        <div className="grimoire-panel rounded-2xl p-3 space-y-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 text-sm font-display font-bold text-amber-300 pr-1">
+                <Compass className="w-4 h-4 text-amber-400" /> Tablero
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-amber-900/15 border border-amber-900/30 text-[10px] font-black text-amber-950">
-                Salas: {revealedRooms.size}/{HQ_ROOMS.length}
-              </span>
+              <select
+                value={selectedMapId}
+                onChange={(e) => switchQuestMap(e.target.value)}
+                className="px-3 py-1.5 rounded-xl bg-stone-950 border border-amber-500/70 text-amber-200 font-bold text-xs cursor-pointer"
+              >
+                {allAvailableMaps.map((m) => (
+                  <option key={m.id} value={m.id} className="bg-stone-900">
+                    [{m.expansion}] {m.title}
+                  </option>
+                ))}
+              </select>
+              {setPartyLevel && (
+                <label className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-stone-950 border border-stone-700 text-xs">
+                  <span className="text-stone-400">Nv:</span>
+                  <select
+                    value={partyLevel}
+                    onChange={(e) => setPartyLevel(Number(e.target.value))}
+                    className="bg-transparent text-amber-300 font-bold cursor-pointer focus:outline-none"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((l) => (
+                      <option key={l} value={l} className="bg-stone-900">
+                        Nv.{l}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              {setCityMode && (
+                <button
+                  type="button"
+                  onClick={() => setCityMode(isSurvivalMode ? 'relaxed' : 'survival')}
+                  className={`px-2.5 py-1.5 rounded-xl text-xs font-extrabold border cursor-pointer transition ${
+                    isSurvivalMode
+                      ? 'bg-red-950/70 border-red-500 text-red-200 shadow'
+                      : 'bg-sky-950/60 border-sky-600/60 text-sky-200 hover:border-sky-400'
+                  }`}
+                  title={
+                    isSurvivalMode
+                      ? 'Modo Supervivencia: Monstruos +1 PC, Jefes Élite, Trampas +2 CD, +25% XP y +20% Oro'
+                      : 'Modo Relajado: Balance estándar HQ-D20 v6 (clic para activar Supervivencia)'
+                  }
+                >
+                  {isSurvivalMode ? '🔥 Supervivencia (+25% XP)' : '🛡️ Relajado'}
+                </button>
+              )}
             </div>
-            <span className="text-[11px] font-bold text-amber-950">
-              Toca una sala para ver su historia, reglas y montaje
-            </span>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleFullscreenMode}
+                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-md"
+                title="Abre el Modo Mesa en Pantalla Completa con tablero gigante y botones rápidos a la mano"
+              >
+                <Maximize2 className="w-3.5 h-3.5" /> Pantalla Completa
+              </button>
+              {missionIntroText && (
+                <button
+                  onClick={() => setShowIntro((s) => !s)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 cursor-pointer ${
+                    showIntro
+                      ? 'bg-amber-600 text-slate-950 border-amber-300'
+                      : 'bg-stone-900 border-amber-700/60 hover:border-amber-400 text-amber-200'
+                  }`}
+                  title="Mostrar u ocultar la narrativa inicial que el DM lee en voz alta antes de empezar"
+                >
+                  <BookOpen className="w-3.5 h-3.5" /> Narrativa
+                </button>
+              )}
+              {onStartTravelToCity && (
+                <button
+                  onClick={onStartTravelToCity}
+                  className="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-extrabold flex items-center gap-1.5 cursor-pointer shadow"
+                  title="Inicia un encuentro interactivo de rol en el camino de regreso a la Ciudad"
+                >
+                  🧭 Viajar a la Ciudad
+                </button>
+              )}
+            </div>
           </div>
 
-          <svg
-            viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-            className="w-full min-w-[740px] h-auto rounded-lg border-2 border-[#3b2c1e] bg-[#e7dbc0]"
+          {/* Barra de Oleadas (Solo aparece en misiones de Defensa del Bastión / Caravana) */}
+          {currentMap._questRef?.plot?.id === 'defensa_oleadas' && (
+            <div className="p-2.5 rounded-xl bg-rose-950/40 border border-rose-500/50 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div>
+                <span className="font-display font-black text-rose-300">
+                  🛡️ DEFENSA POR OLEADAS — Oleada {currentWave}/5
+                </span>
+                <span className="text-slate-300 ml-2">
+                  {currentWave <= 2
+                    ? 'Exploradores y hostigadores por 1 puerta.'
+                    : currentWave <= 4
+                    ? 'Élite y flanqueo por 2 puertas simultáneas.'
+                    : '¡OLEADA FINAL! Llega el Comandante con Fase 2.'}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentWave((w) => Math.max(1, w - 1))}
+                  className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-bold cursor-pointer"
+                >
+                  -1
+                </button>
+                <button
+                  onClick={() => setCurrentWave((w) => Math.min(5, w + 1))}
+                  className="px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-black cursor-pointer"
+                >
+                  Siguiente Oleada →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Narrativa de Inicio de Misión (Visible y clara para leer en voz alta) */}
+          {showIntro && missionIntroText && (
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-950/50 via-slate-900/90 to-slate-900/90 border border-amber-500/60 shadow-lg space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-display text-sm font-black text-amber-300 flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-amber-400" />
+                  Leer en voz alta — {currentMap.title}
+                </span>
+                <button
+                  onClick={() => setShowIntro(false)}
+                  className="text-xs px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold cursor-pointer"
+                >
+                  Ocultar ✕
+                </button>
+              </div>
+              <p className="text-sm sm:text-[15px] text-amber-50 italic leading-relaxed">“{missionIntroText}”</p>
+              {missionObjectives.length > 0 && (
+                <div className="pt-2 border-t border-amber-800/40 flex flex-wrap gap-x-4 gap-y-1 text-xs text-amber-200 font-medium">
+                  {missionObjectives.map((obj, i) => (
+                    <span key={i}>• {obj}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Cinta Táctica Compacta (Solo datos esenciales de mesa) */}
+          <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-stone-950/80 border border-stone-800 text-[11px]">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="text-red-300 font-bold">
+                👹 Errante: <span className="text-stone-100">{currentMap.wanderingMonster}</span>
+              </span>
+              {partySize === 1 && (
+                <span className="px-2 py-0.5 rounded-md bg-emerald-950/70 border border-emerald-600/50 text-emerald-300 font-bold">
+                  🛡️ Solitario: +1 PC al limpiar sala · Trampas -1 daño
+                </span>
+              )}
+              {currentMap.hazardRooms?.[selectedRoomId] && (
+                <span className="px-2 py-0.5 rounded-md bg-red-950/80 border border-red-600/60 text-red-200 font-bold">
+                  ⚠️ Peligro ({selectedRoomId}): {currentMap.hazardRooms[selectedRoomId].icon}{' '}
+                  {currentMap.hazardRooms[selectedRoomId].name} — {currentMap.hazardRooms[selectedRoomId].rule}
+                </span>
+              )}
+            </div>
+            {onRegisterNemesis && currentMap._questRef?.bossName && (
+              <button
+                onClick={() =>
+                  onRegisterNemesis(
+                    currentMap._questRef.bossName,
+                    currentMap._questRef.biome?.name || currentMap.title
+                  )
+                }
+                className="px-2.5 py-1 rounded-lg bg-red-900/60 border border-red-600/60 hover:bg-red-800 text-red-100 text-[11px] font-bold cursor-pointer shrink-0"
+                title="Registra al Jefe como Némesis recurrente si logra escapar"
+              >
+                💨 Jefe Escapó (Némesis)
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Cuerpo Principal: Plano Pergamino SVG + Guía de Montaje por Sala */}
+      <div
+        className={
+          isFullscreenMode
+            ? 'flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden'
+            : 'grid grid-cols-1 xl:grid-cols-12 gap-5 items-start'
+        }
+      >
+        {/* PLANO PERGAMINO ESTILO LIBRO DE MISIONES MODERNO 2021 */}
+        <div
+          className={
+            isFullscreenMode
+              ? 'flex-1 min-w-0 min-h-0 flex flex-col p-2 sm:p-3 gap-2 overflow-hidden'
+              : 'xl:col-span-8 parchment-sheet rounded-2xl p-3 sm:p-4 overflow-x-auto shadow-2xl'
+          }
+        >
+          <div
+            className={
+              isFullscreenMode
+                ? 'flex-1 min-h-0 parchment-sheet rounded-2xl p-2 sm:p-3 flex flex-col shadow-2xl overflow-hidden'
+                : ''
+            }
           >
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5 px-1 shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="font-display font-black text-sm text-stone-900 uppercase tracking-wider">
+                  {currentMap.title}
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-amber-900/15 border border-amber-900/30 text-[10px] font-black text-amber-950">
+                  Salas: {revealedRooms.size}/{HQ_ROOMS.length}
+                </span>
+                {isFullscreenMode && (
+                  <span className="px-2 py-0.5 rounded-full bg-red-900/15 border border-red-900/30 text-[10px] font-black text-red-950">
+                    👹 Errante: {currentMap.wanderingMonster}
+                  </span>
+                )}
+              </div>
+              <span className="text-[11px] font-bold text-amber-950">
+                Toca una sala, monstruo o trampa para inspeccionar
+              </span>
+            </div>
+
+            <div className={isFullscreenMode ? 'flex-1 min-h-0 flex items-center justify-center overflow-hidden' : ''}>
+              <svg
+                viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+                preserveAspectRatio="xMidYMid meet"
+                className={
+                  isFullscreenMode
+                    ? 'w-full h-full max-w-full max-h-full rounded-lg border-2 border-[#3b2c1e] bg-[#e7dbc0]'
+                    : 'w-full min-w-[740px] h-auto rounded-lg border-2 border-[#3b2c1e] bg-[#e7dbc0]'
+                }
+              >
             {/* Coordenadas A–Z */}
             {COL_LETTERS.map((letter, idx) => (
               <text
@@ -1643,44 +1913,168 @@ export default function TacticalBoard({
                 </g>
               );
             })}
-          </svg>
+            </svg>
+            </div>
 
-          {/* Leyenda Visual con Iconos Oficiales del Tablero Moderno 2021 */}
-          <div className="mt-3 pt-2 border-t border-amber-900/30 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-semibold text-stone-800">
-            {[
-              ['door', 'Puerta'],
-              ['secret_door', 'Secreta'],
-              ['trap_pit', 'Foso'],
-              ['trap_spear', 'Lanza'],
-              ['goblin', 'Goblin'],
-              ['orc', 'Orco'],
-              ['abomination', 'Abominación'],
-              ['skeleton', 'Esqueleto'],
-              ['zombie', 'Zombi'],
-              ['mummy', 'Momia'],
-              ['dread_warrior', 'Guerrero Terror'],
-              ['gargoyle', 'Gárgola'],
-              ['sorcerer', 'Hechicero'],
-            ].map(([typeKey, lbl]) => {
-              const src = getPieceIconSrc(typeKey);
-              return (
-                <span key={typeKey} className="inline-flex items-center gap-1">
-                  {src && (
-                    <img
-                      src={src}
-                      alt={lbl}
-                      className="w-4 h-4 object-contain inline-block"
-                    />
-                  )}
-                  <span>{lbl}</span>
-                </span>
-              );
-            })}
+            {/* Leyenda Visual (oculta en Fullscreen para dar 100% de tamaño al tablero) */}
+            {!isFullscreenMode && (
+              <div className="mt-3 pt-2 border-t border-amber-900/30 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-semibold text-stone-800">
+                {[
+                  ['door', 'Puerta'],
+                  ['secret_door', 'Secreta'],
+                  ['trap_pit', 'Foso'],
+                  ['trap_spear', 'Lanza'],
+                  ['goblin', 'Goblin'],
+                  ['orc', 'Orco'],
+                  ['abomination', 'Abominación'],
+                  ['skeleton', 'Esqueleto'],
+                  ['zombie', 'Zombi'],
+                  ['mummy', 'Momia'],
+                  ['dread_warrior', 'Guerrero Terror'],
+                  ['gargoyle', 'Gárgola'],
+                  ['sorcerer', 'Hechicero'],
+                ].map(([typeKey, lbl]) => {
+                  const src = getPieceIconSrc(typeKey);
+                  return (
+                    <span key={typeKey} className="inline-flex items-center gap-1">
+                      {src && (
+                        <img
+                          src={src}
+                          alt={lbl}
+                          className="w-4 h-4 object-contain inline-block"
+                        />
+                      )}
+                      <span>{lbl}</span>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
           </div>
+
+          {/* BARRA INFERIOR DE ACCIONES RÁPIDAS (Solo en Modo Pantalla Completa) */}
+          {isFullscreenMode && (
+            <div className="shrink-0 bg-[#111827]/95 border border-slate-800 rounded-xl px-2.5 py-2 flex flex-wrap items-center justify-between gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={searchRoomTreasure}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black cursor-pointer shadow"
+                >
+                  💎 Tesoro
+                </button>
+                <button
+                  type="button"
+                  onClick={() => triggerContextualRoomEvent('room')}
+                  className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-black cursor-pointer shadow"
+                >
+                  ✨ Evento Sala
+                </button>
+                <button
+                  type="button"
+                  onClick={() => triggerContextualRoomEvent('corridor')}
+                  className="px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 border border-stone-600 text-amber-200 text-xs font-bold cursor-pointer"
+                >
+                  🕯️ Pasillo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const h = generateHintCard(currentMap.biomeId || 'catacumbas', selectedRoomId === 'CORRIDOR');
+                    setRoomDiscovery({
+                      source: `Pista · ${h.biomeName}`,
+                      title: `${h.biomeIcon} ${h.title}`,
+                      badge: 'Pista Sensorial',
+                      text: `“${h.clue}” | ✓ Si investigan: ${h.reward} | ⚠️ Riesgo: ${h.consequence}`,
+                    });
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-sky-700 hover:bg-sky-600 text-white text-xs font-bold cursor-pointer"
+                >
+                  🔍 Pista
+                </button>
+                <button
+                  type="button"
+                  onClick={triggerEpicSceneTwist}
+                  className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 text-white text-xs font-black cursor-pointer shadow"
+                >
+                  🔥 Giro Épico
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRightTab('setup');
+                    setPuzzleOpen((v) => !v);
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg bg-fuchsia-700 hover:bg-fuchsia-600 text-white text-xs font-bold cursor-pointer"
+                >
+                  🧩 Puzzle
+                </button>
+                <button
+                  type="button"
+                  onClick={spawnNpcQuestInRoom}
+                  className="px-2.5 py-1.5 rounded-lg bg-cyan-800 hover:bg-cyan-700 text-white text-xs font-bold cursor-pointer"
+                >
+                  🧙 NPC
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRightTab('actions');
+                    setQuickSendOpen((v) => !v);
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/60 text-amber-200 text-xs font-bold cursor-pointer"
+                >
+                  🎁 Botín
+                </button>
+              </div>
+              {currentMap.hazardRooms?.[selectedRoomId] && (
+                <span className="px-2 py-1 rounded-lg bg-red-950/80 border border-red-600/60 text-red-200 text-[11px] font-bold truncate max-w-[260px]">
+                  ⚠️ {currentMap.hazardRooms[selectedRoomId].icon} {currentMap.hazardRooms[selectedRoomId].name}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* PANEL DERECHO: MONSTRUO SELECCIONADO + GUÍA DE MONTAJE DE LA SALA */}
-        <div className="xl:col-span-4 space-y-4">
+        {/* PANEL DERECHO: HÉROES EN VIVO (Fullscreen) + MONSTRUO/TRAMPA + GUÍA DE SALA */}
+        <div
+          className={
+            isFullscreenMode
+              ? 'w-full lg:w-[390px] xl:w-[430px] shrink-0 overflow-y-auto border-t lg:border-t-0 lg:border-l border-slate-800 bg-[#0f141e] p-3 space-y-3'
+              : 'xl:col-span-4 space-y-4'
+          }
+        >
+          {/* Tira compacta de Héroes en Vivo en Modo Fullscreen */}
+          {isFullscreenMode && heroes.length > 0 && (
+            <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1.5">
+              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                <span>🛡️ Héroes en Misión ({heroes.length})</span>
+                <span className="text-emerald-400">En vivo</span>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                {heroes.map((h) => {
+                  const curPC = h.currentPC ?? h.maxPC;
+                  const lowHP = curPC <= Math.max(2, Math.floor((h.maxPC || 6) / 3));
+                  return (
+                    <div
+                      key={h.id}
+                      className={`px-2 py-1.5 rounded-lg border text-[11px] flex items-center justify-between gap-1 ${
+                        lowHP
+                          ? 'bg-rose-950/50 border-rose-500/60'
+                          : 'bg-slate-900/90 border-slate-800'
+                      }`}
+                    >
+                      <span className="font-bold text-slate-100 truncate">{h.name}</span>
+                      <span className="shrink-0 font-mono text-[10px] font-black">
+                        <span className={lowHP ? 'text-rose-400' : 'text-emerald-300'}>❤️{curPC}/{h.maxPC}</span>
+                        <span className="text-sky-300 ml-1">💧{h.currentPM ?? h.maxPM}</span>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           {/* TARJETA RÁPIDA DEL MONSTRUO CLICADO EN EL TABLERO */}
           {selectedMonsterObj && (
             <div
@@ -3148,7 +3542,8 @@ export default function TacticalBoard({
         </div>
       </div>
 
-      {/* Checklist Agrupado de Piezas Físicas a Sacar de la Caja */}
+      {/* Checklist Agrupado de Piezas Físicas a Sacar de la Caja (oculto en Fullscreen para máxima limpieza) */}
+      {!isFullscreenMode && (
       <div className="grimoire-panel rounded-2xl p-5 space-y-4">
         <h4 className="font-display font-bold text-base text-amber-300 flex items-center gap-2">
           <Package className="w-5 h-5 text-emerald-400" /> Preparación Previa: Todo lo que debes sacar de tu caja física
@@ -3195,6 +3590,301 @@ export default function TacticalBoard({
           })}
         </div>
       </div>
+      )}
+
+      {/* ==================== VENTANA GRANDE DE NARRATIVA EN FULLSCREEN ==================== */}
+      {isFullscreenMode && showIntro && missionIntroText && (
+        <div
+          className="fixed inset-0 z-[45] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
+          onClick={() => setShowIntro(false)}
+        >
+          <div
+            className="w-full max-w-2xl rounded-3xl bg-gradient-to-b from-amber-950/95 via-slate-950 to-slate-950 border-2 border-amber-400/70 p-6 sm:p-8 space-y-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3 border-b border-amber-800/60 pb-4">
+              <div>
+                <div className="text-xs font-black uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
+                  <BookOpen className="w-4 h-4" /> Leer en Voz Alta a los Héroes
+                </div>
+                <h3 className="font-display text-2xl font-black text-white mt-1">
+                  {currentMap.title}
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowIntro(false)}
+                className="p-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="font-lore text-lg sm:text-xl italic text-amber-50 leading-relaxed">
+              “{missionIntroText}”
+            </p>
+            {missionObjectives.length > 0 && (
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-amber-700/50 space-y-1.5">
+                <div className="text-xs font-black uppercase tracking-wider text-amber-300">
+                  🎯 Objetivos de la Misión
+                </div>
+                {missionObjectives.map((obj, i) => (
+                  <div key={i} className="text-sm text-amber-100">• {obj}</div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => setShowIntro(false)}
+              className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm cursor-pointer shadow-lg"
+            >
+              ✓ Comenzar Aventura en el Tablero
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== VENTANA MODAL GRANDE PARA TESOROS, EVENTOS, MUEBLES Y PISTAS ==================== */}
+      {roomDiscovery && (() => {
+        const spawn = detectSpawnable(roomDiscovery, currentMap);
+        const discTxtLow = `${roomDiscovery.source || ''} ${roomDiscovery.badge || ''} ${roomDiscovery.title || ''} ${roomDiscovery.text || ''}`.toLowerCase();
+        const spawnedMonsterId = !roomDiscovery.isBodyLoot
+          ? (spawn.monsterType && PIECE_TYPES[spawn.monsterType]?.monsterId) ||
+            (discTxtLow.includes('araña') ? 'arana_gigante' : null)
+          : null;
+        const spawnedBase = spawnedMonsterId ? MONSTERS.find((m) => m.id === spawnedMonsterId) : null;
+        const spawnedScaled = spawnedBase
+          ? scaleMonster(spawnedBase, partyLevel, 4, false, false, isSurvivalMode)
+          : null;
+
+        const isDanger = Boolean(spawn.monsterType || spawn.trapType || discTxtLow.includes('trampa') || discTxtLow.includes('emboscada') || discTxtLow.includes('mímico'));
+        const isTreasure = discTxtLow.includes('tesoro') || Boolean(roomDiscovery.rewardLoot || roomDiscovery.rewardGold > 0);
+        const isEvent = discTxtLow.includes('evento') || discTxtLow.includes('giro') || discTxtLow.includes('pasillo');
+
+        const themeClass = isDanger
+          ? 'from-rose-950/95 via-slate-950 to-slate-950 border-rose-500/80'
+          : isTreasure
+          ? 'from-emerald-950/95 via-slate-950 to-slate-950 border-amber-400/80'
+          : isEvent
+          ? 'from-purple-950/95 via-slate-950 to-slate-950 border-purple-400/80'
+          : 'from-sky-950/95 via-slate-950 to-slate-950 border-sky-400/80';
+
+        const badgeBg = isDanger
+          ? 'bg-rose-600 text-white'
+          : isTreasure
+          ? 'bg-amber-500 text-slate-950'
+          : isEvent
+          ? 'bg-purple-600 text-white'
+          : 'bg-sky-600 text-white';
+
+        const bigIcon = isDanger ? '⚠️' : isTreasure ? '💎' : isEvent ? '✨' : '🔍';
+
+        return (
+          <div
+            className="fixed inset-0 z-[45] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
+            onClick={() => setRoomDiscovery(null)}
+          >
+            <div
+              className={`w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-gradient-to-b border-2 p-6 sm:p-7 space-y-5 shadow-2xl ${themeClass}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Cabecera Grande */}
+              <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
+                <div className="space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${badgeBg}`}>
+                      {bigIcon} {roomDiscovery.source || 'Descubrimiento'}
+                    </span>
+                    {roomDiscovery.badge && (
+                      <span className="px-2.5 py-1 rounded-full bg-white/10 text-slate-200 text-xs font-bold">
+                        {roomDiscovery.badge}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="font-display text-2xl sm:text-3xl font-black text-amber-100 leading-tight">
+                    {roomDiscovery.title}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setRoomDiscovery(null)}
+                  className="p-2 rounded-xl bg-slate-900/90 border border-slate-700 text-slate-300 hover:text-white cursor-pointer shrink-0"
+                  title="Cerrar (ESC)"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Texto Principal Grande y Legible para el DM */}
+              <div className="p-5 rounded-2xl bg-black/40 border border-white/10">
+                <p className="text-base sm:text-lg text-slate-100 leading-relaxed whitespace-pre-line">
+                  {roomDiscovery.text}
+                </p>
+              </div>
+
+              {/* Ficha Ampliada si el Evento/Tesoro invoca un Monstruo */}
+              {spawnedScaled && (
+                <div className="p-4 rounded-2xl bg-rose-950/55 border border-rose-500/70 space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-display text-lg font-black text-rose-200">
+                      👹 {spawnedScaled.name} (Nv.{partyLevel})
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-600/30 border border-emerald-400/50 text-emerald-200 text-xs font-black">
+                      +{spawnedScaled.scaledXP} XP
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
+                    <div className="p-2 rounded-xl bg-black/45 border border-rose-800/60">
+                      <div className="text-[10px] text-slate-400">ATQ</div>
+                      <div className="font-black text-rose-300 text-sm">{spawnedScaled.scaledAt} DC</div>
+                    </div>
+                    <div className="p-2 rounded-xl bg-black/45 border border-amber-800/60">
+                      <div className="text-[10px] text-slate-400">DEF</div>
+                      <div className="font-black text-amber-200 text-sm">{spawnedScaled.scaledDef} DC</div>
+                    </div>
+                    <div className="p-2 rounded-xl bg-black/45 border border-slate-700">
+                      <div className="text-[10px] text-slate-400">MOV</div>
+                      <div className="font-black text-white text-sm">{spawnedScaled.mov}</div>
+                    </div>
+                    <div className="p-2 rounded-xl bg-black/45 border border-emerald-800/60">
+                      <div className="text-[10px] text-slate-400">VIDA</div>
+                      <div className="font-black text-emerald-300 text-sm">{spawnedScaled.scaledPC} PC</div>
+                    </div>
+                    <div className="p-2 rounded-xl bg-black/45 border border-sky-800/60">
+                      <div className="text-[10px] text-slate-400">PM</div>
+                      <div className="font-black text-sky-300 text-sm">{spawnedScaled.pm}</div>
+                    </div>
+                    <div className="p-2 rounded-xl bg-black/45 border border-purple-800/60">
+                      <div className="text-[10px] text-slate-400">CD</div>
+                      <div className="font-black text-purple-200 text-sm">{spawnedScaled.saveDC}</div>
+                    </div>
+                  </div>
+                  {spawnedScaled.activeAbilities?.[0] && (
+                    <div className="text-sm text-rose-100 leading-snug bg-black/30 p-2.5 rounded-xl">
+                      ⚡ {spawnedScaled.activeAbilities[0]}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Botones Grandes para Invocar Monstruo o Trampa al Tablero */}
+              {(spawn.monsterType || spawn.trapType) && (
+                <div className="flex flex-wrap gap-2.5">
+                  {spawn.monsterType && (
+                    <button
+                      onClick={() => {
+                        spawnDynamicPiece(spawn.monsterType, `${spawn.monsterLabel} (Evento)`);
+                        setRoomDiscovery(null);
+                      }}
+                      className="flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-sm cursor-pointer shadow-lg"
+                    >
+                      👹 Poner {spawn.monsterLabel} en el Tablero
+                    </button>
+                  )}
+                  {spawn.trapType && (
+                    <button
+                      onClick={() => {
+                        spawnDynamicPiece(spawn.trapType, roomDiscovery.title, roomDiscovery.text);
+                        setRoomDiscovery(null);
+                      }}
+                      className="flex-1 py-3 px-4 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-black text-sm cursor-pointer shadow-lg"
+                    >
+                      ▲ Poner Trampa en el Tablero
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Estado de Entrega Automática o Selector para Mandar Botín/Oro/Material al Celular */}
+              {roomDiscovery.alreadyDeliveredTo && (
+                <div className="p-3.5 rounded-2xl bg-emerald-900/50 border border-emerald-400/70 text-sm font-bold text-emerald-100 text-center">
+                  ✅ Enviado automáticamente a la mochila de {roomDiscovery.alreadyDeliveredTo}.
+                </div>
+              )}
+
+              {!roomDiscovery.alreadyDeliveredTo &&
+                (roomDiscovery.rewardLoot ||
+                  roomDiscovery.rewardGold > 0 ||
+                  (roomDiscovery.materialId && roomDiscovery.materialQty > 0)) &&
+                onSendLootToHero && (
+                  <div className="p-4 rounded-2xl bg-emerald-950/50 border border-emerald-500/60 space-y-3">
+                    <div className="text-xs font-black uppercase tracking-wider text-emerald-300">
+                      🎁 Entregar Botín al Celular del Héroe
+                    </div>
+                    {heroes.length === 0 ? (
+                      <p className="text-xs text-amber-300">
+                        Crea al menos un héroe en la pestaña Héroes para enviarle este botín.
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <select
+                          value={effectiveHeroId}
+                          onChange={(e) => setTargetHeroId(e.target.value)}
+                          className="flex-1 min-w-[180px] px-3 py-2.5 rounded-xl bg-slate-950 border border-emerald-600 text-sm text-white font-bold"
+                        >
+                          {heroes.map((h) => (
+                            <option key={h.id} value={h.id}>
+                              {h.name} ({h.className})
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => {
+                            if (roomDiscovery.rewardLoot || roomDiscovery.rewardGold) {
+                              onSendLootToHero(
+                                effectiveHeroId,
+                                roomDiscovery.rewardLoot,
+                                roomDiscovery.rewardGold
+                              );
+                            }
+                            if (roomDiscovery.materialId && roomDiscovery.materialQty > 0 && onSendMaterialToHero) {
+                              onSendMaterialToHero(
+                                effectiveHeroId,
+                                roomDiscovery.materialId,
+                                roomDiscovery.materialQty
+                              );
+                            }
+                            setRoomDiscovery(null);
+                          }}
+                          className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm flex items-center gap-2 cursor-pointer shadow-lg"
+                        >
+                          <Gift className="w-4 h-4" /> Mandar a Inventario
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+              {/* Pie con Acciones Rápidas (Volver a tirar o Cerrar) */}
+              <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-white/10">
+                <div className="flex flex-wrap gap-2">
+                  {isTreasure && (
+                    <button
+                      type="button"
+                      onClick={searchRoomTreasure}
+                      className="px-3.5 py-2 rounded-xl bg-emerald-800/80 hover:bg-emerald-700 text-emerald-100 font-bold text-xs cursor-pointer"
+                    >
+                      💎 Sacar Otro Tesoro
+                    </button>
+                  )}
+                  {isEvent && (
+                    <button
+                      type="button"
+                      onClick={() => triggerContextualRoomEvent(selectedRoomId === 'CORRIDOR' ? 'corridor' : 'room')}
+                      className="px-3.5 py-2 rounded-xl bg-purple-800/80 hover:bg-purple-700 text-purple-100 font-bold text-xs cursor-pointer"
+                    >
+                      ✨ Sacar Otro Evento
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setRoomDiscovery(null)}
+                  className="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-black text-sm cursor-pointer ml-auto"
+                >
+                  ✓ Cerrar y Volver al Tablero
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
