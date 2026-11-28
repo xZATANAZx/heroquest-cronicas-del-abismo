@@ -1047,3 +1047,70 @@ export const FQ_BALANCED_DECK_PRESETS = [
     breakdown: 'Totalmente compatible con FetenQuest, pero al dar menos oro debes activar el botón "÷2 Hasbro" en La Ciudad y cobrar 300 MO (no 500 MO) al subir de Rango.',
   },
 ];
+
+// ==================== TABLAS ESPECIALES DE HÉROES (TIRADAS PROPIAS DE CADA PERSONAJE) ====================
+export const FQ_CHAOS_MARKS = [
+  {
+    id: 'khorne',
+    god: '🩸 Marca de Khorne',
+    ability: 'Furia Asesina: 1 uso/reto (recargable al sacar 2 Escudos Negros en combate) para desatar un ataque devastador adicional. Al inicio de cada reto recibe Bendiciones de Khorne.',
+  },
+  {
+    id: 'nurgle',
+    god: '☣️ Marca de Nurgle',
+    ability: 'Nube de Moscas (Pasiva): en TODAS tus tiradas de defensa cuerpo a cuerpo puedes volver a lanzar 1 dado con Escudo Negro. Al inicio de cada reto recibe Bendiciones de Nurgle.',
+  },
+  {
+    id: 'slaanesh',
+    god: '💜 Marca de Slaanesh',
+    ability: 'Seducción: 1 uso/reto (recargable con 2 Escudos Blancos al atacar) para obligar a un monstruo con PM (no jefe) a mover o atacar inmediatamente (se libra sacando 6 en 1D6/PM).',
+  },
+  {
+    id: 'tzeentch',
+    god: '🔮 Marca de Tzeentch',
+    ability: 'Conocimiento Arcano: +1 PM y al iniciar cada reto lanzas 2D20 en la tabla de Hechizos del Caos para obtener 2 hechizos (puedes cambiar cualquier Nv.3 por un Nv.2).',
+  },
+];
+
+export const FQ_CHAOS_ARTIFACTS_D6 = [
+  { roll: 1, name: 'Arma Demoníaca del Caos', text: 'Arma bendecida por los Dioses Oscuros (+1 DC ataque y poder disforme; si obtienes otra Arma del Caos eliges cuál conservar y la otra se disuelve).' },
+  { roll: 2, name: 'Armadura del Caos', text: '+2 DC de Defensa sin penalización de movimiento (no acumulable con Cota/Placas; solo Guerrero del Caos).' },
+  { roll: 3, name: 'Yelmo de los Mil Ojos', text: '+1 DC de Defensa e inmunidad a ataques por la espalda o emboscadas sorpresa.' },
+  { roll: 4, name: 'Escudo de la Disformidad', text: '+1 DC de Defensa y permite repetir 1 dado de defensa fallido una vez por turno.' },
+  { roll: 5, name: 'Amuleto del Favor Oscuro', text: '1 vez por reto puedes repetir cualquier tirada de ataque, defensa o resistencia a hechizos.' },
+  { roll: 6, name: 'Corona de la Condenación', text: '+1 PC y +1 PM permanentes mientras la lleves equipada (los Artefactos del Caos nunca pueden venderse ni intercambiarse).' },
+];
+
+export const FQ_TOMB_RECOMPOSE_2D6 = [
+  { min: 2, max: 2, roll: '2', text: 'Eres controlado por el Malvado Brujo hasta que tus PC vuelvan a reducirse a 0.' },
+  { min: 3, max: 4, roll: '3–4', text: 'Te recompones con huesos fracturados: −2 a tu movimiento durante el resto del reto.' },
+  { min: 5, max: 6, roll: '5–6', text: 'Te recompones debilitado: −1 PC máximo durante el resto del reto.' },
+  { min: 7, max: 7, roll: '7', text: 'Te recompones con daño estructural: −1 DC de Defensa durante el resto del reto.' },
+  { min: 8, max: 9, roll: '8–9', text: 'Te recompones entumecido: −1 DC de Ataque durante el resto del reto.' },
+  { min: 10, max: 10, roll: '10', text: 'Pierdes una mano: solo puedes usar un arma a una mano o un escudo (si sale otra vez, solo 1 mano libre).' },
+  { min: 11, max: 11, roll: '11', text: '¡Te recompones intacto sin coste ni penalización alguna!' },
+  { min: 12, max: 12, roll: '12', text: '¡Alzamiento Supremo! Te recompones intacto y recuperas además el uso de Causar Miedo.' },
+];
+
+export const FQ_THIEF_STEAL_2D6 = [
+  { min: 2, max: 3, roll: '2–3', text: 'Nada (bolsillos vacíos).' },
+  { min: 4, max: 5, roll: '4–5', text: '3 Monedas de Oro.' },
+  { min: 6, max: 7, roll: '6–7', text: '5 Monedas de Oro.' },
+  { min: 8, max: 8, roll: '8', text: '10 Monedas de Oro.' },
+  { min: 9, max: 9, roll: '9', text: '25 Monedas de Oro.' },
+  { min: 10, max: 10, roll: '10', text: '50 Monedas de Oro.' },
+  { min: 11, max: 12, roll: '11–12', text: '¡100 Monedas de Oro!' },
+];
+
+export const FQ_OGRE_BRUTALITY_D6 = [
+  { roll: 1, name: '1 · Olvido', text: 'Te quedas pensando en qué ibas a hacer: pierdes tu turno de inmediato.' },
+  { roll: 2, name: '2–3 · Golpe Torpe', text: 'El ataque se resuelve de forma normal sin efecto adicional.' },
+  { roll: 4, name: '4–5 · Empujón Brutal', text: 'Además del daño normal, empujas al objetivo 1 casilla hacia atrás (si choca con pared o mueble sufre +1 daño extra).' },
+  { roll: 6, name: '6 · ¡Arrasar!', text: 'Si atacaste cuerpo a cuerpo, el objetivo sufre daño masivo adicional (+1 Calavera automática / barrido imparable).' },
+];
+
+export const FQ_SLAYER_FURY_D6 = [
+  { range: '1–4', text: 'Ataque normal (sin calaveras extra del Dado de Furia).' },
+  { range: '5–6', text: '+1 Calavera adicional garantizada a tu tirada de ataque.' },
+  { range: '7+', text: '+2 Calaveras adicionales garantizadas (alcanzable con el +1 al Dado de Furia vs monstruos con nombre propio / bonos).' },
+];

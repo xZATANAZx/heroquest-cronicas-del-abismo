@@ -46,6 +46,12 @@ import {
   FQ_BOARD_TRAPS,
   FQ_TREASURE_TRAPS,
   FQ_BALANCED_DECK_PRESETS,
+  FQ_CHAOS_MARKS,
+  FQ_CHAOS_ARTIFACTS_D6,
+  FQ_TOMB_RECOMPOSE_2D6,
+  FQ_THIEF_STEAL_2D6,
+  FQ_OGRE_BRUTALITY_D6,
+  FQ_SLAYER_FURY_D6,
 } from '../data/fetenquestExtendedData';
 
 const MB_STORAGE_KEY = 'hq_fetenquest_mb_v41';
@@ -203,7 +209,27 @@ export default function FetenQuestHub({ showToast = null }) {
   // ==================== ESTADO: MAZOS FETENQUEST ====================
   const [decksSubTab, setDecksSubTab] = useState('events'); // 'events' | 'potions' | 'traps' | 'compare'
   const [lairUsedThisQuest, setLairUsedThisQuest] = useState(false);
+  const [heroChaosRolled, setHeroChaosRolled] = useState([]);
   const [fqTreasureDeck, setFqTreasureDeck] = useState(() => shuffle(FQ_TREASURE_DECK));
+
+  const rollChaosSpellByD20 = (r) =>
+    FQ_CHAOS_SPELLS_D20.find((x) => r >= x.min && r <= x.max) || FQ_CHAOS_SPELLS_D20[0];
+
+  const rollChaosSpellsSet = (count) => {
+    const picked = [];
+    const usedNames = new Set();
+    let guard = 0;
+    while (picked.length < count && guard < 100) {
+      guard += 1;
+      const r = Math.floor(Math.random() * 20) + 1;
+      const sp = rollChaosSpellByD20(r);
+      if (!usedNames.has(sp.name)) {
+        usedNames.add(sp.name);
+        picked.push({ ...sp, rolledD20: r });
+      }
+    }
+    setHeroChaosRolled(picked);
+  };
   const [fqEventsDeck, setFqEventsDeck] = useState(() => shuffle(FQ_EVENTS_DECK));
   const [fqDiscardedCount, setFqDiscardedCount] = useState(0);
   const [deckModal, setDeckModal] = useState(null);
@@ -698,6 +724,340 @@ export default function FetenQuestHub({ showToast = null }) {
                       ))}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* TABLAS Y TIRADAS ESPECIALES PROPIAS DE ESTE HÉROE (SI APLICA) */}
+              {activeHero.id === 'fq_hechicero_caos' && (
+                <div className="grimoire-panel rounded-2xl p-5 border-rose-500/50 space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+                    <div>
+                      <h4 className="font-display text-sm font-black text-rose-300 uppercase tracking-wider">
+                        🎲 Hechizos del Caos al Azar (4D20 al iniciar cada reto)
+                      </h4>
+                      <p className="text-[11px] text-slate-400">
+                        Tira 4D20 para determinar tus 4 hechizos del reto (sin repetidos). Puedes cambiar cualquier Nv.3 por un Nv.2 o por 1 hechizo elemental a elección.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => rollChaosSpellsSet(4)}
+                        className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs cursor-pointer shadow"
+                      >
+                        🎲 Tirar 4D20 (Reto)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const r = Math.floor(Math.random() * 20) + 1;
+                          const sp = rollChaosSpellByD20(r);
+                          setTableRollPopup({
+                            title: `💀 ${sp.name} (1D20 = ${r})`,
+                            badge: `${sp.level} · ${sp.uses}`,
+                            text: sp.text,
+                          });
+                        }}
+                        className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-200 font-bold text-xs cursor-pointer"
+                      >
+                        🎲 1D20
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const r = Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6) + 2;
+                          const found = FQ_WINDS_OF_CHAOS.find((c) => c.roll === String(r)) || FQ_WINDS_OF_CHAOS[0];
+                          setTableRollPopup({
+                            title: `🌀 Conjurar el Caos — Vientos del Caos (2D6 = ${r})`,
+                            badge: 'Recuerda: puedes sacrificar 1 PM (+2) o PC (+1 c/u, máx +4) ANTES de tirar',
+                            text: found.text,
+                          });
+                        }}
+                        className="px-3 py-2 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-bold text-xs cursor-pointer"
+                      >
+                        🌀 Vientos Caos (2D6)
+                      </button>
+                    </div>
+                  </div>
+
+                  {heroChaosRolled.length > 0 && (
+                    <div className="p-3.5 rounded-xl bg-rose-950/35 border border-rose-500/50 space-y-2">
+                      <div className="text-[11px] font-black uppercase text-amber-300">
+                        ✨ Tus Hechizos del Caos Sorteados para Este Reto ({heroChaosRolled.length}):
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                        {heroChaosRolled.map((sp) => (
+                          <div key={sp.name} className="p-2.5 rounded-xl bg-slate-950/90 border border-rose-700/50 space-y-1">
+                            <div className="flex items-center justify-between gap-1.5">
+                              <strong className="text-rose-200">
+                                [D20: {sp.rolledD20}] {sp.name}
+                              </strong>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-950 text-amber-300 font-bold">
+                                {sp.level}
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-amber-200/90 font-semibold">📊 {sp.uses}</div>
+                            <p className="text-[11px] text-slate-200 leading-snug">{sp.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <div className="text-[11px] font-black uppercase text-slate-300">
+                      📖 Tabla Completa de los 14 Hechizos del Caos (1D20):
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                      {FQ_CHAOS_SPELLS_D20.map((cs) => (
+                        <div key={cs.range} className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <strong className="text-amber-300">
+                              [{cs.range}] {cs.name}
+                            </strong>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-950 text-rose-200 font-bold">
+                              {cs.level}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-sky-300 font-semibold">📊 {cs.uses}</div>
+                          <p className="text-[11px] text-slate-300 leading-snug">{cs.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeHero.id === 'fq_guerrero_caos' && (
+                <div className="grimoire-panel rounded-2xl p-5 border-rose-500/50 space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+                    <h4 className="font-display text-sm font-black text-rose-300 uppercase tracking-wider">
+                      🩸 Las 4 Marcas del Caos y Artefactos (1D6)
+                    </h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => rollChaosSpellsSet(2)}
+                        className="px-3 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-black text-xs cursor-pointer"
+                      >
+                        🔮 Tirar 2D20 (Tzeentch)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const r = Math.floor(Math.random() * 6) + 1;
+                          const art = FQ_CHAOS_ARTIFACTS_D6[r - 1];
+                          setTableRollPopup({
+                            title: `⚔️ Artefacto del Caos (1D6 = ${r}): ${art.name}`,
+                            badge: 'Ofrenda de 1300 MO entre misiones (no vendible ni intercambiable)',
+                            text: art.text,
+                          });
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs cursor-pointer"
+                      >
+                        🎲 Artefacto Caos (1D6)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
+                    {FQ_CHAOS_MARKS.map((m) => (
+                      <div key={m.id} className="p-3 rounded-xl bg-slate-950/85 border border-rose-800/40 space-y-1">
+                        <div className="font-black text-amber-200">{m.god}</div>
+                        <p className="text-[11px] text-slate-200 leading-snug">{m.ability}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {heroChaosRolled.length > 0 && (
+                    <div className="p-3 rounded-xl bg-purple-950/35 border border-purple-500/50 space-y-2 text-xs">
+                      <div className="text-[11px] font-black text-amber-300">
+                        🔮 Hechizos Sorteados para Marca de Tzeentch:
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {heroChaosRolled.slice(0, 2).map((sp) => (
+                          <div key={sp.name} className="p-2.5 rounded-xl bg-slate-950/90 border border-purple-700/50 space-y-1">
+                            <strong className="text-purple-200">
+                              [D20: {sp.rolledD20}] {sp.name} ({sp.level})
+                            </strong>
+                            <div className="text-[10px] text-amber-200">📊 {sp.uses}</div>
+                            <p className="text-[11px] text-slate-200 leading-snug">{sp.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {FQ_CHAOS_ARTIFACTS_D6.map((a) => (
+                      <div key={a.roll} className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                        <strong className="text-rose-300">[{a.roll}] {a.name}:</strong>{' '}
+                        <span className="text-[11px] text-slate-300">{a.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeHero.id === 'fq_guerrero_tumba' && (
+                <div className="grimoire-panel rounded-2xl p-5 border-sky-500/40 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="font-display text-sm font-black text-sky-300 uppercase tracking-wider">
+                      💀 Tabla de Recomposición — Imperecedero (2D6 al caer a 0 PC)
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const r = Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6) + 2;
+                        const row = FQ_TOMB_RECOMPOSE_2D6.find((x) => r >= x.min && r <= x.max);
+                        setTableRollPopup({
+                          title: `💀 Recomposición (2D6 = ${r})`,
+                          badge: 'Efectos acumulativos durante el reto; desaparecen al acabar',
+                          text: row?.text || '',
+                        });
+                      }}
+                      className="px-3.5 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-black text-xs cursor-pointer"
+                    >
+                      🎲 Tirar Recomposición (2D6)
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {FQ_TOMB_RECOMPOSE_2D6.map((row) => (
+                      <div key={row.roll} className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                        <strong className="text-amber-300">[{row.roll}]</strong>{' '}
+                        <span className="text-slate-200">{row.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeHero.id === 'fq_ladron' && (
+                <div className="grimoire-panel rounded-2xl p-5 border-amber-500/40 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="font-display text-sm font-black text-amber-300 uppercase tracking-wider">
+                      💰 Tabla de Robar (2D6 tras pasar la tirada de 1 DC)
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const r = Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6) + 2;
+                        const row = FQ_THIEF_STEAL_2D6.find((x) => r >= x.min && r <= x.max);
+                        setTableRollPopup({
+                          title: `💰 Botín de Robo (2D6 = ${r})`,
+                          badge: '1 vez por cada humanoide enemigo (si NO salió Escudo Negro en 1 DC)',
+                          text: row?.text || '',
+                        });
+                      }}
+                      className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer"
+                    >
+                      🎲 Tirar Botín de Robo (2D6)
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    {FQ_THIEF_STEAL_2D6.map((row) => (
+                      <div key={row.roll} className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-center">
+                        <div className="font-black text-amber-300">{row.roll}</div>
+                        <div className="text-slate-200 text-[11px]">{row.text}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeHero.id === 'fq_ogro' && (
+                <div className="grimoire-panel rounded-2xl p-5 border-orange-500/40 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="font-display text-sm font-black text-orange-300 uppercase tracking-wider">
+                      🪓 Tabla del Dado de Brutalidad (1D6 con cada ataque)
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const r = Math.floor(Math.random() * 6) + 1;
+                        const row =
+                          r === 1
+                            ? FQ_OGRE_BRUTALITY_D6[0]
+                            : r <= 3
+                              ? FQ_OGRE_BRUTALITY_D6[1]
+                              : r <= 5
+                                ? FQ_OGRE_BRUTALITY_D6[2]
+                                : FQ_OGRE_BRUTALITY_D6[3];
+                        setTableRollPopup({
+                          title: `🪓 Dado de Brutalidad (1D6 = ${r}): ${row.name}`,
+                          badge: 'Se lanza junto a los dados de ataque (y con dobles en movimiento por Cabeza Hueca)',
+                          text: row.text,
+                        });
+                      }}
+                      className="px-3.5 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-black text-xs cursor-pointer"
+                    >
+                      🎲 Tirar Brutalidad (1D6)
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {FQ_OGRE_BRUTALITY_D6.map((row) => (
+                      <div key={row.roll} className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                        <strong className="text-orange-300">{row.name}:</strong>{' '}
+                        <span className="text-slate-200">{row.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeHero.id === 'fq_matador' && (
+                <div className="grimoire-panel rounded-2xl p-5 border-red-500/40 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="font-display text-sm font-black text-red-300 uppercase tracking-wider">
+                      🔥 Tabla del Dado de Furia (1D6 junto a cada ataque)
+                    </h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const r = Math.floor(Math.random() * 6) + 1;
+                          const msg = r >= 5 ? '+1 Calavera adicional garantizada.' : 'Ataque normal (sin bonus extra).';
+                          setTableRollPopup({
+                            title: `🔥 Dado de Furia (1D6 = ${r})`,
+                            badge: 'Vs monstruo normal',
+                            text: msg,
+                          });
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs cursor-pointer"
+                      >
+                        🎲 Dado Furia (1D6)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const base = Math.floor(Math.random() * 6) + 1;
+                          const tot = base + 1;
+                          const msg =
+                            tot >= 7
+                              ? '¡+2 Calaveras adicionales garantizadas!'
+                              : tot >= 5
+                                ? '+1 Calavera adicional garantizada.'
+                                : 'Ataque normal (sin bonus extra).';
+                          setTableRollPopup({
+                            title: `🔥 Dado de Furia vs Jefe (1D6 [${base}] + 1 = ${tot})`,
+                            badge: '+1 automático contra enemigos con nombre propio',
+                            text: msg,
+                          });
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer"
+                      >
+                        🎲 vs Jefe (+1)
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                    {FQ_SLAYER_FURY_D6.map((row) => (
+                      <div key={row.range} className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                        <strong className="text-red-300">[{row.range}]</strong>{' '}
+                        <span className="text-slate-200">{row.text}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -1485,25 +1845,30 @@ export default function FetenQuestHub({ showToast = null }) {
                   type="button"
                   onClick={() => {
                     const r = Math.floor(Math.random() * 20) + 1;
-                    const found = FQ_CHAOS_SPELLS_D20.find((x) => {
-                      const [a, b] = x.range.split('–').map(Number);
-                      return b ? r >= a && r <= b : r === a;
-                    });
+                    const found = rollChaosSpellByD20(r);
                     setTableRollPopup({
-                      title: `💀 Hechizo del Caos (${r}/20): ${found?.name}`,
-                      badge: found?.level || 'Caos',
-                      text: 'Hechizo del Caos determinado al azar para monstruo lanzador o Hechicero del Caos.',
+                      title: `💀 Hechizo del Caos (1D20 = ${r}): ${found.name}`,
+                      badge: `${found.level} · ${found.uses}`,
+                      text: found.text,
                     });
                   }}
                   className="px-4 py-2 rounded-xl bg-rose-700 hover:bg-rose-600 text-white font-black cursor-pointer"
                 >
                   🎲 Tirar Hechizo del Caos al Azar (1D20)
                 </button>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                   {FQ_CHAOS_SPELLS_D20.map((cs) => (
-                    <div key={cs.range} className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
-                      <strong className="text-amber-300">{cs.range}:</strong> {cs.name}{' '}
-                      <span className="text-[10px] text-rose-300">({cs.level})</span>
+                    <div key={cs.range} className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <strong className="text-amber-300">
+                          [{cs.range}] {cs.name}
+                        </strong>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-950 text-rose-200 font-bold">
+                          {cs.level}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-sky-300 font-semibold">📊 {cs.uses}</div>
+                      <p className="text-[11px] text-slate-300 leading-snug">{cs.text}</p>
                     </div>
                   ))}
                 </div>
