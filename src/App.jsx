@@ -20,6 +20,7 @@ import {
   QrCode,
   Smartphone,
   MessageSquarePlus,
+  Crown,
 } from 'lucide-react';
 import DecksPanel from './components/DecksPanel';
 import BestiaryPanel from './components/BestiaryPanel';
@@ -28,6 +29,7 @@ import CharacterForge from './components/CharacterForge';
 import DiceRoller from './components/DiceRoller';
 import GrimoirePanel from './components/GrimoirePanel';
 import TacticalBoard from './components/TacticalBoard';
+import ClassicOfficialBoard from './components/ClassicOfficialBoard';
 import CityHubPanel from './components/CityHubPanel';
 import PlayerMobileView from './components/PlayerMobileView';
 import ActionResolverBanner from './components/ActionResolverBanner';
@@ -89,11 +91,17 @@ const loadState = () => {
 
 const NAV_GROUPS = [
   {
-    group: 'En Partida',
+    group: 'En Partida (HQ-D20 v6)',
     items: [
       { id: 'board', label: 'Tablero 2D', subtitle: 'Plano táctico, salas y contadores', icon: Compass },
       { id: 'decks', label: 'Mazos DM', subtitle: 'Zargon, eventos, muebles y pistas', icon: Layers },
       { id: 'bestiary', label: 'Bestiario', subtitle: 'Escalado, plantillas y amenaza', icon: Skull },
+    ],
+  },
+  {
+    group: 'Juego Original (Sin Mods)',
+    items: [
+      { id: 'classic_board', label: 'HQ Clásico Oficial', subtitle: 'Juego Base + Luna del Terror (100% Oficial)', icon: Crown },
     ],
   },
   {
@@ -1059,6 +1067,10 @@ export default function App() {
                 onRegisterNemesis={handleRegisterNemesis}
                 showToast={showToast}
               />
+            )}
+
+            {activeTab === 'classic_board' && (
+              <ClassicOfficialBoard showToast={showToast} />
             )}
 
             {activeTab === 'city' && (
