@@ -33,6 +33,7 @@ import {
 } from '../data/fetenquestData';
 import {
   FQ_RULES_GUIDE,
+  FQ_WEAPON_PROPERTIES_GLOSSARY,
   FQ_ARMORY_CATALOG,
   FQ_SPELL_SCHOOLS,
   FQ_SCROLLS_DETAILED,
@@ -476,17 +477,60 @@ export default function FetenQuestHub({ showToast = null }) {
                   </div>
                 </div>
 
-                {/* Equipo Inicial y Restricciones */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                  <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
-                    <div className="text-[10px] font-black uppercase text-emerald-400 mb-1">⚔️ Equipo Inicial (Qué lleva al empezar)</div>
-                    <div className="font-bold text-white">{activeHero.startingGear}</div>
-                  </div>
-                  <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
-                    <div className="text-[10px] font-black uppercase text-rose-400 mb-1">🚫 Restricciones de Equipo</div>
-                    <div className="text-slate-200">{activeHero.restrictions}</div>
-                  </div>
-                </div>
+                {/* Equipo Inicial Detallado (con Propiedades del Arma) y Restricciones */}
+                {(() => {
+                  const gearLow = (activeHero.startingGear || '').toLowerCase();
+                  const matchedGear = FQ_ARMORY_CATALOG.filter((it) => {
+                    const baseName = it.name.split('/')[0].trim().toLowerCase();
+                    return gearLow.includes(baseName);
+                  });
+                  return (
+                    <div className="space-y-2.5 text-xs">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div className="p-3 rounded-xl bg-slate-950/80 border border-emerald-800/50 space-y-1.5">
+                          <div className="text-[10px] font-black uppercase text-emerald-400">
+                            ⚔️ Equipo Inicial (Qué lleva al empezar)
+                          </div>
+                          <div className="font-bold text-white">{activeHero.startingGear}</div>
+                          {matchedGear.length > 0 && (
+                            <div className="pt-1.5 border-t border-slate-800 space-y-1.5">
+                              {matchedGear.map((mg) => (
+                                <div key={mg.id} className="space-y-1">
+                                  <div className="flex flex-wrap items-center gap-1">
+                                    <span className="font-bold text-amber-300">{mg.name}</span>
+                                    <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-200 text-[10px] font-bold">
+                                      {mg.dc} · {mg.hands}
+                                    </span>
+                                    {(mg.tags || []).map((tg) => (
+                                      <span
+                                        key={tg}
+                                        className="px-1.5 py-0.5 rounded bg-amber-950/80 border border-amber-600/50 text-amber-200 text-[10px] font-bold"
+                                      >
+                                        {tg}
+                                      </span>
+                                    ))}
+                                  </div>
+                                  <p className="text-[11px] text-slate-300 leading-snug">{mg.traits}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-950/80 border border-rose-800/40 space-y-1">
+                          <div className="text-[10px] font-black uppercase text-rose-400">
+                            🚫 Restricciones de Equipo y Tamaño
+                          </div>
+                          <div className="text-slate-200 leading-relaxed">{activeHero.restrictions}</div>
+                          {activeHero.size === 'Pequeño' && (
+                            <div className="text-[11px] text-amber-300 pt-1">
+                              ⚠️ Tamaño Pequeño: no puede usar Mandoble.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Habilidades Especiales del Héroe */}
@@ -809,39 +853,76 @@ export default function FetenQuestHub({ showToast = null }) {
             </div>
           )}
 
-          {/* 4B. ARMERÍA COMPLETA */}
+          {/* 4B. ARMERÍA COMPLETA (CON DICCIONARIO DE PROPIEDADES, ETIQUETAS Y QUIÉN PUEDE USAR CADA ARMA) */}
           {cityTab === 'armory' && (
-            <div className="grimoire-panel rounded-2xl p-5 space-y-3 text-xs">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap gap-1.5">
-                  {['Todas', 'Arma', 'Distancia', 'Armadura', 'Apoyo'].map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => setArmoryCat(c)}
-                      className={`px-3 py-1 rounded-lg font-bold cursor-pointer ${
-                        armoryCat === c ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-300 border border-slate-700'
-                      }`}
-                    >
-                      {c}
-                    </button>
+            <div className="space-y-4 text-xs">
+              {/* Diccionario de Propiedades de Armas y Armaduras */}
+              <div className="grimoire-panel rounded-2xl p-4 border-amber-500/40 space-y-2.5">
+                <div className="font-display text-sm font-black text-amber-300">
+                  📖 Propiedades Especiales de Armas y Armaduras (Qué significa cada etiqueta)
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {FQ_WEAPON_PROPERTIES_GLOSSARY.map((prop) => (
+                    <div key={prop.tag} className={`p-2.5 rounded-xl border ${prop.color} space-y-1`}>
+                      <div className="font-black text-xs">{prop.tag}</div>
+                      <p className="text-[11px] leading-snug opacity-95">{prop.desc}</p>
+                    </div>
                   ))}
                 </div>
-                <span className="text-slate-400">Venta de equipo usado: 50% del precio marcado.</span>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                {FQ_ARMORY_CATALOG.filter((it) => armoryCat === 'Todas' || it.cat === armoryCat).map((it) => (
-                  <div key={it.id} className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <strong className="text-amber-200">{it.name}</strong>
-                      <span className="font-black text-amber-400">{fmtPrice(it.price)} MO</span>
-                    </div>
-                    <div className="text-[11px] text-emerald-300 font-bold">
-                      {it.dc} · <span className="text-slate-400 font-normal">{it.restrictions}</span>
-                    </div>
-                    <p className="text-[11px] text-slate-300 leading-snug">{it.traits}</p>
+
+              <div className="grimoire-panel rounded-2xl p-5 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap gap-1.5">
+                    {['Todas', 'Arma', 'Distancia', 'Armadura', 'Apoyo'].map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setArmoryCat(c)}
+                        className={`px-3 py-1 rounded-lg font-bold cursor-pointer ${
+                          armoryCat === c ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-300 border border-slate-700'
+                        }`}
+                      >
+                        {c}
+                      </button>
+                    ))}
                   </div>
-                ))}
+                  <span className="text-slate-400">Venta de equipo usado: 50% del precio marcado.</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  {FQ_ARMORY_CATALOG.filter((it) => armoryCat === 'Todas' || it.cat === armoryCat).map((it) => (
+                    <div key={it.id} className="p-3.5 rounded-xl bg-slate-950/85 border border-slate-800 space-y-1.5 flex flex-col justify-between">
+                      <div className="space-y-1.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <strong className="text-amber-200 text-sm leading-tight">{it.name}</strong>
+                          <span className="font-black text-amber-400 shrink-0">{fmtPrice(it.price)} MO</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1">
+                          <span className="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-700/60 text-emerald-300 font-black text-[10px]">
+                            {it.dc}
+                          </span>
+                          {it.hands && (
+                            <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-200 font-bold text-[10px]">
+                              {it.hands}
+                            </span>
+                          )}
+                          {(it.tags || []).map((tg) => (
+                            <span
+                              key={tg}
+                              className="px-1.5 py-0.5 rounded bg-amber-950/80 border border-amber-600/50 text-amber-200 text-[10px] font-bold"
+                            >
+                              {tg}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-[11px] text-slate-200 leading-snug">{it.traits}</p>
+                      </div>
+                      <div className="pt-1.5 border-t border-slate-800/80 text-[10.5px] text-rose-300/95">
+                        <strong>Quién puede usarla:</strong> <span className="text-slate-300">{it.restrictions}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
